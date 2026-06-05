@@ -1,0 +1,26 @@
+name: Desplegar CrossoverMX en VPS
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Instalar Composer
+        run: composer install --prefer-dist --no-interaction --no-dev --optimize-autoloader
+
+      - name: Preparar .env
+        run: |
+          cp .env.example .env || true
+
+
+ls .github/workflows/
