@@ -12,8 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('games', function (Blueprint $table) {
-            // Agregamos la columna round_number como entero, nullable y con valor por defecto 1
-            $table->unsignedInteger('round_number')->default(1)->nullable()->after('status');
+            // Verificar si la columna no existe antes de agregarla
+            if (!Schema::hasColumn('games', 'round_number')) {
+                $table->unsignedInteger('round_number')->default(1)->nullable()->after('status');
+            }
         });
     }
 
