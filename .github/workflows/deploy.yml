@@ -21,6 +21,21 @@ jobs:
       - name: Preparar .env
         run: |
           cp .env.example .env || true
+          php artisan key:generate --force
 
-
-ls .github/workflows/
+      - name: Desplegar en VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/crossovermx
+            git fetch origin
+            git reset --hard origin/master
+            composer install --prefer-dist --no-interaction --no-dev --optimize-autoloader
+            php artisan migrate --force
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            echo "Despliegue completado el $(date)"
