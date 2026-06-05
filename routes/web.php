@@ -72,7 +72,6 @@ Route::resource('teams', TeamController::class)->middleware(['auth', 'verified']
 Route::post('/teams/{team}/accept-contract', [TeamController::class, 'acceptContract'])->name('teams.acceptContract')->middleware(['auth', 'verified']);
 Route::get('/teams/{team}/stats', [TeamController::class, 'stats'])->name('teams.stats')->middleware(['auth', 'verified']);
 Route::post('/teams/strengths/store', [TeamController::class, 'storeStrength'])->name('teams.strengths.store');
-Route::get('/teams/{team}/players/json', [TeamController::class, 'getPlayersByTeamJson']);
 
 // CORRECCIÓN: Rutas de suspensión movidas lógicamente a la gestión de juegos/partidos, apuntando a GameController
 Route::post('/tournaments/suspend-player', [GameController::class, 'suspendPlayer'])->name('tournaments.suspend-player')->middleware(['auth', 'verified']);

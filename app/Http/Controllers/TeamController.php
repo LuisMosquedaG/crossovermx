@@ -171,17 +171,24 @@ class TeamController extends Controller
         if ($tournament) {
             $data['client_id'] = $tournament->client_id;
         } else {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['message' => 'El torneo seleccionado no es válido.'], 422);
+            }
             return back()->withErrors(['tournament_id' => 'El torneo seleccionado no es válido.']);
         }
         // ------------------------------------------
 
-        Team::create($data);
+        $nuevoEquipo = Team::create($data);
 
-        // AGREGA ESTO AL FINAL:
-        // Nota: necesitas recuperar el equipo recién creado. Puedes hacerlo así:
-        $nuevoEquipo = Team::latest()->first(); 
-        // O mejor, si usas $team = Team::create(...) arriba, usa esa variable.
         $this->actualizarFuerzaTorneo($nuevoEquipo);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Equipo creado exitosamente.',
+                'team' => $nuevoEquipo
+            ]);
+        }
 
         return redirect()->route('teams.index')->with('message', 'Equipo creado exitosamente.');
     }
