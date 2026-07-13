@@ -82,7 +82,23 @@ class TournamentController extends Controller
         $courts = $courtsQuery->get();
         // ------------------------------------------------------------
 
-        return view('tournaments.index', compact('tournaments', 'courts'));
+        // --- NUEVO: OBTENER ENTRENADORES ---
+        $coachesQuery = \App\Models\User::whereHas('role', function($q){
+            $q->where('name', 'Coach');
+        });
+        if (auth()->check() && auth()->user()->client_id) {
+            $coachesQuery->where('client_id', auth()->user()->client_id);
+        }
+        $coaches = $coachesQuery->get();
+        // -----------------------------------
+
+        // --- NUEVO: OBTENER FUERZAS ---
+        $strengths = \App\Models\Strength::where('client_id', auth()->user()->client_id ?? null)
+            ->orderBy('name')
+            ->get();
+        // ------------------------------
+
+        return view('tournaments.index', compact('tournaments', 'courts', 'coaches', 'strengths'));
     }
 
     /**
@@ -185,6 +201,30 @@ public function store(Request $request)
             return redirect()->route('tournaments.index')
                 ->with('message', 'Torneo eliminado exitosamente.');
         }
+
+    public function getTeamsByTournamentJson(Tournament $tournament)
+    {
+        if (auth()->user()->client_id && $tournament->client_id !== auth()->user()->client_id) {
+            abort(403, 'Acción no autorizada.');
+        }
+
+        if (auth()->user()->hasRole('Arbitro')) {
+            $hasRefereed = Game::where('tournament_id', $tournament->id)->where('referee_id', auth()->id())->exists();
+            if (!$hasRefereed) {
+                abort(403, 'Acción no autorizada.');
+            }
+        }
+
+        if (auth()->user()->hasRole('Coach')) {
+            $hasTeam = Team::where('tournament_id', $tournament->id)->where('coach_id', auth()->id())->exists();
+            if (!$hasTeam) {
+                abort(403, 'Acción no autorizada.');
+            }
+        }
+
+        $teams = $tournament->teams()->get();
+        return response()->json($teams);
+    }
     
     public function generateCalendar(Request $request, CalendarGeneratorService $calendarService)
     {

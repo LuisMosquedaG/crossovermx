@@ -857,9 +857,9 @@ public function showLiveGame(Game $game)
     {
         $request->validate([
             'game_id' => 'required|exists:games,id',
-            'players.local' => 'required|array|min:3|max:5',
+            'players.local' => 'required|array|min:1|max:5',
             'players.local.*' => 'exists:players,id',
-            'players.away' => 'required|array|min:3|max:5',
+            'players.away' => 'required|array|min:1|max:5',
             'players.away.*' => 'exists:players,id',
         ]);
 

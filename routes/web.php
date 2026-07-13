@@ -18,6 +18,8 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
+Route::get('/posiciones', [TournamentController::class, 'publicStandings'])->name('public.standings');
+
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -34,6 +36,7 @@ Route::post('/tournaments/{tournament}/generate-second-round', [TournamentContro
 Route::post('/tournaments/{tournament}/generate-elimination', [TournamentController::class, 'generateElimination'])->name('tournaments.elimination')->middleware(['auth', 'verified']);
 Route::post('/tournaments/{tournament}/update-progression', [TournamentController::class, 'updateProgression'])->name('tournaments.update-progression');
 Route::post('/tournaments/{tournament}/swap-global', [TournamentController::class, 'swapTeamsGlobal'])->name('tournaments.swap-global');
+Route::get('/tournaments/{tournament}/teams/json', [TournamentController::class, 'getTeamsByTournamentJson'])->name('tournaments.teamsJson')->middleware(['auth', 'verified']);
 
 // --- Rutas para la gestión de partidos ---
 // CORRECCIÓN: Rutas movidas y actualizadas para usar GameController

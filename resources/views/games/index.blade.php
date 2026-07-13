@@ -644,8 +644,8 @@
             const localSelected = document.querySelectorAll('input.player-checkbox[data-team="local"]:checked').length;
             const awaySelected = document.querySelectorAll('input.player-checkbox[data-team="away"]:checked').length;
 
-            if (localSelected < 3 || localSelected > 5 || awaySelected < 3 || awaySelected > 5) {
-                alert('Debes seleccionar entre 3 y 5 jugadores para cada equipo.'); return;
+            if (localSelected < 1 || localSelected > 5 || awaySelected < 1 || awaySelected > 5) {
+                alert('Debes seleccionar entre 1 y 5 jugadores para cada equipo.'); return;
             }
 
             try {

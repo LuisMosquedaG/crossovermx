@@ -70,6 +70,13 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                                             <div class="flex items-center justify-center space-x-3">
 
+                                                <!-- NUEVO BOTÓN VER EQUIPOS REGISTRADOS -->
+                                                <button onclick="showTeamsListModal({{ $tournament->id }}, '{{ addslashes($tournament->name) }}')" class="text-orange-600 hover:text-orange-900" title="Ver Equipos Registrados">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+                                                    </svg>
+                                                </button>
+
                                                 <!-- NUEVO BOTÓN REGLAMENTO -->
                                                 <button onclick="openRulesModal({{ $tournament->id }})" class="text-gray-600 hover:text-gray-900" title="Ver Reglamento">
                                                     <!-- Icono de Documento/Libro -->
@@ -362,6 +369,287 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                 </svg>
                                 Descargar PDF
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Lista de Equipos del Torneo -->
+    <div id="teamsListModal" class="fixed inset-0 z-50 hidden">
+        <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"></div>
+        <div class="fixed inset-0 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4">
+                <div class="relative w-full max-w-5xl transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all">
+                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="w-full">
+                                <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-4" id="teamsListModalTitle">
+                                    Equipos del Torneo
+                                </h3>
+                                <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Imagen</th>
+                                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
+                                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Fuerza</th>
+                                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estatus</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="teamsTableBody" class="bg-white divide-y divide-gray-200">
+                                        </tbody>
+                                    </table>
+                                    <div id="noTeamsMessage" class="hidden text-center py-4 text-gray-500 font-medium">
+                                        Este torneo aún no tiene equipos registrados.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                        @if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach'))
+                            <button type="button" onclick="openCreateTeamModalFromList()" class="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded text-sm transition duration-150 ease-in-out sm:ml-3">
+                                Crear Nuevo Equipo
+                            </button>
+                        @endif
+                        <button type="button" onclick="closeTeamsListModal()" class="mt-3 sm:mt-0 w-full sm:w-auto inline-flex justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Estadísticas Acumuladas del Equipo -->
+    <div id="teamStatsModal" class="fixed inset-0 hidden" style="z-index: 60;">
+        <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"></div>
+        <div class="fixed inset-0 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4">
+                <div class="relative w-full max-w-4xl transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all">
+                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="w-full">
+                                <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-4 text-center" id="teamStatsModalTitle">
+                                    Estadísticas Acumuladas
+                                </h3>
+                                <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                                    <table class="min-w-full text-sm text-left">
+                                        <thead class="bg-gray-100 text-gray-600">
+                                            <tr>
+                                                <th class="px-3 py-2">Jugador</th>
+                                                <th class="px-3 py-2 text-center">1 Pt</th>
+                                                <th class="px-3 py-2 text-center">2 Pt</th>
+                                                <th class="px-3 py-2 text-center">3 Pt</th>
+                                                <th class="px-3 py-2 text-center font-bold bg-gray-200">Total</th>
+                                                <th class="px-3 py-2 text-center">Faltas</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="teamStatsTableBody" class="divide-y divide-gray-200">
+                                        </tbody>
+                                    </table>
+                                    <div id="noStatsMessage" class="hidden text-center py-4 text-gray-500 bg-white">
+                                        Este equipo aún no tiene estadísticas registradas.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                        <button type="button" onclick="closeTeamStatsModal()" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Crear/Editar Equipo -->
+    <div id="teamModal" class="fixed inset-0 hidden" style="z-index: 60;">
+        <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"></div>
+        <div class="fixed inset-0 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4">
+                <div class="relative w-full max-w-2xl transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all">
+                    <form id="teamForm" onsubmit="submitTeamForm(event)" enctype="multipart/form-data">
+                        @csrf
+                        <input type="hidden" name="_method" id="team_form_method" value="POST">
+                        <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                            <div class="sm:flex sm:items-start">
+                                <div class="w-full">
+                                    <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-4" id="teamModalTitle">
+                                        Editar Equipo
+                                    </h3>
+                                    <div class="mb-4">
+                                        <x-input-label for="team_modal_name" :value="__('Nombre del Equipo')" />
+                                        <x-text-input id="team_modal_name" class="block mt-1 w-full focus:border-orange-500 focus:ring-orange-500" type="text" name="name" required />
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <x-input-label for="team_modal_coach_id" :value="__('Entrenador Asignado')" />
+                                        <select id="team_modal_coach_id" name="coach_id" 
+                                            class="border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md shadow-sm block w-full mt-1 border py-2 px-3 bg-white">
+                                            <option value="">-- Sin Entrenador --</option>
+                                            @foreach ($coaches as $coach)
+                                                <option value="{{ $coach->id }}">{{ $coach->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <x-input-label for="team_modal_tournament_id" :value="__('Torneo')" />
+                                        <select id="team_modal_tournament_id" name="tournament_id" class="border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md shadow-sm mt-1 block w-full">
+                                            @foreach ($tournaments as $t)
+                                                <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <x-input-label for="team_modal_status" :value="__('Estatus del Equipo')" />
+                                        <select id="team_modal_status" name="status" class="border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md shadow-sm mt-1 block w-full">
+                                            <option value="pending">Pendiente (Necesita firma)</option>
+                                            <option value="active">Activo</option>
+                                            <option value="suspended">Suspendido</option>
+                                        </select>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                        <div>
+                                            <x-input-label for="team_modal_category" :value="__('Categoría')" />
+                                            <select id="team_modal_category" name="category" class="border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md shadow-sm mt-1 block w-full">
+                                                <option value="">-- Seleccionar --</option>
+                                                <option value="Varonil">Varonil</option>
+                                                <option value="Femenil">Femenil</option>
+                                                <option value="Mixto">Mixto</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <x-input-label for="team_modal_strength" :value="__('Fuerza / Nivel')" />
+                                            <select id="team_modal_strength" name="strength" class="border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md shadow-sm mt-1 block w-full border py-2 px-3 bg-white">
+                                                <option value="">-- Seleccionar --</option>
+                                                @foreach ($strengths as $str)
+                                                    <option value="{{ $str->name }}">{{ $str->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="mb-4">
+                                        <x-input-label for="team_modal_image" :value="__('Logo del Equipo')" />
+                                        <x-text-input id="team_modal_image" class="block mt-1 w-full focus:border-orange-500 focus:ring-orange-500" type="file" name="image" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                            <x-primary-button type="submit" id="teamSaveButton" class="w-full sm:ml-3 sm:w-auto">
+                                Guardar
+                            </x-primary-button>
+                            <button type="button" onclick="closeTeamModal()" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">
+                                Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal de Lista de Jugadores de un Equipo -->
+    <div id="playersListModal" class="fixed inset-0 hidden" style="z-index: 70;">
+        <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"></div>
+        <div class="fixed inset-0 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4">
+                <div class="relative w-full max-w-5xl transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all">
+                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="w-full">
+                                <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-4" id="playersListModalTitle">
+                                    Jugadores del Equipo
+                                </h3>
+                                <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Imagen</th>
+                                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">RFC</th>
+                                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Número</th>
+                                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Posición</th>
+                                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estatus</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="playersTableBody" class="bg-white divide-y divide-gray-200">
+                                        </tbody>
+                                    </table>
+                                    <div id="noPlayersMessage" class="hidden text-center py-4 text-gray-500">
+                                        Este equipo aún no tiene jugadores.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                        @if(!auth()->user()->hasRole('Arbitro'))
+                            <button type="button" onclick="openCreatePlayerModalFromList()" class="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded text-sm transition duration-150 ease-in-out sm:ml-3">
+                                Nuevo Jugador
+                            </button>
+                        @endif
+                        <button type="button" onclick="closePlayersListModal()" class="mt-3 sm:mt-0 w-full sm:w-auto inline-flex justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Crear Nuevo Jugador (Rápido) -->
+    <div id="playerQuickModal" class="fixed inset-0 hidden" style="z-index: 80;">
+        <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"></div>
+        <div class="fixed inset-0 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4">
+                <div class="relative w-full max-w-md transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all">
+                    <form id="playerQuickForm" onsubmit="submitPlayerQuickForm(event)">
+                        @csrf
+                        <input type="hidden" name="team_id" id="player_quick_team_id">
+                        <input type="hidden" name="status" value="active">
+                        <input type="hidden" name="gender" id="player_quick_gender" value="">
+                        
+                        <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                            <div class="sm:flex sm:items-start">
+                                <div class="w-full">
+                                    <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-4" id="playerQuickModalTitle">
+                                        Nuevo Jugador
+                                    </h3>
+                                    
+                                    <div class="space-y-4">
+                                        <div>
+                                            <x-input-label for="player_quick_name" :value="__('Nombre Completo')" />
+                                            <x-text-input id="player_quick_name" name="name" class="block mt-1 w-full focus:border-orange-500 focus:ring-orange-500" type="text" required />
+                                        </div>
+                                        <div>
+                                            <x-input-label for="player_quick_number" :value="__('Número de Camiseta')" />
+                                            <x-text-input id="player_quick_number" name="number" class="block mt-1 w-full focus:border-orange-500 focus:ring-orange-500" type="number" required />
+                                        </div>
+                                        <div>
+                                            <x-input-label for="player_quick_image" :value="__('Fotografía (Opcional)')" />
+                                            <x-text-input id="player_quick_image" name="image" class="block mt-1 w-full focus:border-orange-500 focus:ring-orange-500 border border-gray-300 rounded-md p-1 bg-white text-sm" type="file" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                            <x-primary-button type="submit" id="playerQuickSaveButton" class="w-full sm:ml-3 sm:w-auto">
+                                Guardar
+                            </x-primary-button>
+                            <button type="button" onclick="closePlayerQuickModal()" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">
+                                Cancelar
                             </button>
                         </div>
                     </form>
@@ -970,6 +1258,435 @@ saveButton.className = 'inline-flex items-center px-4 py-2 bg-orange-600 border 
 
     function closeRulesModal() {
         document.getElementById('rulesModal').classList.add('hidden');
+    }
+
+    const storageUrl = "{{ asset('storage') }}/";
+    let currentTournamentTeams = [];
+    let currentActiveTournamentId = null;
+    let currentActiveTournamentName = '';
+
+    async function showTeamsListModal(tournamentId, tournamentName) {
+        currentActiveTournamentId = tournamentId;
+        currentActiveTournamentName = tournamentName;
+        document.getElementById('teamsListModalTitle').innerText = `Equipos del Torneo: ${tournamentName}`;
+        document.getElementById('teamsTableBody').innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">Cargando equipos...</td></tr>';
+        document.getElementById('noTeamsMessage').classList.add('hidden');
+        document.getElementById('teamsListModal').classList.remove('hidden');
+
+        try {
+            const response = await fetch(`/tournaments/${tournamentId}/teams/json`);
+            if (!response.ok) throw new Error('Error al cargar equipos.');
+            const teams = await response.json();
+            
+            currentTournamentTeams = teams;
+            const tableBody = document.getElementById('teamsTableBody');
+            tableBody.innerHTML = '';
+            
+            if (teams.length > 0) {
+                teams.forEach(team => {
+                    // 1. Imagen / Logo
+                    let teamLogo = '';
+                    if (team.image_path) {
+                        let path = team.image_path;
+                        let finalUrl = '';
+                        if (path.startsWith('http')) {
+                            finalUrl = path;
+                        } else {
+                            if (path.startsWith('/')) path = path.substring(1);
+                            if (path.startsWith('storage/')) path = path.replace('storage/', '');
+                            finalUrl = storageUrl + path;
+                        }
+                        teamLogo = `<img src="${finalUrl}" alt="${team.name}" class="h-10 w-10 rounded-full object-cover mx-auto">`;
+                    } else {
+                        teamLogo = `<div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xs font-bold mx-auto">${team.name.substring(0, 1).toUpperCase()}</div>`;
+                    }
+
+                    // 2. Categoría
+                    let categoryBadge = '<span class="text-gray-400">-</span>';
+                    if (team.category === 'Femenil') {
+                        categoryBadge = `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-pink-100 text-pink-800">Femenil</span>`;
+                    } else if (team.category === 'Mixto') {
+                        categoryBadge = `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">Mixto</span>`;
+                    } else if (team.category === 'Varonil') {
+                        categoryBadge = `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Varonil</span>`;
+                    }
+
+                    // 3. Fuerza
+                    let strengthBadge = `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800 border border-gray-200">${team.strength || '-'}</span>`;
+
+                    // 4. Estatus
+                    let statusBadge = '';
+                    if (team.status === 'active') {
+                        statusBadge = `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Activo</span>`;
+                    } else if (team.status === 'pending') {
+                        statusBadge = `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-200 text-gray-800">Pendiente</span>`;
+                    } else if (team.status === 'suspended') {
+                        statusBadge = `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Suspendido (${team.suspension_games || 0} part.)</span>`;
+                    }
+
+                    // 5. Acciones
+                    let actionsHtml = `
+                        <div class="flex items-center justify-center space-x-2">
+                            <button onclick="showPlayersListModalForTeam(${team.id})" class="text-green-600 hover:text-green-900" title="Ver Jugadores">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                                </svg>
+                            </button>
+                            <button onclick="openTeamStatsModal(${team.id})" class="text-purple-600 hover:text-purple-900" title="Ver Estadísticas">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125z" />
+                                </svg>
+                            </button>
+                    `;
+
+                    if (isAdmin) {
+                        actionsHtml += `
+                            <button onclick="openEditTeamModal(${team.id})" class="text-indigo-600 hover:text-indigo-900" title="Editar Equipo">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                </svg>
+                            </button>
+                        `;
+                    }
+                    actionsHtml += `</div>`;
+
+                    const row = `
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">${actionsHtml}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">${teamLogo}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-900">${team.name}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm">${categoryBadge}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm">${strengthBadge}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm">${statusBadge}</td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            } else {
+                document.getElementById('noTeamsMessage').classList.remove('hidden');
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('teamsTableBody').innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-red-500">Error al cargar los equipos del torneo.</td></tr>';
+        }
+    }
+
+    function closeTeamsListModal() {
+        document.getElementById('teamsListModal').classList.add('hidden');
+    }
+
+    async function openTeamStatsModal(teamId) {
+        const team = currentTournamentTeams.find(t => t.id === teamId);
+        if (!team) return;
+
+        document.getElementById('teamStatsModalTitle').innerText = `Estadísticas: ${team.name}`;
+        const tableBody = document.getElementById('teamStatsTableBody');
+        const noStatsMsg = document.getElementById('noStatsMessage');
+        tableBody.innerHTML = '';
+        noStatsMsg.classList.add('hidden');
+        
+        try {
+            const response = await fetch(`/teams/${team.id}/stats`);
+            const statsData = await response.json();
+            
+            if (Array.isArray(statsData)) {
+                if (statsData.length === 0) {
+                    noStatsMsg.classList.remove('hidden');
+                }
+                statsData.forEach(item => {
+                    const points1 = item.stats.points1 ?? 0;
+                    const points2 = item.stats.points2 ?? 0;
+                    const points3 = item.stats.points3 ?? 0;
+                    const totalPoints = (points1 * 1) + (points2 * 2) + (points3 * 3);
+                    const fouls = item.stats.fouls ?? 0;
+                    
+                    const row = `
+                        <tr>
+                            <td class="px-3 py-2 font-medium text-gray-900">${item.name} (#${item.number})</td>
+                            <td class="px-3 py-2 text-center text-gray-600">${points1}</td>
+                            <td class="px-3 py-2 text-center text-gray-600">${points2}</td>
+                            <td class="px-3 py-2 text-center text-gray-600">${points3}</td>
+                            <td class="px-3 py-2 text-center font-bold bg-gray-50 text-gray-900">${totalPoints}</td>
+                            <td class="px-3 py-2 text-center text-orange-600">${fouls}</td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            } else {
+                if (Object.keys(statsData).length === 0) {
+                    noStatsMsg.classList.remove('hidden');
+                }
+                for (const [playerId, stats] of Object.entries(statsData)) {
+                    const totalPoints = (stats.points1 * 1) + (stats.points2 * 2) + (stats.points3 * 3);
+                    const row = `
+                        <tr>
+                            <td class="px-3 py-2 font-medium text-gray-900">${stats.name} (#${stats.number})</td>
+                            <td class="px-3 py-2 text-center text-gray-600">${stats.points1}</td>
+                            <td class="px-3 py-2 text-center text-gray-600">${stats.points2}</td>
+                            <td class="px-3 py-2 text-center text-gray-600">${stats.points3}</td>
+                            <td class="px-3 py-2 text-center font-bold bg-gray-50 text-gray-900">${totalPoints}</td>
+                            <td class="px-3 py-2 text-center text-orange-600">${stats.fouls}</td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                }
+            }
+            document.getElementById('teamStatsModal').classList.remove('hidden');
+        } catch(error) {
+            console.error('Error al cargar estadísticas:', error);
+            alert('No se pudieron cargar las estadísticas del equipo.');
+        }
+    }
+
+    function closeTeamStatsModal() {
+        document.getElementById('teamStatsModal').classList.add('hidden');
+    }
+
+    function openCreateTeamModalFromList() {
+        document.getElementById('teamModalTitle').innerText = 'Crear Nuevo Equipo';
+        document.getElementById('team_form_method').value = 'POST';
+        document.getElementById('teamForm').action = '{{ route("teams.store") }}';
+
+        document.getElementById('team_modal_name').value = '';
+        document.getElementById('team_modal_coach_id').value = '';
+        document.getElementById('team_modal_tournament_id').value = currentActiveTournamentId;
+        document.getElementById('team_modal_tournament_id').disabled = true; // Bloquea el select del torneo
+        document.getElementById('team_modal_status').value = 'active';
+        document.getElementById('team_modal_category').value = '';
+        document.getElementById('team_modal_strength').value = '';
+        document.getElementById('team_modal_image').value = '';
+
+        document.getElementById('teamModal').classList.remove('hidden');
+    }
+
+    function openEditTeamModal(teamId) {
+        const team = currentTournamentTeams.find(t => t.id === teamId);
+        if (!team) return;
+
+        document.getElementById('teamModalTitle').innerText = 'Editar Equipo: ' + team.name;
+        document.getElementById('team_form_method').value = 'PUT';
+        document.getElementById('teamForm').action = '{{ route("teams.update", "TEAM_ID") }}'.replace('TEAM_ID', team.id);
+
+        document.getElementById('team_modal_name').value = team.name;
+        document.getElementById('team_modal_coach_id').value = team.coach_id || '';
+        document.getElementById('team_modal_tournament_id').value = team.tournament_id;
+        document.getElementById('team_modal_tournament_id').disabled = false; // Desbloquea para permitir cambios en edición si es necesario
+        document.getElementById('team_modal_status').value = team.status || 'active';
+        document.getElementById('team_modal_category').value = team.category || '';
+        document.getElementById('team_modal_strength').value = team.strength || '';
+
+        document.getElementById('teamModal').classList.remove('hidden');
+    }
+
+    function closeTeamModal() {
+        document.getElementById('teamModal').classList.add('hidden');
+    }
+
+    let currentActiveTeamId = null;
+
+    async function showPlayersListModalForTeam(teamId) {
+        currentActiveTeamId = teamId;
+        const team = currentTournamentTeams.find(t => t.id === teamId);
+        const teamName = team ? team.name : 'Desconocido';
+        document.getElementById('playersListModalTitle').innerText = `Jugadores del equipo: ${teamName}`;
+        document.getElementById('playersTableBody').innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">Cargando jugadores...</td></tr>';
+        document.getElementById('noPlayersMessage').classList.add('hidden');
+        document.getElementById('playersListModal').classList.remove('hidden');
+
+        try {
+            const response = await fetch(`/teams/${teamId}/players/json`);
+            if (!response.ok) throw new Error('Error al cargar jugadores.');
+            const players = await response.json();
+            
+            const tableBody = document.getElementById('playersTableBody');
+            tableBody.innerHTML = '';
+            
+            if (players.length > 0) {
+                players.forEach(player => {
+                    let playerImage = '';
+                    if (player.image_path) {
+                        let path = player.image_path;
+                        let finalUrl = '';
+                        if (path.startsWith('http')) {
+                            finalUrl = path;
+                        } else {
+                            if (path.startsWith('/')) path = path.substring(1);
+                            if (path.startsWith('storage/')) path = path.replace('storage/', '');
+                            finalUrl = storageUrl + path;
+                        }
+                        playerImage = `<img src="${finalUrl}" alt="${player.name}" class="h-10 w-10 rounded-full object-cover mx-auto">`;
+                    } else if (player.gender === 'hombre') {
+                        playerImage = `<img src="/images/hombre.png" alt="${player.name}" class="h-10 w-10 rounded-full object-cover mx-auto">`;
+                    } else if (player.gender === 'mujer') {
+                        playerImage = `<img src="/images/mujer.png" alt="${player.name}" class="h-10 w-10 rounded-full object-cover mx-auto">`;
+                    } else {
+                        playerImage = `<div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xs font-bold mx-auto">${player.name.substring(0, 1).toUpperCase()}</div>`;
+                    }
+
+                    let statusBadge = '';
+                    if (player.status === 'suspended') {
+                        statusBadge = `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Suspendido (${player.suspension_games || 0} part.)</span>`;
+                    } else if (player.status === 'expelled') {
+                        statusBadge = `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Expulsado</span>`;
+                    } else {
+                        statusBadge = `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Activo</span>`;
+                    }
+
+                    const row = `
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">${playerImage}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-900">${player.name}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">${player.rfc || '-'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">${player.number || '-'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">${player.position || '-'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm">${statusBadge}</td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            } else {
+                document.getElementById('noPlayersMessage').classList.remove('hidden');
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('playersTableBody').innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-red-500">Error al cargar los jugadores del equipo.</td></tr>';
+        }
+    }
+
+    function closePlayersListModal() {
+        document.getElementById('playersListModal').classList.add('hidden');
+    }
+
+    function openCreatePlayerModalFromList() {
+        document.getElementById('playerQuickForm').reset();
+        document.getElementById('player_quick_team_id').value = currentActiveTeamId;
+
+        // Determinar género por categoría del equipo para asignar avatar por default
+        const team = currentTournamentTeams.find(t => t.id === currentActiveTeamId);
+        let genderValue = '';
+        if (team) {
+            if (team.category === 'Varonil') {
+                genderValue = 'hombre';
+            } else if (team.category === 'Femenil') {
+                genderValue = 'mujer';
+            }
+        }
+        document.getElementById('player_quick_gender').value = genderValue;
+
+        document.getElementById('playerQuickModal').classList.remove('hidden');
+    }
+
+    function closePlayerQuickModal() {
+        document.getElementById('playerQuickModal').classList.add('hidden');
+    }
+
+    async function submitPlayerQuickForm(event) {
+        event.preventDefault();
+        const form = document.getElementById('playerQuickForm');
+        const formData = new FormData(form);
+
+        const btn = document.getElementById('playerQuickSaveButton');
+        const originalText = btn.innerText;
+        btn.disabled = true;
+        btn.innerText = 'Guardando...';
+
+        try {
+            const response = await fetch('{{ route("players.store") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                alert(data.message || 'Error al guardar el jugador.');
+                return;
+            }
+
+            const data = await response.json();
+            if (data.success) {
+                closePlayerQuickModal();
+                showPlayersListModalForTeam(currentActiveTeamId);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error de conexión.');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = originalText;
+        }
+    }
+
+    async function submitTeamForm(event) {
+        event.preventDefault();
+        const form = document.getElementById('teamForm');
+        const formData = new FormData();
+
+        const addField = (name, id) => {
+            const el = document.getElementById(id);
+            if (el) {
+                if (el.type === 'file' && el.files.length > 0) {
+                    formData.append(name, el.files[0]);
+                } else {
+                    formData.append(name, el.value);
+                }
+            }
+        };
+
+        formData.append('_token', '{{ csrf_token() }}');
+        formData.append('_method', document.getElementById('team_form_method').value);
+
+        addField('name', 'team_modal_name');
+        addField('coach_id', 'team_modal_coach_id');
+        addField('tournament_id', 'team_modal_tournament_id');
+        addField('status', 'team_modal_status');
+        addField('category', 'team_modal_category');
+        addField('strength', 'team_modal_strength');
+        addField('image', 'team_modal_image');
+
+        const btn = document.getElementById('teamSaveButton');
+        const originalText = btn.innerText;
+        btn.disabled = true;
+        btn.innerText = 'Guardando...';
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error("ERROR DEL SERVIDOR (HTML):", errorText);
+                alert("Error " + response.status + " del servidor:\n\n" + errorText.substring(0, 500) + "...");
+                return;
+            }
+
+            const data = await response.json();
+
+            if (response.ok) {
+                closeTeamModal();
+                showTeamsListModal(currentActiveTournamentId, currentActiveTournamentName);
+            }
+
+        } catch (error) {
+            console.error('Error de red o JS:', error);
+            alert('Error de conexión: ' + error.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = originalText;
+        }
     }
 
     async function saveRules(event) {
