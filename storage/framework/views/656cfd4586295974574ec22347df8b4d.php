@@ -759,6 +759,7 @@
                 <li><a href="#summary">Impacto</a></li>
                 <li><a href="#features">Torneos</a></li>
                 <li><a href="#calendar-logic">Calendario</a></li>
+                <li><a href="<?php echo e(route('public.standings')); ?>" style="color: var(--brand-orange); font-weight: bold;">Posiciones</a></li>
             </ul>
             
             <a href="<?php echo e(route('login')); ?>" class="btn btn-primary">Entrar</a>

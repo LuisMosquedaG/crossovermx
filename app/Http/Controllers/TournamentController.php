@@ -715,6 +715,196 @@ public function store(Request $request)
 
         return view('tournaments.standings', compact('tournament', 'standingsData'));
     }
+
+    public function publicStandings(\Illuminate\Http\Request $request)
+    {
+        $tournaments = \App\Models\Tournament::where('status', 'active')->orderBy('name')->get();
+        
+        $selectedTournamentId = $request->input('tournament_id');
+        if (!$selectedTournamentId && $tournaments->isNotEmpty()) {
+            $selectedTournamentId = $tournaments->first()->id;
+        }
+
+        $tournament = $selectedTournamentId ? \App\Models\Tournament::find($selectedTournamentId) : null;
+        $standingsData = [];
+
+        if ($tournament) {
+            // 1. Cargar Configuración y Detectar Tipo
+            $settings = $tournament->settings ? $tournament->settings->settings : [];
+            $tournamentType = $settings['tournament_type'] ?? 'round_robin';
+            
+            // Agrupamiento estándar para vista de tabla
+            $groups = $tournament->teams->groupBy(function ($item) {
+                $cat = $item->category ?? 'Sin Categoria';
+                $strength = $item->strength ?? 'General';
+                return $cat . ' - ' . $strength;
+            });
+
+            // --- NUEVA LÓGICA DINÁMICA: DOBLE ELIMINATORIA (V2) ---
+            $hasDoubleElimGames = $tournament->games()
+                ->where('is_playoff', true)
+                ->whereIn('group_name', ['WB_R1', 'LB_R1', 'GF']) // Solo verificamos semillas clave para detectar el modo
+                ->exists();
+
+            if ($tournamentType === 'double_elimination' || $hasDoubleElimGames) {
+                if ($hasDoubleElimGames && $tournamentType !== 'double_elimination') {
+                    $tournamentType = 'double_elimination';
+                }
+
+                $doubleElimGroups = \App\Models\Game::where('tournament_id', $tournament->id)
+                    ->where('is_playoff', true)
+                    ->whereNotNull('category_group')
+                    ->distinct()
+                    ->pluck('category_group');
+
+                foreach ($doubleElimGroups as $groupName) {
+                    // Obtenemos todos los juegos de esta categoría
+                    $allCategoryGames = $tournament->games()
+                        ->where('is_playoff', true)
+                        ->where('category_group', $groupName)
+                        ->with(['localTeam', 'awayTeam'])
+                        ->orderBy('created_at')
+                        ->get();
+
+                    $wbRounds = [];
+                    $lbRounds = [];
+                    $grandFinal = null;
+                    $resetGame = null;
+
+                    // Clasificamos los juegos en arrays por ronda
+                    foreach ($allCategoryGames as $game) {
+                        if (strpos($game->group_name, 'WB_R') === 0) {
+                            $roundNum = (int) str_replace('WB_R', '', $game->group_name);
+                            $wbRounds[$roundNum][] = $game;
+                        } elseif (strpos($game->group_name, 'LB_R') === 0) {
+                            $roundNum = (int) str_replace('LB_R', '', $game->group_name);
+                            $lbRounds[$roundNum][] = $game;
+                        } elseif ($game->group_name === 'GF') {
+                            $grandFinal = $game;
+                        } elseif ($game->group_name === 'GR') {
+                            $resetGame = $game;
+                        }
+                    }
+
+                    // Ordenamos las rondas por clave numérica
+                    ksort($wbRounds);
+                    ksort($lbRounds);
+
+                    $standingsData[$groupName] = [
+                        'mode' => 'double_elimination_grouped',
+                        'bracket' => [
+                            'winner_bracket' => array_values($wbRounds),
+                            'loser_bracket'  => array_values($lbRounds),
+                            'grand_final'    => $grandFinal,
+                            'reset_game'     => $resetGame
+                        ]
+                    ];
+                }
+            }
+            // --- LÓGICA ESTÁNDAR (LIGA O ELIMINACIÓN SIMPLE) ---
+            else {
+                foreach ($groups as $groupName => $teamsInGroup) {
+                    $teamIdsInGroup = $teamsInGroup->pluck('id')->toArray();
+                    $isElimination = ($tournamentType === 'elimination');
+
+                    $allGroupGames = $tournament->games()
+                        ->where(function($query) use ($teamIdsInGroup) {
+                            $query->whereIn('local_team_id', $teamIdsInGroup)
+                                  ->orWhereIn('away_team_id', $teamIdsInGroup);
+                        })->get();
+                    
+                    $teamsCount = $teamsInGroup->count();
+                    $gamesPerRound = $teamsCount > 1 ? ($teamsCount * ($teamsCount - 1)) / 2 : 1;
+                    $finishedGamesCount = $allGroupGames->where('status', 'finished')->count();
+                    $roundsPlayed = floor($finishedGamesCount / $gamesPerRound);
+                    $nextRoundNumber = $roundsPlayed + 1;
+                    $roundOrdinal = '1ra';
+                    if($nextRoundNumber == 2) $roundOrdinal = '2da';
+                    if($nextRoundNumber == 3) $roundOrdinal = '3ra';
+
+                    $groupPlayoffGames = $tournament->games()
+                        ->where('is_playoff', true)
+                        ->where(function($query) use ($teamIdsInGroup) {
+                            $query->whereIn('local_team_id', $teamIdsInGroup)
+                                  ->orWhereIn('away_team_id', $teamIdsInGroup);
+                        })
+                        ->orderBy('created_at')
+                        ->with(['localTeam', 'awayTeam'])
+                        ->get();
+
+                    $hasPlayoffs = $groupPlayoffGames->count() > 0;
+                    $playoffChampion = null; 
+                    $playoffRoundName = '';
+                    
+                    $playoffRounds = [];
+                    if ($hasPlayoffs) {
+                        $rawRounds = $this->groupPlayoffRoundsByTeamOverlap($groupPlayoffGames);
+                        $playoffRounds = $rawRounds->map(function($round) {
+                            return $this->formatRoundData($round);
+                        })->values()->all();
+                    }
+
+                    // Detección de Campeón (Estándar)
+                    if (!empty($playoffRounds)) {
+                        $playoffRoundName = end($playoffRounds)['name'];
+                        $lastRoundFinal = end($playoffRounds)['games'];
+                        if ($lastRoundFinal->count() === 1 && $lastRoundFinal->first()->status === 'finished') {
+                            $finalGame = $lastRoundFinal->first();
+                            $wTeam = ($finalGame->local_team_score > $finalGame->away_team_score) ? $finalGame->localTeam : $finalGame->awayTeam;
+                            $playoffChampion = $wTeam->name;
+                        }
+                    }
+
+                    $standings = [];
+                    if (!$isElimination) {
+                        $groupGames = $allGroupGames->where('status', 'finished');
+                        foreach ($teamsInGroup as $team) {
+                            $standings[$team->id] = [
+                                'team_id' => $team->id, 'played' => 0, 'won' => 0, 'drawn' => 0, 'lost' => 0, 'points' => 0
+                            ];
+                        }
+                        foreach ($groupGames as $game) {
+                            $localId = $game->local_team_id;
+                            $awayId = $game->away_team_id;
+                            if (!isset($standings[$localId]) || !isset($standings[$awayId])) continue;
+                            $standings[$localId]['played']++;
+                            $standings[$awayId]['played']++;
+                            if ($game->local_team_score > $game->away_team_score) {
+                                $standings[$localId]['won']++; $standings[$localId]['points'] += 2; $standings[$awayId]['lost']++;
+                            } elseif ($game->local_team_score < $game->away_team_score) {
+                                $standings[$awayId]['won']++; $standings[$awayId]['points'] += 2; $standings[$localId]['lost']++;
+                            } else {
+                                if ($game->local_team_score === 0 && $game->away_team_score === 0) {
+                                    $standings[$localId]['lost']++; $standings[$awayId]['lost']++;
+                                } else {
+                                    $standings[$localId]['drawn']++; $standings[$localId]['points'] += 1;
+                                    $standings[$awayId]['drawn']++; $standings[$awayId]['points'] += 1;
+                                }
+                            }
+                        }
+                        uasort($standings, function($a, $b) { return $b['points'] <=> $a['points']; });
+                    }
+
+                    $standingsData[$groupName] = [
+                        'standings' => $standings,
+                        'teams' => $teamsInGroup->keyBy('id'),
+                        'is_finished' => ($allGroupGames->count() > 0 && $allGroupGames->count() === $allGroupGames->where('status', 'finished')->count()),
+                        'team_ids' => $teamIdsInGroup,
+                        'next_round_number' => $nextRoundNumber,
+                        'round_ordinal' => $roundOrdinal,
+                        'has_playoffs' => $hasPlayoffs,
+                        'playoff_games' => $groupPlayoffGames, 
+                        'playoff_rounds' => $playoffRounds, 
+                        'playoff_champion' => $playoffChampion,
+                        'playoff_round_name' => $playoffRoundName ?? '',
+                        'is_groups' => false
+                    ];
+                }
+            }
+        }
+
+        return view('public.standings', compact('tournaments', 'selectedTournamentId', 'tournament', 'standingsData'));
+    }
     
     private function determineGroupWinner($games, &$winnerId)
     {
