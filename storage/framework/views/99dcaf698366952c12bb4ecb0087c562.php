@@ -1,4 +1,13 @@
-<x-guest-layout>
+<?php if (isset($component)) { $__componentOriginal69dc84650370d1d4dc1b42d016d7226b = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal69dc84650370d1d4dc1b42d016d7226b = $attributes; } ?>
+<?php $component = App\View\Components\GuestLayout::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('guest-layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\App\View\Components\GuestLayout::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
     
     <style>
         /* Inputs Estilo Pro (Cajones Redondeados) */
@@ -23,7 +32,7 @@
 <div class="text-center">
     <!-- Logo (h-24 hace que sea más grande) -->
     <div class="relative inline-block mb-5">
-        <img class="relative w-auto h-24 drop-shadow-md" src="{{ asset('images/Logo completo.png') }}" alt="CrossoverMX Logo">
+        <img class="relative w-auto h-24 drop-shadow-md" src="<?php echo e(asset('images/Logo completo.png')); ?>" alt="CrossoverMX Logo">
     </div>
     
     <!-- Título Pro -->
@@ -38,11 +47,30 @@
 </div>
 
         <!-- Mensajes de estado -->
-        <x-auth-session-status class="mb-4" :status="session('status')" />
+        <?php if (isset($component)) { $__componentOriginal7c1bf3a9346f208f66ee83b06b607fb5 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal7c1bf3a9346f208f66ee83b06b607fb5 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.auth-session-status','data' => ['class' => 'mb-4','status' => session('status')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('auth-session-status'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'mb-4','status' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(session('status'))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal7c1bf3a9346f208f66ee83b06b607fb5)): ?>
+<?php $attributes = $__attributesOriginal7c1bf3a9346f208f66ee83b06b607fb5; ?>
+<?php unset($__attributesOriginal7c1bf3a9346f208f66ee83b06b607fb5); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal7c1bf3a9346f208f66ee83b06b607fb5)): ?>
+<?php $component = $__componentOriginal7c1bf3a9346f208f66ee83b06b607fb5; ?>
+<?php unset($__componentOriginal7c1bf3a9346f208f66ee83b06b607fb5); ?>
+<?php endif; ?>
 
         <!-- Formulario -->
-        <form class="space-y-5" action="{{ route('login') }}" method="POST">
-            @csrf
+        <form class="space-y-5" action="<?php echo e(route('login')); ?>" method="POST">
+            <?php echo csrf_field(); ?>
             
             <div class="space-y-4">
                 <!-- Input Email (Estilo Cajón Redondeado) -->
@@ -52,7 +80,7 @@
                     </label>
                     <input id="email" name="email" type="email" autocomplete="email" required 
                         class="input-pro appearance-none block w-full px-4 py-3.5 border border-slate-200 placeholder-slate-400 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#ff6b00] focus:border-transparent sm:text-sm" 
-                        placeholder="nombre@ejemplo.com" value="{{ old('email') }}">
+                        placeholder="nombre@ejemplo.com" value="<?php echo e(old('email')); ?>">
                 </div>
                 
                 <!-- Input Contraseña (Estilo Cajón Redondeado) -->
@@ -77,11 +105,11 @@
                 </div>
 
                 <div class="text-xs font-bold">
-                    @if (Route::has('password.request'))
-                        <a href="{{ route('password.request') }}" class="text-[#ff6b00] hover:text-[#ea580c] transition-colors hover:underline decoration-2 underline-offset-2">
+                    <?php if(Route::has('password.request')): ?>
+                        <a href="<?php echo e(route('password.request')); ?>" class="text-[#ff6b00] hover:text-[#ea580c] transition-colors hover:underline decoration-2 underline-offset-2">
                             ¿Olvidaste tu clave?
                         </a>
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -100,4 +128,13 @@
             </div>
         </form>
     </div>
-</x-guest-layout>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal69dc84650370d1d4dc1b42d016d7226b)): ?>
+<?php $attributes = $__attributesOriginal69dc84650370d1d4dc1b42d016d7226b; ?>
+<?php unset($__attributesOriginal69dc84650370d1d4dc1b42d016d7226b); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal69dc84650370d1d4dc1b42d016d7226b)): ?>
+<?php $component = $__componentOriginal69dc84650370d1d4dc1b42d016d7226b; ?>
+<?php unset($__componentOriginal69dc84650370d1d4dc1b42d016d7226b); ?>
+<?php endif; ?><?php /**PATH C:\Users\luism\gemini-work\sistemaTorneos\resources\views/auth/login.blade.php ENDPATH**/ ?>
