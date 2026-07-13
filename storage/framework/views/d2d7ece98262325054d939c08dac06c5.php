@@ -900,17 +900,23 @@
                                             <div class="space-y-3 max-h-[300px] overflow-y-auto pr-1 nba-scroll">
                                                 <?php $__currentLoopData = $tData['upcoming_games']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $game): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                     <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex flex-col justify-between gap-3">
-                                                        <div class="text-[10px] font-extrabold text-gray-400 uppercase flex justify-between border-b pb-1 border-gray-50 items-center">
-                                                            <span class="truncate w-32 flex items-center">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 mr-1 text-gray-400 inline">
+                                                        <div class="text-[9px] font-extrabold text-gray-400 uppercase flex justify-between border-b pb-1 border-gray-50 items-center gap-1.5">
+                                                            <span class="truncate max-w-[80px] flex items-center">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 mr-0.5 text-gray-400 inline shrink-0">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1 1 15 0Z" />
                                                                 </svg>
                                                                 <?php echo e($game['court_name']); ?>
 
                                                             </span>
-                                                            <span class="flex items-center">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 mr-1 text-gray-400 inline">
+                                                            
+                                                            <span class="truncate max-w-[110px] text-gray-400 text-[8px] font-bold">
+                                                                <?php echo e($game['category_strength']); ?>
+
+                                                            </span>
+
+                                                            <span class="flex items-center shrink-0">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 mr-0.5 text-gray-400 inline shrink-0">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                                                 </svg>
                                                                 <?php echo e($game['date_time']); ?>

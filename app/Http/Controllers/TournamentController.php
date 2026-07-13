@@ -846,12 +846,17 @@ public function store(Request $request)
                     ->with(['localTeam', 'awayTeam', 'court'])
                     ->get()
                     ->map(function($game) {
+                        $category = $game->localTeam->category ?? ($game->awayTeam->category ?? null);
+                        $strength = $game->localTeam->strength ?? ($game->awayTeam->strength ?? null);
+                        $catStr = $category ? ($strength ? "$category - $strength" : $category) : 'General';
+                        
                         return [
                             'local_name' => $game->localTeam->name ?? 'Pendiente',
                             'local_logo' => $game->localTeam->image_path ?? null,
                             'away_name' => $game->awayTeam->name ?? 'Pendiente',
                             'away_logo' => $game->awayTeam->image_path ?? null,
                             'court_name' => $game->court->name ?? 'Cancha',
+                            'category_strength' => $catStr,
                             'date_time' => $game->date_time ? $game->date_time->format('d/m H:i') : '-'
                         ];
                     });
