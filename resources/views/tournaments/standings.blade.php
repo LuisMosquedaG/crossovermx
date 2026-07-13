@@ -58,7 +58,7 @@
     transform: translateY(-50%);
     height: 104px;
     width: auto;
-    opacity: 1;
+    opacity: 0.15;
     z-index: 0;
     object-fit: contain;
 }

@@ -721,12 +721,150 @@ public function store(Request $request)
         $tournaments = \App\Models\Tournament::where('status', 'active')->orderBy('name')->get();
         
         $selectedTournamentId = $request->input('tournament_id');
-        if (!$selectedTournamentId && $tournaments->isNotEmpty()) {
-            $selectedTournamentId = $tournaments->first()->id;
-        }
-
+        
         $tournament = $selectedTournamentId ? \App\Models\Tournament::find($selectedTournamentId) : null;
         $standingsData = [];
+        $dashboardData = [];
+
+        if (!$selectedTournamentId || $selectedTournamentId === '') {
+            // General Dashboard Mode (No tournament selected yet)
+            foreach ($tournaments as $t) {
+                // 1. Los 5 jugadores con más puntos
+                $topScorers = \App\Models\GameAction::whereIn('game_id', $t->games()->pluck('id'))
+                    ->where('action_type', 'point_scored')
+                    ->selectRaw('player_id, SUM(value) as total_points')
+                    ->groupBy('player_id')
+                    ->orderByDesc('total_points')
+                    ->limit(5)
+                    ->with('player.team')
+                    ->get()
+                    ->map(function($action) {
+                        return [
+                            'player_name' => $action->player->name ?? 'Jugador',
+                            'player_logo' => $action->player->image_path ?? null,
+                            'player_gender' => $action->player->gender ?? null,
+                            'team_name' => $action->player->team->name ?? 'Equipo',
+                            'points' => $action->total_points
+                        ];
+                    });
+
+                // Get tournament type from settings
+                $tSettings = $t->settings ? $t->settings->settings : [];
+                $tType = $tSettings['tournament_type'] ?? 'round_robin';
+
+                $topTeams = [];
+
+                if ($tType === 'round_robin') {
+                    // 2. Los 3 equipos con más puntos (todos contra todos)
+                    $groups = $t->teams->groupBy(function ($item) {
+                        $cat = $item->category ?? 'Sin Categoria';
+                        $strength = $item->strength ?? 'General';
+                        return $cat . ' - ' . $strength;
+                    });
+
+                    $allStandings = [];
+                    foreach ($groups as $groupName => $teamsInGroup) {
+                        $teamIdsInGroup = $teamsInGroup->pluck('id')->toArray();
+                        $groupGames = $t->games()
+                            ->where('status', 'finished')
+                            ->where('is_playoff', false)
+                            ->where(function($query) use ($teamIdsInGroup) {
+                                $query->whereIn('local_team_id', $teamIdsInGroup)
+                                      ->orWhereIn('away_team_id', $teamIdsInGroup);
+                            })->get();
+
+                        $standings = [];
+                        foreach ($teamsInGroup as $team) {
+                            $standings[$team->id] = [
+                                'team' => $team,
+                                'points' => 0
+                            ];
+                        }
+                        foreach ($groupGames as $game) {
+                            $localId = $game->local_team_id;
+                            $awayId = $game->away_team_id;
+                            if (!isset($standings[$localId]) || !isset($standings[$awayId])) continue;
+                            if ($game->local_team_score > $game->away_team_score) {
+                                $standings[$localId]['points'] += 2;
+                            } elseif ($game->local_team_score < $game->away_team_score) {
+                                $standings[$awayId]['points'] += 2;
+                            } else {
+                                if ($game->local_team_score > 0 || $game->away_team_score > 0) {
+                                    $standings[$localId]['points'] += 1;
+                                    $standings[$awayId]['points'] += 1;
+                                }
+                            }
+                        }
+                        foreach ($standings as $tid => $sData) {
+                            $allStandings[] = $sData;
+                        }
+                    }
+                    
+                    usort($allStandings, function($a, $b) {
+                        return $b['points'] <=> $a['points'];
+                    });
+                    
+                    $top3Teams = array_slice($allStandings, 0, 5);
+                    foreach ($top3Teams as $item) {
+                        $topTeams[] = [
+                            'team_name' => $item['team']->name,
+                            'team_logo' => $item['team']->image_path,
+                            'score' => $item['points'] . ' pts'
+                        ];
+                    }
+                } else {
+                    // 3. Los 3 equipos con más victorias (eliminatoria o doble eliminatoria)
+                    $finishedGames = $t->games()->where('status', 'finished')->get();
+                    $wins = [];
+                    foreach ($finishedGames as $game) {
+                        $wId = $game->getWinnerId();
+                        if ($wId) {
+                            $wins[$wId] = ($wins[$wId] ?? 0) + 1;
+                        }
+                    }
+                    arsort($wins);
+                    $top3Ids = array_slice(array_keys($wins), 0, 5, true);
+                    $teams = \App\Models\Team::whereIn('id', $top3Ids)->get()->keyBy('id');
+                    
+                    foreach ($top3Ids as $tid) {
+                        if (isset($teams[$tid])) {
+                            $topTeams[] = [
+                                'team_name' => $teams[$tid]->name,
+                                'team_logo' => $teams[$tid]->image_path,
+                                'score' => $wins[$tid] . ' victorias'
+                            ];
+                        }
+                    }
+                }
+
+                // 4. Proximos 3 partidos del torneo
+                $upcoming = $t->games()
+                    ->where('status', 'pending')
+                    ->where('date_time', '>=', now())
+                    ->orderBy('date_time', 'asc')
+                    ->limit(3)
+                    ->with(['localTeam', 'awayTeam', 'court'])
+                    ->get()
+                    ->map(function($game) {
+                        return [
+                            'local_name' => $game->localTeam->name ?? 'Pendiente',
+                            'local_logo' => $game->localTeam->image_path ?? null,
+                            'away_name' => $game->awayTeam->name ?? 'Pendiente',
+                            'away_logo' => $game->awayTeam->image_path ?? null,
+                            'court_name' => $game->court->name ?? 'Cancha',
+                            'date_time' => $game->date_time ? $game->date_time->format('d/m H:i') : '-'
+                        ];
+                    });
+
+                $dashboardData[] = [
+                    'tournament_name' => $t->name,
+                    'tournament_type' => $tType,
+                    'top_scorers' => $topScorers,
+                    'top_teams' => $topTeams,
+                    'upcoming_games' => $upcoming
+                ];
+            }
+        }
 
         if ($tournament) {
             // 1. Cargar Configuración y Detectar Tipo
@@ -903,7 +1041,7 @@ public function store(Request $request)
             }
         }
 
-        return view('public.standings', compact('tournaments', 'selectedTournamentId', 'tournament', 'standingsData'));
+        return view('public.standings', compact('tournaments', 'selectedTournamentId', 'tournament', 'standingsData', 'dashboardData'));
     }
     
     private function determineGroupWinner($games, &$winnerId)
