@@ -313,6 +313,59 @@
             text-overflow: ellipsis;
             letter-spacing: 0.5px;
         }
+
+        /* --- FOOTER COMPARTIDO CON LANDING --- */
+        footer {
+            background: #1e293b;
+            color: #cbd5e1;
+            padding: 60px 0;
+            text-align: center;
+            border-top: 4px solid #ff6b00;
+        }
+        footer p { color: #e2e8f0; margin-top: 10px; font-size: 0.875rem; }
+        .logo-container-footer {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .logo-img-footer {
+            height: 40px;
+            width: auto;
+        }
+        .logo-text-footer {
+            font-weight: 900;
+            font-size: 1.5rem;
+            letter-spacing: -0.5px;
+            color: white;
+            text-transform: uppercase;
+        }
+        .logo-text-footer span { color: #ff6b00; }
+        
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 20px;
+        }
+        .social-icon {
+            color: #cbd5e1;
+            font-size: 1.6rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            text-decoration: none;
+        }
+        .social-icon:hover {
+            color: #ff6b00;
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.05);
+        }
     </style>
 </head>
 <body class="relative min-h-screen font-sans text-gray-900 antialiased">
@@ -983,8 +1036,30 @@
 
     </main>
 
-    <footer class="text-center py-8 text-sm text-gray-400 border-t border-gray-100 mt-12 bg-white">
-        &copy; {{ date('Y') }} CrossoverMX. Todos los derechos reservados.
+    <!-- Footer -->
+    <footer>
+        <div class="container mx-auto px-4">
+            <div class="logo-container-footer">
+                <img src="{{ asset('images/logo.png') }}" alt="CrossoverMX Logo" class="logo-img-footer">
+                <div class="logo-text-footer">Crossover<span>MX</span></div>
+            </div>
+            <p>&copy; {{ date('Y') }} CrossoverMX. Todos los derechos reservados.</p>
+
+            <div class="social-links">
+                <a href="https://www.facebook.com/profile.php?id=61586587724531" target="_blank" class="social-icon" title="Facebook">
+                    <i class="fa-brands fa-facebook-f"></i>
+                </a>
+                <a href="https://www.instagram.com/crossover_mex" target="_blank" class="social-icon" title="Instagram">
+                    <i class="fa-brands fa-instagram"></i>
+                </a>
+                <a href="https://wa.me/525511402976" target="_blank" class="social-icon" title="WhatsApp">
+                    <i class="fa-brands fa-whatsapp"></i>
+                </a>
+                <a href="mailto:ventas@crossovermx.com" class="social-icon" title="Email">
+                    <i class="fa-solid fa-envelope"></i>
+                </a>
+            </div>
+        </div>
     </footer>
 
 </body>
