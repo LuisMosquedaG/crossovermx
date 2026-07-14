@@ -153,7 +153,7 @@
     <!-- ZONA EQUIPO LOCAL (Izquierda) -->
     <div class="flex items-center gap-1 md:gap-3 w-1/3 md:w-auto justify-start">
         <!-- CORRECCIÓN: Se agregó el ID "localTimeouts" al span que contiene el número -->
-        <button onclick="recordTimeout('local')" class="text-[9px] md:text-sm bg-white text-gray-800 border border-gray-300 rounded-lg px-1.5 py-1 md:px-3 md:py-1.5 font-semibold shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all truncate">
+        <button onclick="recordTimeout('local')" class="text-[9px] md:text-sm bg-white text-gray-800 border border-gray-300 rounded-lg px-1.5 py-1 md:px-3 md:py-1.5 font-semibold shadow-sm hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 active:bg-blue-100 active:scale-95 transition-all truncate">
             T. Local (<span id="localTimeouts">{{ $localTimeoutsLeft }}</span>)
         </button>
         <div id="localTeamFouls" class="text-[9px] md:text-xs font-bold text-gray-500 bg-gray-100/80 px-1.5 py-1 rounded-md border border-gray-200 shadow-sm whitespace-nowrap">
@@ -163,13 +163,13 @@
 
     <!-- ZONA CONTROLES CENTRALES (Medio) -->
     <div class="flex items-center gap-1 md:gap-4 flex-1 justify-center w-full md:w-auto order-first md:order-none mb-1 md:mb-0">
-    <button id="startBtn" class="flex-1 md:flex-none bg-white text-gray-900 border border-gray-300 rounded-full px-3 md:px-6 py-1.5 md:py-1.5 text-[10px] md:text-sm font-bold shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all">
+    <button id="startBtn" class="flex-1 md:flex-none bg-white text-gray-900 border border-gray-300 rounded-full px-3 md:px-6 py-1.5 md:py-1.5 text-[10px] md:text-sm font-bold shadow-sm hover:border-green-300 hover:bg-green-50 hover:text-green-700 active:bg-green-100 active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none">
     Iniciar
     </button>
-    <button id="pauseBtn" disabled class="flex-1 md:flex-none bg-white text-gray-900 border border-gray-300 rounded-full px-3 md:px-6 py-1.5 md:py-1.5 text-[10px] md:text-sm font-bold shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all">
+    <button id="pauseBtn" disabled class="flex-1 md:flex-none bg-white text-gray-900 border border-gray-300 rounded-full px-3 md:px-6 py-1.5 md:py-1.5 text-[10px] md:text-sm font-bold shadow-sm hover:border-yellow-300 hover:bg-yellow-50 hover:text-yellow-700 active:bg-yellow-100 active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none">
     Pausar
     </button>
-    <button id="endBtn" disabled class="flex-1 md:flex-none bg-white text-gray-900 border border-gray-300 rounded-full px-3 md:px-6 py-1.5 md:py-1.5 text-[10px] md:text-sm font-bold shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all">
+    <button id="endBtn" disabled class="flex-1 md:flex-none bg-white text-gray-900 border border-gray-300 rounded-full px-3 md:px-6 py-1.5 md:py-1.5 text-[10px] md:text-sm font-bold shadow-sm hover:border-red-300 hover:bg-red-50 hover:text-red-700 active:bg-red-100 active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none">
     Finalizar
     </button>
     <!-- ESTADO DEL PARTIDO -->
@@ -178,7 +178,7 @@
         <span id="matchStatusText">Pausado</span>
     </div>
     <!-- BOTÓN DESHACER (NUEVO) -->
-    <button onclick="undoLastAction()" class="flex-1 md:flex-none bg-yellow-100 text-yellow-800 border border-yellow-300 rounded-full px-3 md:px-6 py-1.5 md:py-1.5 text-[10px] md:text-sm font-bold shadow-sm hover:bg-yellow-200 active:bg-yellow-300 active:scale-95 transition-all">
+    <button onclick="undoLastAction()" class="flex-1 md:flex-none bg-white text-gray-900 border border-gray-300 rounded-full px-3 md:px-6 py-1.5 md:py-1.5 text-[10px] md:text-sm font-bold shadow-sm hover:border-red-300 hover:bg-red-50 hover:text-red-700 active:bg-red-100 active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none">
             Deshacer
     </button>
     </div>
@@ -189,7 +189,7 @@
             F: {{ $awayTeamFouls }}/5
         </div>
         <!-- CORRECCIÓN: Se agregó el ID "awayTimeouts" al span que contiene el número -->
-        <button onclick="recordTimeout('away')" class="text-[9px] md:text-sm bg-white text-gray-800 border border-gray-300 rounded-lg px-1.5 py-1 md:px-3 md:py-1.5 font-semibold shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all truncate">
+        <button onclick="recordTimeout('away')" class="text-[9px] md:text-sm bg-white text-gray-800 border border-gray-300 rounded-lg px-1.5 py-1 md:px-3 md:py-1.5 font-semibold shadow-sm hover:border-red-300 hover:bg-red-50 hover:text-red-700 active:bg-red-100 active:scale-95 transition-all truncate">
             T. Visita (<span id="awayTimeouts">{{ $awayTimeoutsLeft }}</span>)
         </button>
     </div>
@@ -698,11 +698,28 @@
     // ==========================================
     // CONTROL DE ESTADO VISUAL DEL PARTIDO (PILL)
     // ==========================================
+    let currentMatchStatus = 'pausado';
+
+    function updateActionButtonsState() {
+        const actionButtons = document.querySelectorAll('button[onclick^="recordPoint"], button[onclick^="recordFoul"]');
+        actionButtons.forEach(btn => {
+            if (currentMatchStatus === 'jugando') {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        });
+    }
+
     function setMatchStatus(status) {
         const pill = document.getElementById('matchStatusPill');
         const dot = document.getElementById('matchStatusDot');
         const text = document.getElementById('matchStatusText');
         if (!pill || !dot || !text) return;
+
+        currentMatchStatus = status;
 
         if (status === 'jugando') {
             pill.className = "inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] md:text-xs font-black bg-green-50 text-green-700 border border-green-200 uppercase tracking-wider shadow-sm shrink-0";
@@ -717,6 +734,8 @@
             dot.className = "h-1.5 w-1.5 rounded-full bg-gray-500";
             text.textContent = "Pausado";
         }
+
+        updateActionButtonsState();
     }
     let gameId = {{ $game->id }};
     let totalSeconds = {{ $game->seconds_remaining ?? ($gameDurationMinutes * 60) }};
@@ -882,12 +901,8 @@
         const endBtn = document.getElementById('endBtn');
         if (currentPeriodDisplay < totalPeriodsConfig) {
             endBtn.textContent = 'Finalizar Periodo';
-            endBtn.classList.remove('bg-red-500', 'hover:bg-red-700');
-            endBtn.classList.add('bg-orange-500', 'hover:bg-orange-700');
         } else {
             endBtn.textContent = 'Finalizar Partido';
-            endBtn.classList.remove('bg-orange-500', 'hover:bg-orange-700');
-            endBtn.classList.add('bg-red-500', 'hover:bg-red-700');
         }
     }
 
@@ -1215,6 +1230,9 @@
     
     // Función para registrar puntos (modificada para recibir slotIndex)
     function recordPoint(playerId, teamSide, points, slotIndex) {
+        if (currentMatchStatus !== 'jugando') {
+            return;
+        }
         triggerButtonEffect();
         const data = {
             game_id: gameId,
@@ -1241,6 +1259,9 @@
     }
 
     function recordFoul(playerId, teamSide, foulType, slotIndex) {
+        if (currentMatchStatus !== 'jugando') {
+            return;
+        }
         triggerButtonEffect();
         const data = {
             game_id: gameId,
@@ -1676,6 +1697,8 @@
                         </div>
                     `;
                 }
+                
+                updateActionButtonsState();
                 
                 if(result.action) {
                     addActionToLog(result.action);
