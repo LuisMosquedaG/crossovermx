@@ -718,7 +718,7 @@ public function store(Request $request)
 
     public function publicStandings(\Illuminate\Http\Request $request)
     {
-        $tournaments = \App\Models\Tournament::where('status', 'active')->orderBy('name')->get();
+        $tournaments = \App\Models\Tournament::whereIn('status', ['active', 'finished'])->orderBy('name')->get();
         
         $selectedTournamentId = $request->input('tournament_id');
         
@@ -744,6 +744,7 @@ public function store(Request $request)
                             'player_logo' => $action->player->image_path ?? null,
                             'player_gender' => $action->player->gender ?? null,
                             'team_name' => $action->player->team->name ?? 'Equipo',
+                            'team_logo' => $action->player->team->image_path ?? null,
                             'points' => $action->total_points
                         ];
                     });

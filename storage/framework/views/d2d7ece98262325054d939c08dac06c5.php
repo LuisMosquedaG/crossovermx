@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Tailwind CSS compiled via Vite -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css', 'resources/js/app.js']); ?>
 
     <style>
         /* --- VARIABLES (NARANJA + AZUL MARINO) --- */
@@ -330,19 +330,19 @@
     <!-- Header Navigation -->
     <header id="navbar">
         <nav>
-            <div class="logo-container" onclick="window.location.href='{{ route('home') }}'">
-                <img src="{{ asset('images/logo.png') }}" alt="CrossoverMX Logo" class="logo-img">
+            <div class="logo-container" onclick="window.location.href='<?php echo e(route('home')); ?>'">
+                <img src="<?php echo e(asset('images/logo.png')); ?>" alt="CrossoverMX Logo" class="logo-img">
                 <div class="logo-text">Crossover<span>MX</span></div>
             </div>
             
             <ul class="nav-links">
-                <li><a href="{{ route('home') }}#summary">Impacto</a></li>
-                <li><a href="{{ route('home') }}#features">Torneos</a></li>
-                <li><a href="{{ route('home') }}#calendar-logic">Calendario</a></li>
-                <li><a href="{{ route('public.standings') }}" style="color: var(--brand-orange); font-weight: bold;">Posiciones</a></li>
+                <li><a href="<?php echo e(route('home')); ?>#summary">Impacto</a></li>
+                <li><a href="<?php echo e(route('home')); ?>#features">Torneos</a></li>
+                <li><a href="<?php echo e(route('home')); ?>#calendar-logic">Calendario</a></li>
+                <li><a href="<?php echo e(route('public.standings')); ?>" style="color: var(--brand-orange); font-weight: bold;">Posiciones</a></li>
             </ul>
             
-            <a href="{{ route('login') }}" class="btn btn-primary">Entrar</a>
+            <a href="<?php echo e(route('login')); ?>" class="btn btn-primary">Entrar</a>
         </nav>
     </header>
 
@@ -358,19 +358,20 @@
                 </div>
                 
                 <div class="w-full md:w-auto">
-                    <form action="{{ route('public.standings') }}" method="GET" class="flex items-center gap-3">
+                    <form action="<?php echo e(route('public.standings')); ?>" method="GET" class="flex items-center gap-3">
                         <label for="tournament_id" class="text-sm font-semibold text-gray-600 shrink-0 hidden sm:inline">Torneo:</label>
                         <select name="tournament_id" id="tournament_id" onchange="this.form.submit()" class="block w-full md:w-80 rounded-full border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm py-2.5 px-4 bg-gray-50 text-gray-800 font-medium">
-                            @if($tournaments->isEmpty())
+                            <?php if($tournaments->isEmpty()): ?>
                                 <option value="">Sin Torneos</option>
-                            @else
-                                <option value="" {{ !$selectedTournamentId ? 'selected' : '' }}>Selecciona un torneo</option>
-                                @foreach($tournaments as $t)
-                                    <option value="{{ $t->id }}" {{ $selectedTournamentId == $t->id ? 'selected' : '' }}>
-                                        {{ $t->name }}
+                            <?php else: ?>
+                                <option value="" <?php echo e(!$selectedTournamentId ? 'selected' : ''); ?>>Selecciona un torneo</option>
+                                <?php $__currentLoopData = $tournaments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $t): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($t->id); ?>" <?php echo e($selectedTournamentId == $t->id ? 'selected' : ''); ?>>
+                                        <?php echo e($t->name); ?>
+
                                     </option>
-                                @endforeach
-                            @endif
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            <?php endif; ?>
                         </select>
                     </form>
                 </div>
@@ -378,52 +379,53 @@
         </div>
 
         <!-- Resultados del Torneo Seleccionado -->
-        @if($tournament)
+        <?php if($tournament): ?>
             <div>
                 <!-- Información del Torneo -->
                 <div class="mb-6 flex items-center justify-between">
                     <div>
-                        <h2 class="text-xl font-bold text-gray-800 uppercase tracking-wide">{{ $tournament->name }}</h2>
-                        @if($tournament->status === 'finished')
+                        <h2 class="text-xl font-bold text-gray-800 uppercase tracking-wide"><?php echo e($tournament->name); ?></h2>
+                        <?php if($tournament->status === 'finished'): ?>
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 mt-1.5 border border-gray-200">
                                 <span class="h-2 w-2 rounded-full bg-gray-500"></span>
                                 Terminado
                             </span>
-                        @else
+                        <?php else: ?>
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 mt-1.5">
                                 <span class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
                                 Activo
                             </span>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
 
                 <!-- LOOP PRINCIPAL DE GRUPOS / ETAPAS -->
-                @foreach($standingsData as $groupName => $data)
-                    @if($groupName === 'mode') @continue @endif
+                <?php $__currentLoopData = $standingsData; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $groupName => $data): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php if($groupName === 'mode'): ?> <?php continue; ?> <?php endif; ?>
                     
                     <div class="mb-10 bg-white/80 backdrop-blur-md rounded-2xl p-6 border border-white/50 shadow-sm">
                         
                         <!-- ================================================================= -->
                         <!--        CASO DOBLE ELIMINATORIA                                    -->
                         <!-- ================================================================= -->
-                        @if(isset($data['mode']) && $data['mode'] === 'double_elimination_grouped')
+                        <?php if(isset($data['mode']) && $data['mode'] === 'double_elimination_grouped'): ?>
                             
-                            @php
+                            <?php
                                 $totalEquipos = 0;
                                 if (isset($data['bracket']['winner_bracket']) && isset($data['bracket']['winner_bracket'][0])) {
                                     $totalEquipos = count($data['bracket']['winner_bracket'][0]) * 2;
                                 }
-                            @endphp
+                            ?>
 
                             <!-- Encabezado del Grupo -->
                             <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 border-b pb-3 border-gray-200 gap-4">
                                 <div>
                                     <h3 class="text-xl font-bold text-gray-800">
-                                        <span class="text-gray-400 text-base font-normal mr-2">Grupo:</span>{{ $groupName }}
+                                        <span class="text-gray-400 text-base font-normal mr-2">Grupo:</span><?php echo e($groupName); ?>
+
                                     </h3>
                                     <span class="text-sm text-gray-500">
-                                        {{ $totalEquipos }} Equipos
+                                        <?php echo e($totalEquipos); ?> Equipos
                                     </span>
                                 </div>
                             </div>
@@ -445,51 +447,51 @@
                                                 Bracket Ganadores
                                             </h4>
 
-                                            @foreach($data['bracket']['winner_bracket'] as $roundIndex => $games)
+                                            <?php $__currentLoopData = $data['bracket']['winner_bracket']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $roundIndex => $games): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                 <div class="w-full">
-                                                    @if($loop->first)
+                                                    <?php if($loop->first): ?>
                                                         <div class="flex justify-between items-center mb-2 px-2">
-                                                            <span class="text-[10px] font-bold text-gray-400 uppercase">Ronda {{ $roundIndex + 1 }}</span>
+                                                            <span class="text-[10px] font-bold text-gray-400 uppercase">Ronda <?php echo e($roundIndex + 1); ?></span>
                                                             <div class="h-px bg-gray-200 flex-1 ml-2"></div>
                                                         </div>
-                                                    @else
+                                                    <?php else: ?>
                                                         <div class="flex justify-center mb-4">
                                                             <div class="h-6 border-l-4 border-blue-200"></div>
                                                         </div>
-                                                    @endif
+                                                    <?php endif; ?>
 
                                                     <div class="flex flex-wrap justify-center gap-4">
-                                                        @foreach($games as $game)
+                                                        <?php $__currentLoopData = $games; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $game): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                             <div class="nba-card w-full max-w-xs">
                                                                 <!-- Local -->
-                                                                <div @class([
+                                                                <div class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                                                                     'nba-team-row',
                                                                     'nba-winner' => $game->local_team_score > $game->away_team_score,
                                                                     'nba-loser' => $game->away_team_score > $game->local_team_score
-                                                                ])>
-                                                                    @if($game->localTeam && $game->localTeam->image_path)
-                                                                        <img src="{{ asset('storage/' . $game->localTeam->image_path) }}" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
-                                                                    @endif
-                                                                    <span class="nba-team-name">{{ $game->localTeam->name ?? 'Pendiente' }}</span>
-                                                                    <span class="nba-team-score">{{ $game->local_team_score ?? '-' }}</span>
+                                                                ]); ?>">
+                                                                    <?php if($game->localTeam && $game->localTeam->image_path): ?>
+                                                                        <img src="<?php echo e(asset('storage/' . $game->localTeam->image_path)); ?>" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
+                                                                    <?php endif; ?>
+                                                                    <span class="nba-team-name"><?php echo e($game->localTeam->name ?? 'Pendiente'); ?></span>
+                                                                    <span class="nba-team-score"><?php echo e($game->local_team_score ?? '-'); ?></span>
                                                                 </div>
                                                                 <!-- Visitante -->
-                                                                <div @class([
+                                                                <div class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                                                                     'nba-team-row',
                                                                     'nba-winner' => $game->away_team_score > $game->local_team_score,
                                                                     'nba-loser' => $game->local_team_score > $game->away_team_score
-                                                                ])>
-                                                                    @if($game->awayTeam && $game->awayTeam->image_path)
-                                                                        <img src="{{ asset('storage/' . $game->awayTeam->image_path) }}" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
-                                                                    @endif
-                                                                    <span class="nba-team-name">{{ $game->awayTeam->name ?? 'Pendiente' }}</span>
-                                                                    <span class="nba-team-score">{{ $game->away_team_score ?? '-' }}</span>
+                                                                ]); ?>">
+                                                                    <?php if($game->awayTeam && $game->awayTeam->image_path): ?>
+                                                                        <img src="<?php echo e(asset('storage/' . $game->awayTeam->image_path)); ?>" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
+                                                                    <?php endif; ?>
+                                                                    <span class="nba-team-name"><?php echo e($game->awayTeam->name ?? 'Pendiente'); ?></span>
+                                                                    <span class="nba-team-score"><?php echo e($game->away_team_score ?? '-'); ?></span>
                                                                 </div>
                                                             </div>
-                                                        @endforeach
+                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                     </div>
                                                 </div>
-                                            @endforeach
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                         </div>
 
                                         <!-- BRACKET PERDEDORES -->
@@ -498,59 +500,59 @@
                                                 Bracket Perdedores
                                             </h4>
 
-                                            @foreach($data['bracket']['loser_bracket'] as $roundIndex => $games)
+                                            <?php $__currentLoopData = $data['bracket']['loser_bracket']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $roundIndex => $games): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                 <div class="w-full">
-                                                    @if($loop->first)
+                                                    <?php if($loop->first): ?>
                                                         <div class="flex justify-between items-center mb-2 px-2">
-                                                            <span class="text-[10px] font-bold text-gray-400 uppercase">Ronda {{ $roundIndex + 1 }}</span>
+                                                            <span class="text-[10px] font-bold text-gray-400 uppercase">Ronda <?php echo e($roundIndex + 1); ?></span>
                                                             <div class="h-px bg-gray-200 flex-1 ml-2"></div>
                                                         </div>
-                                                    @else
+                                                    <?php else: ?>
                                                         <div class="flex justify-center mb-4">
                                                             <div class="h-6 border-l-4 border-red-200"></div>
                                                         </div>
-                                                    @endif
+                                                    <?php endif; ?>
 
                                                     <div class="flex flex-wrap justify-center gap-4">
-                                                        @foreach($games as $game)
+                                                        <?php $__currentLoopData = $games; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $game): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                             <div class="nba-card w-full max-w-xs">
                                                                 <!-- Local -->
-                                                                <div @class([
+                                                                <div class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                                                                     'nba-team-row',
                                                                     'nba-winner' => $game->local_team_score > $game->away_team_score,
                                                                     'nba-loser' => $game->away_team_score > $game->local_team_score
-                                                                ])>
-                                                                    @if($game->localTeam && $game->localTeam->image_path)
-                                                                        <img src="{{ asset('storage/' . $game->localTeam->image_path) }}" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
-                                                                    @endif
-                                                                    <span class="nba-team-name">{{ $game->localTeam->name ?? 'Pendiente' }}</span>
-                                                                    <span class="nba-team-score">{{ $game->local_team_score ?? '-' }}</span>
+                                                                ]); ?>">
+                                                                    <?php if($game->localTeam && $game->localTeam->image_path): ?>
+                                                                        <img src="<?php echo e(asset('storage/' . $game->localTeam->image_path)); ?>" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
+                                                                    <?php endif; ?>
+                                                                    <span class="nba-team-name"><?php echo e($game->localTeam->name ?? 'Pendiente'); ?></span>
+                                                                    <span class="nba-team-score"><?php echo e($game->local_team_score ?? '-'); ?></span>
                                                                 </div>
                                                                 <!-- Visitante -->
-                                                                <div @class([
+                                                                <div class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                                                                     'nba-team-row',
                                                                     'nba-winner' => $game->away_team_score > $game->local_team_score,
                                                                     'nba-loser' => $game->local_team_score > $game->away_team_score
-                                                                ])>
-                                                                    @if($game->awayTeam && $game->awayTeam->image_path)
-                                                                        <img src="{{ asset('storage/' . $game->awayTeam->image_path) }}" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
-                                                                    @endif
-                                                                    <span class="nba-team-name">{{ $game->awayTeam->name ?? 'Pendiente' }}</span>
-                                                                    <span class="nba-team-score">{{ $game->away_team_score ?? '-' }}</span>
+                                                                ]); ?>">
+                                                                    <?php if($game->awayTeam && $game->awayTeam->image_path): ?>
+                                                                        <img src="<?php echo e(asset('storage/' . $game->awayTeam->image_path)); ?>" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
+                                                                    <?php endif; ?>
+                                                                    <span class="nba-team-name"><?php echo e($game->awayTeam->name ?? 'Pendiente'); ?></span>
+                                                                    <span class="nba-team-score"><?php echo e($game->away_team_score ?? '-'); ?></span>
                                                                 </div>
                                                             </div>
-                                                        @endforeach
+                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                     </div>
                                                 </div>
-                                            @endforeach
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                         </div>
                                     </div>
 
                                     <!-- GRAN FINAL -->
                                     <div class="mt-12 pt-8 border-t border-gray-200 w-full max-w-3xl mx-auto">
                                         <div class="flex flex-col items-center justify-center gap-10">
-                                            @if(isset($data['bracket']['grand_final']))
-                                                @php $gf = $data['bracket']['grand_final']; $wfLocal = $gf->local_team_score > $gf->away_team_score; @endphp
+                                            <?php if(isset($data['bracket']['grand_final'])): ?>
+                                                <?php $gf = $data['bracket']['grand_final']; $wfLocal = $gf->local_team_score > $gf->away_team_score; ?>
                                                 
                                                 <div class="w-full max-w-md relative z-10">
                                                     <div class="text-center mb-4 relative">
@@ -562,36 +564,36 @@
                                                     
                                                     <div class="nba-card border border-gray-300 shadow-lg bg-white relative overflow-hidden">
                                                         <!-- LOCAL -->
-                                                        <div @class([
+                                                        <div class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                                                             'nba-team-row relative z-10',
                                                             'nba-winner' => $wfLocal,
                                                             'nba-loser' => !$wfLocal
-                                                        ])>
-                                                            @if($gf->localTeam && $gf->localTeam->image_path)
-                                                                <img src="{{ asset('storage/' . $gf->localTeam->image_path) }}" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
-                                                            @endif
-                                                            <span class="nba-team-name">{{ $gf->localTeam->name }}</span>
-                                                            <span class="nba-team-score">{{ $gf->local_team_score ?? '-' }}</span>
+                                                        ]); ?>">
+                                                            <?php if($gf->localTeam && $gf->localTeam->image_path): ?>
+                                                                <img src="<?php echo e(asset('storage/' . $gf->localTeam->image_path)); ?>" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
+                                                            <?php endif; ?>
+                                                            <span class="nba-team-name"><?php echo e($gf->localTeam->name); ?></span>
+                                                            <span class="nba-team-score"><?php echo e($gf->local_team_score ?? '-'); ?></span>
                                                         </div>
 
                                                         <!-- VISITANTE -->
-                                                        <div @class([
+                                                        <div class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                                                             'nba-team-row relative z-10',
                                                             'nba-winner' => !$wfLocal,
                                                             'nba-loser' => $wfLocal
-                                                        ])>
-                                                            @if($gf->awayTeam && $gf->awayTeam->image_path)
-                                                                <img src="{{ asset('storage/' . $gf->awayTeam->image_path) }}" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
-                                                            @endif
-                                                            <span class="nba-team-name">{{ $gf->awayTeam->name }}</span>
-                                                            <span class="nba-team-score">{{ $gf->away_team_score ?? '-' }}</span>
+                                                        ]); ?>">
+                                                            <?php if($gf->awayTeam && $gf->awayTeam->image_path): ?>
+                                                                <img src="<?php echo e(asset('storage/' . $gf->awayTeam->image_path)); ?>" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
+                                                            <?php endif; ?>
+                                                            <span class="nba-team-name"><?php echo e($gf->awayTeam->name); ?></span>
+                                                            <span class="nba-team-score"><?php echo e($gf->away_team_score ?? '-'); ?></span>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            @endif
+                                            <?php endif; ?>
 
-                                            @if(isset($data['bracket']['reset_game']))
-                                                @php $g = $data['bracket']['reset_game']; $wLocal = $g->local_team_score > $g->away_team_score; @endphp
+                                            <?php if(isset($data['bracket']['reset_game'])): ?>
+                                                <?php $g = $data['bracket']['reset_game']; $wLocal = $g->local_team_score > $g->away_team_score; ?>
                                                 
                                                 <div class="w-full max-w-md">
                                                     <div class="text-center mb-3">
@@ -602,43 +604,43 @@
                                                     
                                                     <div class="nba-card border border-yellow-300 shadow-md">
                                                         <!-- LOCAL -->
-                                                        <div @class([
+                                                        <div class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                                                             'nba-team-row',
                                                             'nba-winner' => $wLocal,
                                                             'nba-loser' => !$wLocal
-                                                        ])>
-                                                            @if($g->localTeam && $g->localTeam->image_path)
-                                                                <img src="{{ asset('storage/' . $g->localTeam->image_path) }}" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
-                                                            @endif
-                                                            <span class="nba-team-name">{{ $g->localTeam->name }}</span>
-                                                            <span class="nba-team-score">{{ $g->local_team_score ?? '-' }}</span>
+                                                        ]); ?>">
+                                                            <?php if($g->localTeam && $g->localTeam->image_path): ?>
+                                                                <img src="<?php echo e(asset('storage/' . $g->localTeam->image_path)); ?>" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
+                                                            <?php endif; ?>
+                                                            <span class="nba-team-name"><?php echo e($g->localTeam->name); ?></span>
+                                                            <span class="nba-team-score"><?php echo e($g->local_team_score ?? '-'); ?></span>
                                                         </div>
                                                         
                                                         <!-- VISITANTE -->
-                                                        <div @class([
+                                                        <div class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                                                             'nba-team-row',
                                                             'nba-winner' => !$wLocal,
                                                             'nba-loser' => $wLocal
-                                                        ])>
-                                                            @if($g->awayTeam && $g->awayTeam->image_path)
-                                                                <img src="{{ asset('storage/' . $g->awayTeam->image_path) }}" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
-                                                            @endif
-                                                            <span class="nba-team-name">{{ $g->awayTeam->name }}</span>
-                                                            <span class="nba-team-score">{{ $g->away_team_score ?? '-' }}</span>
+                                                        ]); ?>">
+                                                            <?php if($g->awayTeam && $g->awayTeam->image_path): ?>
+                                                                <img src="<?php echo e(asset('storage/' . $g->awayTeam->image_path)); ?>" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
+                                                            <?php endif; ?>
+                                                            <span class="nba-team-name"><?php echo e($g->awayTeam->name); ?></span>
+                                                            <span class="nba-team-score"><?php echo e($g->away_team_score ?? '-'); ?></span>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            @endif
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                        @else
+                        <?php else: ?>
                             <!-- ================================================================= -->
                             <!-- CASO LIGA / ELIMINACIÓN SENCILLA                                 -->
                             <!-- ================================================================= -->
-                            @php
+                            <?php
                                 $equiposHeader = 0;
                                 if (isset($data['team_ids']) && is_countable($data['team_ids'])) {
                                     $equiposHeader = count($data['team_ids']);
@@ -647,22 +649,23 @@
                                 } elseif (isset($data['standings']) && is_countable($data['standings'])) {
                                     $equiposHeader = count($data['standings']);
                                 }
-                            @endphp
+                            ?>
 
                             <!-- Encabezado del Grupo -->
                             <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 border-b pb-3 border-gray-200 gap-4">
                                 <div>
                                     <h3 class="text-xl font-bold text-gray-800">
-                                        <span class="text-gray-400 text-base font-normal mr-2">Grupo:</span>{{ $groupName }}
+                                        <span class="text-gray-400 text-base font-normal mr-2">Grupo:</span><?php echo e($groupName); ?>
+
                                     </h3>
                                     <span class="text-sm text-gray-500">
-                                        {{ $equiposHeader }} Equipos
+                                        <?php echo e($equiposHeader); ?> Equipos
                                     </span>
                                 </div>
                             </div>
 
                             <!-- Brackets de Playoffs (Si aplica) -->
-                            @if(isset($data['has_playoffs']) && $data['has_playoffs'])
+                            <?php if(isset($data['has_playoffs']) && $data['has_playoffs']): ?>
                                 <div class="mt-6 nba-bg p-4 md:p-6 shadow-inner mb-6">
                                     <div class="mb-6 border-b border-gray-200 pb-3 flex justify-center items-center">
                                         <h4 class="text-base font-bold text-gray-900 tracking-wider uppercase flex items-center gap-2">
@@ -671,63 +674,65 @@
                                     </div>
 
                                     <div class="flex flex-row gap-6 overflow-x-auto pb-6 nba-scroll snap-x items-center">
-                                        @foreach($data['playoff_rounds'] ?? [] as $round)
+                                        <?php $__currentLoopData = $data['playoff_rounds'] ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $round): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                             <div class="flex-shrink-0 w-full md:w-72 snap-center flex flex-col gap-4">
                                                 <div class="nba-header rounded">
-                                                    {{ $round['name'] ?? 'Ronda' }}
+                                                    <?php echo e($round['name'] ?? 'Ronda'); ?>
+
                                                 </div>
 
-                                                @foreach($round['games'] ?? [] as $game)
+                                                <?php $__currentLoopData = $round['games'] ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $game): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                     <div class="nba-card">
                                                         <!-- Local -->
-                                                        <div @class([
+                                                        <div class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                                                             'nba-team-row',
                                                             'nba-winner' => isset($game->local_team_score) && isset($game->away_team_score) && $game->local_team_score > $game->away_team_score,
                                                             'nba-loser' => isset($game->local_team_score) && isset($game->away_team_score) && $game->away_team_score > $game->local_team_score
-                                                        ])>
-                                                            @if(isset($game->localTeam) && $game->localTeam->image_path)
-                                                                <img src="{{ asset('storage/' . $game->localTeam->image_path) }}" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
-                                                            @endif
-                                                            <span class="nba-team-name">{{ $game->localTeam->name ?? 'Pendiente' }}</span>
-                                                            <span class="nba-team-score">{{ $game->local_team_score ?? '-' }}</span>
+                                                        ]); ?>">
+                                                            <?php if(isset($game->localTeam) && $game->localTeam->image_path): ?>
+                                                                <img src="<?php echo e(asset('storage/' . $game->localTeam->image_path)); ?>" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
+                                                            <?php endif; ?>
+                                                            <span class="nba-team-name"><?php echo e($game->localTeam->name ?? 'Pendiente'); ?></span>
+                                                            <span class="nba-team-score"><?php echo e($game->local_team_score ?? '-'); ?></span>
                                                         </div>
 
                                                         <!-- Visitante -->
-                                                        <div @class([
+                                                        <div class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                                                             'nba-team-row',
                                                             'nba-winner' => isset($game->local_team_score) && isset($game->away_team_score) && $game->away_team_score > $game->local_team_score,
                                                             'nba-loser' => isset($game->local_team_score) && isset($game->away_team_score) && $game->local_team_score > $game->away_team_score
-                                                        ])>
-                                                            @if(isset($game->awayTeam) && $game->awayTeam->image_path)
-                                                                <img src="{{ asset('storage/' . $game->awayTeam->image_path) }}" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
-                                                            @endif
-                                                            <span class="nba-team-name">{{ $game->awayTeam->name ?? 'Pendiente' }}</span>
-                                                            <span class="nba-team-score">{{ $game->away_team_score ?? '-' }}</span>
+                                                        ]); ?>">
+                                                            <?php if(isset($game->awayTeam) && $game->awayTeam->image_path): ?>
+                                                                <img src="<?php echo e(asset('storage/' . $game->awayTeam->image_path)); ?>" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
+                                                            <?php endif; ?>
+                                                            <span class="nba-team-name"><?php echo e($game->awayTeam->name ?? 'Pendiente'); ?></span>
+                                                            <span class="nba-team-score"><?php echo e($game->away_team_score ?? '-'); ?></span>
                                                         </div>
                                                     </div>
-                                                @endforeach
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </div>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
                                         <!-- Campeón Playoffs -->
-                                        @if(isset($data['playoff_champion']))
+                                        <?php if(isset($data['playoff_champion'])): ?>
                                             <div class="flex-shrink-0 w-full md:w-64 snap-center">
                                                 <div class="nba-champion-card">
                                                     <div class="champion-content">
                                                         <div class="champion-label">🏆 Campeón</div>
                                                         <div class="champion-name text-center">
-                                                            {{ $data['playoff_champion'] }}
+                                                            <?php echo e($data['playoff_champion']); ?>
+
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        @endif
+                                        <?php endif; ?>
                                     </div>
                                 </div>
-                            @endif
+                            <?php endif; ?>
 
                             <!-- Tabla General (Round Robin) -->
-                            @if(isset($data['standings']) && count($data['standings']) > 0)
+                            <?php if(isset($data['standings']) && count($data['standings']) > 0): ?>
                                 <div class="overflow-x-auto mt-4 rounded-xl border border-gray-100">
                                     <table class="min-w-full divide-y divide-gray-100">
                                         <thead class="bg-gray-50/70">
@@ -742,59 +747,61 @@
                                             </tr>
                                         </thead>
                                         <tbody class="bg-white divide-y divide-gray-100">
-                                            @php $pos = 1; @endphp
-                                            @foreach($data['standings'] as $tid => $stats)
+                                            <?php $pos = 1; ?>
+                                            <?php $__currentLoopData = $data['standings']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tid => $stats): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                 <tr class="hover:bg-gray-50/50 transition">
-                                                    <td class="px-4 py-3.5 whitespace-nowrap text-center text-sm font-medium text-gray-500">{{ $pos++ }}</td>
+                                                    <td class="px-4 py-3.5 whitespace-nowrap text-center text-sm font-medium text-gray-500"><?php echo e($pos++); ?></td>
                                                     <td class="px-4 py-3.5 whitespace-nowrap text-sm font-bold text-gray-900">
                                                         <div class="flex items-center">
-                                                            @if(isset($data['teams'][$tid]))
-                                                                @if($data['teams'][$tid]->image_path)
-                                                                    <img src="{{ asset('storage/' . $data['teams'][$tid]->image_path) }}" alt="{{ $data['teams'][$tid]->name }}" class="h-8 w-8 rounded-full object-cover mr-3 border border-gray-100" onerror="this.style.display='none'">
-                                                                @else
+                                                            <?php if(isset($data['teams'][$tid])): ?>
+                                                                <?php if($data['teams'][$tid]->image_path): ?>
+                                                                    <img src="<?php echo e(asset('storage/' . $data['teams'][$tid]->image_path)); ?>" alt="<?php echo e($data['teams'][$tid]->name); ?>" class="h-8 w-8 rounded-full object-cover mr-3 border border-gray-100" onerror="this.style.display='none'">
+                                                                <?php else: ?>
                                                                     <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-bold mr-3 border border-gray-100">
-                                                                        {{ substr($data['teams'][$tid]->name, 0, 1) }}
+                                                                        <?php echo e(substr($data['teams'][$tid]->name, 0, 1)); ?>
+
                                                                     </div>
-                                                                @endif
-                                                                <span>{{ $data['teams'][$tid]->name }}</span>
-                                                            @else
+                                                                <?php endif; ?>
+                                                                <span><?php echo e($data['teams'][$tid]->name); ?></span>
+                                                            <?php else: ?>
                                                                 <span class="text-gray-400 italic">Equipo Eliminado</span>
-                                                            @endif
+                                                            <?php endif; ?>
                                                         </div>
                                                     </td>
-                                                    <td class="px-4 py-3.5 whitespace-nowrap text-center text-sm text-gray-500">{{ $stats['played'] ?? 0 }}</td>
-                                                    <td class="px-4 py-3.5 whitespace-nowrap text-center text-sm text-green-600 font-bold">{{ $stats['won'] ?? 0 }}</td>
-                                                    <td class="px-4 py-3.5 whitespace-nowrap text-center text-sm text-yellow-600 font-bold">{{ $stats['drawn'] ?? 0 }}</td>
-                                                    <td class="px-4 py-3.5 whitespace-nowrap text-center text-sm text-red-600 font-bold">{{ $stats['lost'] ?? 0 }}</td>
-                                                    <td class="px-4 py-3.5 whitespace-nowrap text-center text-sm font-bold bg-emerald-50 text-emerald-800">{{ $stats['points'] ?? 0 }}</td>
+                                                    <td class="px-4 py-3.5 whitespace-nowrap text-center text-sm text-gray-500"><?php echo e($stats['played'] ?? 0); ?></td>
+                                                    <td class="px-4 py-3.5 whitespace-nowrap text-center text-sm text-green-600 font-bold"><?php echo e($stats['won'] ?? 0); ?></td>
+                                                    <td class="px-4 py-3.5 whitespace-nowrap text-center text-sm text-yellow-600 font-bold"><?php echo e($stats['drawn'] ?? 0); ?></td>
+                                                    <td class="px-4 py-3.5 whitespace-nowrap text-center text-sm text-red-600 font-bold"><?php echo e($stats['lost'] ?? 0); ?></td>
+                                                    <td class="px-4 py-3.5 whitespace-nowrap text-center text-sm font-bold bg-emerald-50 text-emerald-800"><?php echo e($stats['points'] ?? 0); ?></td>
                                                 </tr>
-                                            @endforeach
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                         </tbody>
                                     </table>
                                 </div>
-                            @endif
+                            <?php endif; ?>
 
-                        @endif
+                        <?php endif; ?>
                     </div>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
-        @else
-            @if($tournaments->isEmpty())
+        <?php else: ?>
+            <?php if($tournaments->isEmpty()): ?>
                 <!-- Sin Torneos Activos banner -->
                 <div class="text-center py-20 bg-white/80 backdrop-blur-md rounded-2xl border border-white/50 shadow-sm">
                     <i class="fa-solid fa-circle-info text-gray-300 text-5xl mb-4"></i>
                     <h3 class="text-lg font-bold text-gray-700">No hay torneos activos</h3>
                     <p class="text-gray-500 text-sm mt-1 max-w-md mx-auto">Vuelve más tarde cuando comience una nueva competencia de baloncesto en CrossoverMX.</p>
                 </div>
-            @else
+            <?php else: ?>
                 <!-- MODO PANEL GENERAL (DASHBOARD POR TORNEO) -->
                 <div class="space-y-12">
-                    @foreach($dashboardData as $tData)
+                    <?php $__currentLoopData = $dashboardData; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tData): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-white/50 p-6 md:p-8">
                             <div class="border-b border-gray-100 pb-4 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                                <h2 class="text-2xl font-black text-gray-900 tracking-tight uppercase">{{ $tData['tournament_name'] }}</h2>
+                                <h2 class="text-2xl font-black text-gray-900 tracking-tight uppercase"><?php echo e($tData['tournament_name']); ?></h2>
                                 <span class="px-3 py-1 rounded-full text-xs font-bold bg-orange-50 text-orange-600 border border-orange-100 uppercase tracking-wider">
-                                    {{ $tData['tournament_type'] === 'round_robin' ? 'Todos contra todos' : 'Eliminatoria' }}
+                                    <?php echo e($tData['tournament_type'] === 'round_robin' ? 'Todos contra todos' : 'Eliminatoria'); ?>
+
                                 </span>
                             </div>
 
@@ -810,44 +817,45 @@
                                             Líderes Anotadores
                                         </h3>
                                         
-                                        @if($tData['top_scorers']->isEmpty())
+                                        <?php if($tData['top_scorers']->isEmpty()): ?>
                                             <div class="text-center py-8 text-sm text-gray-400 font-medium">Sin datos de anotación registrados</div>
-                                        @else
+                                        <?php else: ?>
                                             <div class="space-y-3">
-                                                @php $rank = 1; @endphp
-                                                @foreach($tData['top_scorers'] as $scorer)
+                                                <?php $rank = 1; ?>
+                                                <?php $__currentLoopData = $tData['top_scorers']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $scorer): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                     <div class="relative overflow-hidden flex items-center justify-between bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
-                                                        @if($scorer['team_logo'])
-                                                            <img src="{{ asset('storage/' . $scorer['team_logo']) }}" class="absolute right-[-25px] top-1/2 -translate-y-1/2 h-36 w-auto opacity-15 pointer-events-none z-0 object-contain" onerror="this.style.display='none'">
-                                                        @endif
+                                                        <?php if($scorer['team_logo']): ?>
+                                                            <img src="<?php echo e(asset('storage/' . $scorer['team_logo'])); ?>" class="absolute right-[-25px] top-1/2 -translate-y-1/2 h-36 w-auto opacity-15 pointer-events-none z-0 object-contain" onerror="this.style.display='none'">
+                                                        <?php endif; ?>
                                                         
                                                         <div class="flex items-center gap-3 relative z-10">
-                                                            <span class="text-xs font-extrabold text-gray-400 bg-gray-50 h-6 w-6 rounded-full flex items-center justify-center">{{ $rank++ }}</span>
+                                                            <span class="text-xs font-extrabold text-gray-400 bg-gray-50 h-6 w-6 rounded-full flex items-center justify-center"><?php echo e($rank++); ?></span>
                                                             
-                                                            @if($scorer['player_logo'])
-                                                                <img src="{{ asset('storage/' . $scorer['player_logo']) }}" class="h-8 w-8 rounded-full object-cover border border-gray-100" onerror="this.style.display='none'">
-                                                            @elseif($scorer['player_gender'] === 'hombre')
-                                                                <img src="{{ asset('images/hombre.png') }}" class="h-8 w-8 rounded-full object-cover border border-gray-100">
-                                                            @elseif($scorer['player_gender'] === 'mujer')
-                                                                <img src="{{ asset('images/mujer.png') }}" class="h-8 w-8 rounded-full object-cover border border-gray-100">
-                                                            @else
+                                                            <?php if($scorer['player_logo']): ?>
+                                                                <img src="<?php echo e(asset('storage/' . $scorer['player_logo'])); ?>" class="h-8 w-8 rounded-full object-cover border border-gray-100" onerror="this.style.display='none'">
+                                                            <?php elseif($scorer['player_gender'] === 'hombre'): ?>
+                                                                <img src="<?php echo e(asset('images/hombre.png')); ?>" class="h-8 w-8 rounded-full object-cover border border-gray-100">
+                                                            <?php elseif($scorer['player_gender'] === 'mujer'): ?>
+                                                                <img src="<?php echo e(asset('images/mujer.png')); ?>" class="h-8 w-8 rounded-full object-cover border border-gray-100">
+                                                            <?php else: ?>
                                                                 <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-500 border border-gray-100">
-                                                                    {{ substr($scorer['player_name'], 0, 1) }}
+                                                                    <?php echo e(substr($scorer['player_name'], 0, 1)); ?>
+
                                                                 </div>
-                                                            @endif
+                                                            <?php endif; ?>
 
                                                             <div>
-                                                                <div class="text-sm font-bold text-gray-800 truncate w-24 sm:w-32">{{ $scorer['player_name'] }}</div>
-                                                                <div class="text-[10px] text-gray-400 font-bold uppercase truncate w-24 sm:w-32">{{ $scorer['team_name'] }}</div>
+                                                                <div class="text-sm font-bold text-gray-800 truncate w-24 sm:w-32"><?php echo e($scorer['player_name']); ?></div>
+                                                                <div class="text-[10px] text-gray-400 font-bold uppercase truncate w-24 sm:w-32"><?php echo e($scorer['team_name']); ?></div>
                                                             </div>
                                                         </div>
                                                         <span class="relative z-10 bg-white/40 backdrop-blur-md border border-white/40 px-3 py-1 rounded-full shadow-sm text-xs font-black text-gray-800 shrink-0">
-                                                            {{ $scorer['points'] }} pts
+                                                            <?php echo e($scorer['points']); ?> pts
                                                         </span>
                                                     </div>
-                                                @endforeach
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </div>
-                                        @endif
+                                        <?php endif; ?>
                                     </div>
                                 </div>
 
@@ -861,30 +869,31 @@
                                             Mejores Equipos
                                         </h3>
                                         
-                                        @if(empty($tData['top_teams']))
+                                        <?php if(empty($tData['top_teams'])): ?>
                                             <div class="text-center py-8 text-sm text-gray-400 font-medium">Sin estadísticas de juego registradas</div>
-                                        @else
+                                        <?php else: ?>
                                             <div class="space-y-3">
-                                                @php $teamRank = 1; @endphp
-                                                @foreach($tData['top_teams'] as $team)
+                                                <?php $teamRank = 1; ?>
+                                                <?php $__currentLoopData = $tData['top_teams']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $team): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                     <div class="relative overflow-hidden flex items-center justify-between bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
                                                         <!-- Marca de agua de fondo -->
-                                                        @if($team['team_logo'])
-                                                            <img src="{{ asset('storage/' . $team['team_logo']) }}" class="absolute right-[-25px] top-1/2 -translate-y-1/2 h-36 w-auto opacity-15 pointer-events-none z-0 object-contain" onerror="this.style.display='none'">
-                                                        @endif
+                                                        <?php if($team['team_logo']): ?>
+                                                            <img src="<?php echo e(asset('storage/' . $team['team_logo'])); ?>" class="absolute right-[-25px] top-1/2 -translate-y-1/2 h-36 w-auto opacity-15 pointer-events-none z-0 object-contain" onerror="this.style.display='none'">
+                                                        <?php endif; ?>
                                                         
                                                         <div class="flex items-center gap-3 relative z-10">
-                                                            <span class="text-xs font-extrabold text-gray-400 bg-gray-50 h-6 w-6 rounded-full flex items-center justify-center">{{ $teamRank++ }}</span>
-                                                            <span class="text-sm font-bold text-gray-800 truncate w-32 sm:w-40">{{ $team['team_name'] }}</span>
+                                                            <span class="text-xs font-extrabold text-gray-400 bg-gray-50 h-6 w-6 rounded-full flex items-center justify-center"><?php echo e($teamRank++); ?></span>
+                                                            <span class="text-sm font-bold text-gray-800 truncate w-32 sm:w-40"><?php echo e($team['team_name']); ?></span>
                                                         </div>
                                                         
                                                         <span class="relative z-10 bg-white/40 backdrop-blur-md border border-white/40 px-3 py-1 rounded-full shadow-sm text-xs font-black text-gray-800 shrink-0">
-                                                            {{ $team['score'] }}
+                                                            <?php echo e($team['score']); ?>
+
                                                         </span>
                                                     </div>
-                                                @endforeach
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </div>
-                                        @endif
+                                        <?php endif; ?>
                                     </div>
                                 </div>
 
@@ -899,20 +908,20 @@
                                             Próximos Partidos
                                         </h3>
 
-                                        @if(empty($tData['upcoming_games']) || count($tData['upcoming_games']) === 0)
+                                        <?php if(empty($tData['upcoming_games']) || count($tData['upcoming_games']) === 0): ?>
                                             <div class="text-center py-8 text-sm text-gray-400 font-medium">Sin partidos programados pendientes</div>
-                                        @else
+                                        <?php else: ?>
                                             <!-- Listado vertical con scroll si excede el tamaño -->
                                             <div class="space-y-3 max-h-[300px] overflow-y-auto pr-1 nba-scroll">
-                                                @foreach($tData['upcoming_games'] as $game)
+                                                <?php $__currentLoopData = $tData['upcoming_games']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $game): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                     <div class="relative overflow-hidden bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex flex-col justify-between gap-3">
                                                         <!-- Marcas de agua de los equipos -->
-                                                        @if($game['local_logo'])
-                                                            <img src="{{ asset('storage/' . $game['local_logo']) }}" class="absolute left-[-25px] top-1/2 -translate-y-1/2 h-32 w-auto opacity-10 pointer-events-none z-0 object-contain" onerror="this.style.display='none'">
-                                                        @endif
-                                                        @if($game['away_logo'])
-                                                            <img src="{{ asset('storage/' . $game['away_logo']) }}" class="absolute right-[-25px] top-1/2 -translate-y-1/2 h-32 w-auto opacity-10 pointer-events-none z-0 object-contain" onerror="this.style.display='none'">
-                                                        @endif
+                                                        <?php if($game['local_logo']): ?>
+                                                            <img src="<?php echo e(asset('storage/' . $game['local_logo'])); ?>" class="absolute left-[-25px] top-1/2 -translate-y-1/2 h-32 w-auto opacity-10 pointer-events-none z-0 object-contain" onerror="this.style.display='none'">
+                                                        <?php endif; ?>
+                                                        <?php if($game['away_logo']): ?>
+                                                            <img src="<?php echo e(asset('storage/' . $game['away_logo'])); ?>" class="absolute right-[-25px] top-1/2 -translate-y-1/2 h-32 w-auto opacity-10 pointer-events-none z-0 object-contain" onerror="this.style.display='none'">
+                                                        <?php endif; ?>
 
                                                         <div class="relative z-10 flex items-center justify-between gap-1.5 px-3 py-1.5 rounded-full bg-white/40 backdrop-blur-md border border-white/40 text-[9px] font-extrabold text-gray-500 uppercase shadow-sm">
                                                              <span class="truncate max-w-[80px] flex items-center">
@@ -920,18 +929,21 @@
                                                                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                                                      <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1 1 15 0Z" />
                                                                  </svg>
-                                                                 {{ $game['court_name'] }}
+                                                                 <?php echo e($game['court_name']); ?>
+
                                                              </span>
                                                              
                                                              <span class="truncate max-w-[110px] text-gray-500 text-[8px] font-bold">
-                                                                 {{ $game['category_strength'] }}
+                                                                 <?php echo e($game['category_strength']); ?>
+
                                                              </span>
 
                                                              <span class="flex items-center shrink-0">
                                                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 mr-0.5 text-gray-500 inline shrink-0">
                                                                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                                                  </svg>
-                                                                 {{ $game['date_time'] }}
+                                                                 <?php echo e($game['date_time']); ?>
+
                                                              </span>
                                                          </div>
                                                         
@@ -939,7 +951,8 @@
                                                             <!-- Local -->
                                                             <div class="flex items-center w-5/12">
                                                                 <span class="bg-white/40 backdrop-blur-md border border-white/40 px-3 py-1 rounded-full shadow-sm text-xs font-bold text-gray-800 truncate w-24 sm:w-28 text-center block">
-                                                                    {{ $game['local_name'] }}
+                                                                    <?php echo e($game['local_name']); ?>
+
                                                                 </span>
                                                             </div>
                                                             
@@ -948,31 +961,33 @@
                                                             <!-- Visitante -->
                                                             <div class="flex items-center w-5/12 justify-end">
                                                                 <span class="bg-white/40 backdrop-blur-md border border-white/40 px-3 py-1 rounded-full shadow-sm text-xs font-bold text-gray-800 truncate w-24 sm:w-28 text-center block">
-                                                                    {{ $game['away_name'] }}
+                                                                    <?php echo e($game['away_name']); ?>
+
                                                                 </span>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                @endforeach
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </div>
                                             <div class="text-[10px] font-bold text-gray-400 text-center mt-2 uppercase tracking-wider">
                                                 <i class="fa-solid fa-angles-down mr-1 animate-pulse"></i> Desliza hacia abajo <i class="fa-solid fa-angles-down ml-1 animate-pulse"></i>
                                             </div>
-                                        @endif
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
-            @endif
-        @endif
+            <?php endif; ?>
+        <?php endif; ?>
 
     </main>
 
     <footer class="text-center py-8 text-sm text-gray-400 border-t border-gray-100 mt-12 bg-white">
-        &copy; {{ date('Y') }} CrossoverMX. Todos los derechos reservados.
+        &copy; <?php echo e(date('Y')); ?> CrossoverMX. Todos los derechos reservados.
     </footer>
 
 </body>
 </html>
+<?php /**PATH C:\Users\luism\gemini-work\sistemaTorneos\resources\views/public/standings.blade.php ENDPATH**/ ?>

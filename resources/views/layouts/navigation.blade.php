@@ -3,7 +3,7 @@
     <div class="h-16 w-full"></div>
 
     <!-- NAVEGACIÓN PRINCIPAL (BARRA FLOTANTE) -->
-    <nav class="fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-6xl lg:max-w-7xl z-50 transition-all duration-300
+    <nav class="fixed top-4 left-1/2 -translate-x-1/2 w-[96%] md:w-[90%] z-50 transition-all duration-300
                bg-white/80 backdrop-blur-md border border-orange-500/50 rounded-[50px] px-2 py-2 shadow-[0_4px_30px_rgba(0,0,0,0.1)]
                flex justify-between items-center">
         
