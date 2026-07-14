@@ -492,13 +492,22 @@
                                     
                                     <div class="mb-4">
                                         <x-input-label for="team_modal_coach_id" :value="__('Entrenador Asignado')" />
-                                        <select id="team_modal_coach_id" name="coach_id" 
-                                            class="border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md shadow-sm block w-full mt-1 border py-2 px-3 bg-white">
-                                            <option value="">-- Sin Entrenador --</option>
-                                            @foreach ($coaches as $coach)
-                                                <option value="{{ $coach->id }}">{{ $coach->name }}</option>
-                                            @endforeach
-                                        </select>
+                                        <div class="flex mt-1">
+                                            <select id="team_modal_coach_id" name="coach_id" 
+                                                class="flex-1 border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-l-md shadow-sm block w-full border py-2 px-3 bg-white">
+                                                <option value="">-- Sin Entrenador --</option>
+                                                @foreach ($coaches as $coach)
+                                                    <option value="{{ $coach->id }}">{{ $coach->name }}</option>
+                                                @endforeach
+                                            </select>
+                                            <button type="button" onclick="openQuickCoachModal()" 
+                                                class="bg-orange-600 hover:bg-orange-700 text-white rounded-r-md border border-l-0 border-orange-600 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition duration-150 ease-in-out"
+                                                title="Crear nuevo entrenador">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div class="mb-4">
@@ -526,16 +535,26 @@
                                                 <option value="Varonil">Varonil</option>
                                                 <option value="Femenil">Femenil</option>
                                                 <option value="Mixto">Mixto</option>
+                                                <option value="Infantil">Infantil</option>
                                             </select>
                                         </div>
                                         <div>
                                             <x-input-label for="team_modal_strength" :value="__('Fuerza / Nivel')" />
-                                            <select id="team_modal_strength" name="strength" class="border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md shadow-sm mt-1 block w-full border py-2 px-3 bg-white">
-                                                <option value="">-- Seleccionar --</option>
-                                                @foreach ($strengths as $str)
-                                                    <option value="{{ $str->name }}">{{ $str->name }}</option>
-                                                @endforeach
-                                            </select>
+                                            <div class="flex mt-1">
+                                                <select id="team_modal_strength" name="strength" class="flex-1 border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-l-md shadow-sm block w-full border py-2 px-3 bg-white">
+                                                    <option value="">-- Seleccionar --</option>
+                                                    @foreach ($strengths as $str)
+                                                        <option value="{{ $str->name }}">{{ $str->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <button type="button" onclick="openAddStrengthModal()" 
+                                                    class="bg-orange-600 hover:bg-orange-700 text-white rounded-r-md border border-l-0 border-orange-600 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition duration-150 ease-in-out"
+                                                    title="Agregar nueva fuerza">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                                    </svg>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="mb-4">
@@ -550,6 +569,103 @@
                                 Guardar
                             </x-primary-button>
                             <button type="button" onclick="closeTeamModal()" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">
+                                Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Coach Modal (Creación rápida de Entrenador) -->
+    <div id="quickCoachModal" class="fixed inset-0 hidden" style="z-index: 70;">
+        <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"></div>
+        <div class="fixed inset-0 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4">
+                <div class="relative w-full max-w-lg transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all">
+                    <form id="quickCoachForm" onsubmit="submitQuickCoachForm(event)">
+                        @csrf
+                        <input type="hidden" name="role" value="Coach">
+                        <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                            <div class="sm:flex sm:items-start">
+                                <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-orange-100 sm:mx-0 sm:h-10 sm:w-10">
+                                    <svg class="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 1-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 5.472m0 0a9.09 9.09 0 0 1-3.74-.479 3 3 0 0 0 4.682-2.72m.94 3.198c.083-.89.142-1.79.18-2.692M14.5 5.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0Z" />
+                                    </svg>
+                                </div>
+                                <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+                                    <h3 class="text-base font-semibold leading-6 text-gray-900">Nuevo Entrenador</h3>
+                                    <div class="mt-4 space-y-4">
+                                        <div>
+                                            <label for="q_name" class="block text-sm font-medium text-gray-700">Nombre Completo</label>
+                                            <input type="text" name="name" id="q_name" required placeholder="Ej. Juan Pérez" 
+                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm border p-2">
+                                        </div>
+                                        <div>
+                                            <label for="q_email" class="block text-sm font-medium text-gray-700">Usuario</label>
+                                            <input type="text" name="email" id="q_email" required placeholder="Ej. juan.perez" 
+                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm border p-2">
+                                            <p class="text-xs text-gray-500 mt-1">Solo el usuario (sin @). El dominio del cliente se agregará automáticamente.</p>
+                                        </div>
+                                        <div>
+                                            <label for="q_password" class="block text-sm font-medium text-gray-700">Contraseña</label>
+                                            <input type="password" name="password" id="q_password" required 
+                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm border p-2">
+                                        </div>
+                                        <div>
+                                            <label for="q_password_confirmation" class="block text-sm font-medium text-gray-700">Confirmar Contraseña</label>
+                                            <input type="password" name="password_confirmation" id="q_password_confirmation" required 
+                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm border p-2">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                            <button type="submit" class="inline-flex w-full justify-center rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 sm:ml-3 sm:w-auto">
+                                Crear y Asignar
+                            </button>
+                            <button type="button" onclick="closeQuickCoachModal()" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">
+                                Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Strength Modal (Creación rápida de Fuerza) -->
+    <div id="addStrengthModal" class="fixed inset-0 hidden" style="z-index: 70;">
+        <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"></div>
+        <div class="fixed inset-0 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4">
+                <div class="relative w-full max-w-sm transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all">
+                    <form id="addStrengthForm" onsubmit="submitStrengthForm(event)">
+                        @csrf
+                        <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                            <div class="sm:flex sm:items-start">
+                                <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-orange-100 sm:mx-0 sm:h-10 sm:w-10">
+                                    <svg class="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                    </svg>
+                                </div>
+                                <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+                                    <h3 class="text-base font-semibold leading-6 text-gray-900">Nueva Fuerza</h3>
+                                    <div class="mt-2">
+                                        <label for="new_strength_name" class="block text-sm font-medium text-gray-700">Nombre de la Fuerza</label>
+                                        <input type="text" name="name" id="new_strength_name" required placeholder="Ej. 2013-2014" 
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm border p-2">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                            <button type="submit" class="inline-flex w-full justify-center rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 sm:ml-3 sm:w-auto">
+                                Agregar
+                            </button>
+                            <button type="button" onclick="closeAddStrengthModal()" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">
                                 Cancelar
                             </button>
                         </div>
@@ -1767,7 +1883,142 @@ saveButton.className = 'inline-flex items-center px-4 py-2 bg-orange-600 border 
 
         html2pdf().set(opt).from(element).save();
     }
-        function toggleGroupInputs() {
+        // ========================
+    // LÓGICA COACH RÁPIDO
+    // ========================
+    function openQuickCoachModal() {
+        document.getElementById('quickCoachForm').reset();
+        document.getElementById('quickCoachModal').classList.remove('hidden');
+    }
+
+    function closeQuickCoachModal() {
+        document.getElementById('quickCoachModal').classList.add('hidden');
+    }
+
+    async function submitQuickCoachForm(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerText;
+
+        // UI Feedback
+        submitBtn.innerText = 'Guardando...';
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-75');
+
+        try {
+            const response = await fetch('{{ route("users.store") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
+
+            let data;
+            try {
+                data = await response.json();
+            } catch (e) {
+                console.error("Error parseando JSON:", await response.text());
+                throw new Error("El servidor devolvió un error inesperado (Error 500 o redirección).");
+            }
+
+            if (response.ok && data.success) {
+                closeQuickCoachModal();
+                const coachSelect = document.getElementById('team_modal_coach_id');
+                const newOption = document.createElement('option');
+                newOption.value = data.user.id;
+                newOption.text = data.user.name;
+                newOption.selected = true;
+                coachSelect.appendChild(newOption);
+                
+                alert('Entrenador creado y asignado: ' + data.user.name);
+            } else {
+                let errorMsg = 'Error al crear el coach.\n';
+                if (data.message) {
+                    errorMsg += data.message + "\n";
+                }
+                if (data.errors) {
+                    errorMsg += "Detalles:\n";
+                    for (const [field, messages] of Object.entries(data.errors)) {
+                        errorMsg += `- ${field}: ${messages.join(', ')}\n`;
+                    }
+                }
+                alert(errorMsg);
+            }
+        } catch (error) {
+            console.error("Error en catch:", error);
+            alert('Error de conexión o del servidor: ' + error.message);
+        } finally {
+            submitBtn.innerText = originalBtnText;
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-75');
+        }
+    }
+
+    // ========================
+    // LÓGICA DE FUERZAS DINÁMICAS
+    // ========================
+    function openAddStrengthModal() {
+        document.getElementById('addStrengthForm').reset();
+        document.getElementById('addStrengthModal').classList.remove('hidden');
+    }
+
+    function closeAddStrengthModal() {
+        document.getElementById('addStrengthModal').classList.add('hidden');
+    }
+
+    async function submitStrengthForm(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerText;
+
+        submitBtn.innerText = 'Guardando...';
+        submitBtn.disabled = true;
+
+        try {
+            const response = await fetch('{{ route("teams.strengths.store") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                closeAddStrengthModal();
+                const newOptionText = data.strength.name;
+                
+                const select = document.getElementById('team_modal_strength');
+                const option = document.createElement('option');
+                option.value = newOptionText;
+                option.text = newOptionText;
+                option.selected = true;
+                select.appendChild(option);
+
+                alert('Fuerza agregada exitosamente: ' + newOptionText);
+            } else {
+                alert('Error: ' + (data.message || 'No se pudo guardar la fuerza.'));
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Ocurrió un error de conexión.');
+        } finally {
+            submitBtn.innerText = originalText;
+            submitBtn.disabled = false;
+        }
+    }
+
+    function toggleGroupInputs() {
         const type = document.getElementById('tournament_type_select').value;
         const inputs = document.getElementById('groups_inputs');
         if (type === 'groups') {

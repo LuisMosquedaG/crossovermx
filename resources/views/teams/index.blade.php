@@ -426,6 +426,7 @@
                                                 <option value="Varonil">Varonil</option>
                                                 <option value="Femenil">Femenil</option>
                                                 <option value="Mixto">Mixto</option>
+                                                <option value="Infantil">Infantil</option>
                                             </select>
                                         </div>
                                     <div>
@@ -630,6 +631,7 @@
                                                 <option value="Varonil">Varonil</option>
                                                 <option value="Femenil">Femenil</option>
                                                 <option value="Mixto">Mixto</option>
+                                                <option value="Infantil">Infantil</option>
                                             </select>
                                         </div>
                                     <div>

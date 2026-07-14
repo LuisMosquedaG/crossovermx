@@ -171,7 +171,7 @@ public function store(Request $request)
                 'start_date' => 'required|date',
                 'end_date' => 'nullable|date|after_or_equal:start_date',
                 'location' => 'nullable|string|max:255',
-                'category' => 'nullable|string|in:varonil,femenil,mixto',
+                'category' => 'nullable|string|in:varonil,femenil,mixto,infantil',
                 'fuerza' => 'nullable|string|max:255',
             ]);
 
