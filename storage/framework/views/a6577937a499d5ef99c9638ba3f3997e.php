@@ -1,4 +1,13 @@
-<x-app-layout>
+<?php if (isset($component)) { $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54 = $attributes; } ?>
+<?php $component = App\View\Components\AppLayout::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('app-layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\App\View\Components\AppLayout::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
 
 <style>
     /* --- AJUSTES FULL-SCREEN (MODO TV GLOBAL) --- */
@@ -103,19 +112,19 @@
     <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-1 md:p-3 rounded-2xl shadow-2xl relative overflow-hidden border border-slate-700 ring-1 ring-white/10">
 
     <!-- LOGO LOCAL (Fondo fantasma sutil) -->
-    @if($game->localTeam->logo)
+    <?php if($game->localTeam->logo): ?>
     <!-- Reducimos ligeramente el logo absoluto para que no desborde si encogemos mucho -->
     <div class="absolute left-0 top-1/2 transform -translate-y-1/2 w-24 h-24 md:w-40 md:h-40 opacity-5 pointer-events-none z-0">
-    <img src="{{ asset('storage/' . $game->localTeam->logo) }}" alt="{{ $game->localTeam->name }}" class="w-full h-full object-contain">
+    <img src="<?php echo e(asset('storage/' . $game->localTeam->logo)); ?>" alt="<?php echo e($game->localTeam->name); ?>" class="w-full h-full object-contain">
     </div>
-    @endif
+    <?php endif; ?>
 
     <!-- LOGO VISITANTE (Fondo fantasma sutil) -->
-    @if($game->awayTeam->logo)
+    <?php if($game->awayTeam->logo): ?>
     <div class="absolute right-0 top-1/2 transform -translate-y-1/2 w-24 h-24 md:w-40 md:h-40 opacity-5 pointer-events-none z-0">
-    <img src="{{ asset('storage/' . $game->awayTeam->logo) }}" alt="{{ $game->awayTeam->name }}" class="w-full h-full object-contain">
+    <img src="<?php echo e(asset('storage/' . $game->awayTeam->logo)); ?>" alt="<?php echo e($game->awayTeam->name); ?>" class="w-full h-full object-contain">
     </div>
-    @endif
+    <?php endif; ?>
 
     <!-- Contenido del Marcador -->
     <!-- CAMBIOS: gap-1 md:gap-4 -> gap-1 md:gap-2 (Menos espacio vertical entre filas) -->
@@ -123,9 +132,9 @@
 
     <!-- Equipo Local -->
     <div>
-    <h3 class="text-[9px] md:text-lg font-bold uppercase tracking-wider truncate text-blue-400 drop-shadow-md">{{ $game->localTeam->name }}</h3>
+    <h3 class="text-[9px] md:text-lg font-bold uppercase tracking-wider truncate text-blue-400 drop-shadow-md"><?php echo e($game->localTeam->name); ?></h3>
     <!-- CAMBIOS: Fuente reducida para ahorrar altura (md:text-7xl -> md:text-6xl, lg:text-8xl -> lg:text-7xl) -->
-    <p class="text-2xl md:text-6xl lg:text-7xl font-black font-mono text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)] leading-none" id="localScore">{{ $game->local_team_score ?? 0 }}</p>
+    <p class="text-2xl md:text-6xl lg:text-7xl font-black font-mono text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)] leading-none" id="localScore"><?php echo e($game->local_team_score ?? 0); ?></p>
     </div>
 
     <!-- Centro -->
@@ -139,9 +148,9 @@
 
     <!-- Equipo Visitante -->
     <div>
-    <h3 class="text-[9px] md:text-lg font-bold uppercase tracking-wider truncate text-red-400 drop-shadow-md">{{ $game->awayTeam->name }}</h3>
+    <h3 class="text-[9px] md:text-lg font-bold uppercase tracking-wider truncate text-red-400 drop-shadow-md"><?php echo e($game->awayTeam->name); ?></h3>
     <!-- CAMBIOS: Fuente reducida para ahorrar altura (md:text-7xl -> md:text-6xl, lg:text-8xl -> lg:text-7xl) -->
-    <p class="text-2xl md:text-6xl lg:text-7xl font-black font-mono text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)] leading-none" id="awayScore">{{ $game->away_team_score ?? 0 }}</p>
+    <p class="text-2xl md:text-6xl lg:text-7xl font-black font-mono text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)] leading-none" id="awayScore"><?php echo e($game->away_team_score ?? 0); ?></p>
     </div>
     </div>
     </div>
@@ -154,10 +163,10 @@
     <div class="flex items-center gap-1 md:gap-3 w-1/3 md:w-auto justify-start">
         <!-- CORRECCIÓN: Se agregó el ID "localTimeouts" al span que contiene el número -->
         <button onclick="recordTimeout('local')" class="text-[9px] md:text-sm bg-white text-gray-800 border border-gray-300 rounded-lg px-1.5 py-1 md:px-3 md:py-1.5 font-semibold shadow-sm hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 active:bg-blue-100 active:scale-95 transition-all truncate">
-            T. Local (<span id="localTimeouts">{{ $localTimeoutsLeft }}</span>)
+            T. Local (<span id="localTimeouts"><?php echo e($localTimeoutsLeft); ?></span>)
         </button>
         <div id="localTeamFouls" class="text-[9px] md:text-xs font-bold text-gray-500 bg-gray-100/80 px-1.5 py-1 rounded-md border border-gray-200 shadow-sm whitespace-nowrap">
-            F: {{ $localTeamFouls }}/5
+            F: <?php echo e($localTeamFouls); ?>/5
         </div>
     </div>
 
@@ -186,11 +195,11 @@
     <!-- ZONA EQUIPO VISITANTE (Derecha) -->
     <div class="flex items-center gap-1 md:gap-3 w-1/3 md:w-auto justify-end">
         <div id="awayTeamFouls" class="text-[9px] md:text-xs font-bold text-gray-500 bg-gray-100/80 px-1.5 py-1 rounded-md border border-gray-200 shadow-sm whitespace-nowrap">
-            F: {{ $awayTeamFouls }}/5
+            F: <?php echo e($awayTeamFouls); ?>/5
         </div>
         <!-- CORRECCIÓN: Se agregó el ID "awayTimeouts" al span que contiene el número -->
         <button onclick="recordTimeout('away')" class="text-[9px] md:text-sm bg-white text-gray-800 border border-gray-300 rounded-lg px-1.5 py-1 md:px-3 md:py-1.5 font-semibold shadow-sm hover:border-red-300 hover:bg-red-50 hover:text-red-700 active:bg-red-100 active:scale-95 transition-all truncate">
-            T. Visita (<span id="awayTimeouts">{{ $awayTimeoutsLeft }}</span>)
+            T. Visita (<span id="awayTimeouts"><?php echo e($awayTimeoutsLeft); ?></span>)
         </button>
     </div>
     </div>
@@ -203,47 +212,48 @@
             <!-- Panel Equipo LOCAL -->
             <div class="bg-white/70 backdrop-blur-md p-1.5 md:p-3 rounded-xl shadow-sm border border-gray-200 w-full overflow-visible md:overflow-hidden">
                 <ul class="space-y-1">
-                   @for ($i = 0; $i < 5; $i++)
-                        @if(isset($localActivePlayers[$i]))
-                            @php
+                   <?php for($i = 0; $i < 5; $i++): ?>
+                        <?php if(isset($localActivePlayers[$i])): ?>
+                            <?php
                                 $pid = $localActivePlayers[$i]->id;
                                 $s = $localStats[$pid] ?? ['points' => 0, 'fouls' => ['personal' => 0, 'technical' => 0, 'unsportsmanlike' => 0, 'disqualifying' => 0]];
                                 $totalFouls = $s['fouls']['personal'] + $s['fouls']['technical'] + $s['fouls']['unsportsmanlike'] + $s['fouls']['disqualifying'];
-                            @endphp
+                            ?>
                             
-                            <li id="local-row-{{ $i }}" class="flex flex-col md:flex-row md:justify-between items-center py-2 md:py-2.5 hover:bg-gray-50/50 transition-colors w-full border-b border-gray-50 last:border-0 overflow-visible">
+                            <li id="local-row-<?php echo e($i); ?>" class="flex flex-col md:flex-row md:justify-between items-center py-2 md:py-2.5 hover:bg-gray-50/50 transition-colors w-full border-b border-gray-50 last:border-0 overflow-visible">
                                 <!-- INFO JUGADOR: DORSAL DE FONDO Y STATS EN PRIMER PLANO -->
                                 <div class="relative flex items-end justify-center w-full md:w-[12%] py-2 border-b border-gray-100 md:border-b-0 pb-2 md:pb-0 h-14 overflow-visible">
                                     <!-- NÚMERO DE FONDO -->
                                     <span class="absolute text-5xl md:text-6xl lg:text-7xl font-black text-blue-200 select-none pointer-events-none z-0 tracking-tighter transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
-                                        {{ $localActivePlayers[$i]->number ?? '-' }}
+                                        <?php echo e($localActivePlayers[$i]->number ?? '-'); ?>
+
                                     </span>
                                     <!-- CONTENIDO AL FRENTE (A pie de número) -->
                                     <div class="relative z-10 flex flex-row items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/30 backdrop-blur-[2px] border border-white/40 shadow-sm text-[9px] md:text-[10px] text-gray-600 font-bold mb-1 leading-none">
-                                        <span>F: <span class="player-fouls text-gray-800 font-extrabold" id="local-{{ $localActivePlayers[$i]->id }}-fouls">{{ $totalFouls }}</span></span>
-                                        <span>P: <span class="player-points text-gray-800 font-extrabold" id="local-{{ $localActivePlayers[$i]->id }}-points">{{ $s['points'] }}</span></span>
+                                        <span>F: <span class="player-fouls text-gray-800 font-extrabold" id="local-<?php echo e($localActivePlayers[$i]->id); ?>-fouls"><?php echo e($totalFouls); ?></span></span>
+                                        <span>P: <span class="player-points text-gray-800 font-extrabold" id="local-<?php echo e($localActivePlayers[$i]->id); ?>-points"><?php echo e($s['points']); ?></span></span>
                                     </div>
                                 </div>
 
                                 <!-- BOTONES -->
                                 <div class="flex items-center gap-1 md:gap-1 lg:gap-1 overflow-x-auto hide-scrollbar w-full md:flex-1 justify-end min-w-0 mt-2 md:mt-0">
-                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordPoint({{ $localActivePlayers[$i]->id }}, 'local', 1, {{ $i }})">+1</button>
-                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordPoint({{ $localActivePlayers[$i]->id }}, 'local', 2, {{ $i }})">+2</button>
-                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordPoint({{ $localActivePlayers[$i]->id }}, 'local', 3, {{ $i }})">+3</button>
+                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordPoint(<?php echo e($localActivePlayers[$i]->id); ?>, 'local', 1, <?php echo e($i); ?>)">+1</button>
+                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordPoint(<?php echo e($localActivePlayers[$i]->id); ?>, 'local', 2, <?php echo e($i); ?>)">+2</button>
+                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordPoint(<?php echo e($localActivePlayers[$i]->id); ?>, 'local', 3, <?php echo e($i); ?>)">+3</button>
                                     <div class="w-px h-4 md:h-5 bg-gray-300 shrink-0 mx-0.5"></div>
-                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordFoul({{ $localActivePlayers[$i]->id }}, 'local', 'foul_personal', {{ $i }})">P</button>
-                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordFoul({{ $localActivePlayers[$i]->id }}, 'local', 'foul_unsportsmanlike', {{ $i }})">A</button>
-                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordFoul({{ $localActivePlayers[$i]->id }}, 'local', 'foul_technical', {{ $i }})">T</button>
-                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordFoul({{ $localActivePlayers[$i]->id }}, 'local', 'foul_disqualifying', {{ $i }})">D</button>
+                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordFoul(<?php echo e($localActivePlayers[$i]->id); ?>, 'local', 'foul_personal', <?php echo e($i); ?>)">P</button>
+                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordFoul(<?php echo e($localActivePlayers[$i]->id); ?>, 'local', 'foul_unsportsmanlike', <?php echo e($i); ?>)">A</button>
+                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordFoul(<?php echo e($localActivePlayers[$i]->id); ?>, 'local', 'foul_technical', <?php echo e($i); ?>)">T</button>
+                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordFoul(<?php echo e($localActivePlayers[$i]->id); ?>, 'local', 'foul_disqualifying', <?php echo e($i); ?>)">D</button>
                                     <div class="w-px h-4 md:h-5 bg-gray-300 shrink-0 mx-0.5"></div>
-                                    <button class="bg-gray-200 text-gray-400 border border-gray-300 rounded hover:bg-gray-300 active:bg-gray-400 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 change-player-btn shrink-0" data-team-side="local" data-player-id="{{ $localActivePlayers[$i]->id }}" data-player-name="{{ $localActivePlayers[$i]->name }}" data-player-number="{{ $localActivePlayers[$i]->number ?? '' }}" data-slot-index="{{ $i }}" title="Cambiar Jugador">
+                                    <button class="bg-gray-200 text-gray-400 border border-gray-300 rounded hover:bg-gray-300 active:bg-gray-400 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 change-player-btn shrink-0" data-team-side="local" data-player-id="<?php echo e($localActivePlayers[$i]->id); ?>" data-player-name="<?php echo e($localActivePlayers[$i]->name); ?>" data-player-number="<?php echo e($localActivePlayers[$i]->number ?? ''); ?>" data-slot-index="<?php echo e($i); ?>" title="Cambiar Jugador">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 md:w-5 md:h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 8H5M8 5l-3 3 3 3" /><path stroke-linecap="round" stroke-linejoin="round" d="M5 16H19M16 13l3 3-3 3" /></svg>
                                     </button>
                                 </div>
                             </li>
                                                
-                        @else
-                            <li id="local-row-{{ $i }}" class="flex flex-col md:flex-row md:justify-between items-center py-2 md:py-2.5 w-full border-b border-gray-50 last:border-0 overflow-visible">
+                        <?php else: ?>
+                            <li id="local-row-<?php echo e($i); ?>" class="flex flex-col md:flex-row md:justify-between items-center py-2 md:py-2.5 w-full border-b border-gray-50 last:border-0 overflow-visible">
                                 <!-- INFO VACANTE: CENTRADO, SIN STATS, NÚMERO TOSCO -->
                                 <div class="flex items-center justify-center w-full md:w-[12%] gap-2 border-b border-gray-100 md:border-b-0 pb-2 md:pb-0">
                                     <div class="flex flex-col items-center text-center w-full">
@@ -267,59 +277,60 @@
                                     <button class="bg-white text-gray-300 border border-gray-200 rounded text-[11px] md:text-xs lg:text-sm font-bold py-1.5 px-2 md:px-3 lg:px-4 cursor-not-allowed shrink-0" disabled>T</button>
                                     <button class="bg-white text-gray-300 border border-gray-200 rounded text-[11px] md:text-xs lg:text-sm font-bold py-1.5 px-2 md:px-3 lg:px-4 cursor-not-allowed shrink-0" disabled>D</button>
                                     <div class="w-px h-4 md:h-5 bg-gray-300 shrink-0 mx-0.5"></div>
-                                    <button class="bg-gray-200 text-gray-400 border border-gray-300 rounded hover:bg-gray-300 active:bg-gray-400 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-1.5 px-2 md:px-3 lg:px-4 change-player-btn shrink-0" data-team-side="local" data-player-id="null" data-player-name="Slot Vacante" data-player-number="" data-slot-index="{{ $i }}" title="Llenar Espacio">
+                                    <button class="bg-gray-200 text-gray-400 border border-gray-300 rounded hover:bg-gray-300 active:bg-gray-400 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-1.5 px-2 md:px-3 lg:px-4 change-player-btn shrink-0" data-team-side="local" data-player-id="null" data-player-name="Slot Vacante" data-player-number="" data-slot-index="<?php echo e($i); ?>" title="Llenar Espacio">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 md:w-5 md:h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 8H5M8 5l-3 3 3 3" /><path stroke-linecap="round" stroke-linejoin="round" d="M5 16H19M16 13l3 3-3 3" /></svg>
                                     </button>
                                 </div>
                             </li>
-                        @endif
-                    @endfor
+                        <?php endif; ?>
+                    <?php endfor; ?>
                 </ul>
             </div>
 
             <!-- Panel Equipo VISITANTE -->
             <div class="bg-white/70 backdrop-blur-md p-1.5 md:p-3 rounded-xl shadow-sm border border-gray-200 w-full overflow-visible md:overflow-hidden">
                 <ul class="space-y-1">
-                    @for ($i = 0; $i < 5; $i++)
-                        @if(isset($awayActivePlayers[$i]))
-                            @php
+                    <?php for($i = 0; $i < 5; $i++): ?>
+                        <?php if(isset($awayActivePlayers[$i])): ?>
+                            <?php
                                 $pid = $awayActivePlayers[$i]->id;
                                 $s = $awayStats[$pid] ?? ['points' => 0, 'fouls' => ['personal' => 0, 'technical' => 0, 'unsportsmanlike' => 0, 'disqualifying' => 0]];
                                 $totalFouls = $s['fouls']['personal'] + $s['fouls']['technical'] + $s['fouls']['unsportsmanlike'] + $s['fouls']['disqualifying'];
-                            @endphp
+                            ?>
 
-                                                        <li id="away-row-{{ $i }}" class="flex flex-col md:flex-row md:justify-between items-center py-2 md:py-2.5 hover:bg-gray-50/50 transition-colors w-full border-b border-gray-50 last:border-0 overflow-visible">
+                                                        <li id="away-row-<?php echo e($i); ?>" class="flex flex-col md:flex-row md:justify-between items-center py-2 md:py-2.5 hover:bg-gray-50/50 transition-colors w-full border-b border-gray-50 last:border-0 overflow-visible">
                                 <!-- INFO JUGADOR: DORSAL DE FONDO Y STATS EN PRIMER PLANO -->
                                 <div class="relative flex items-end justify-center w-full md:w-[12%] py-2 border-b border-gray-100 md:border-b-0 pb-2 md:pb-0 h-14 overflow-visible">
                                     <!-- NÚMERO DE FONDO -->
                                     <span class="absolute text-5xl md:text-6xl lg:text-7xl font-black text-red-200 select-none pointer-events-none z-0 tracking-tighter transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
-                                        {{ $awayActivePlayers[$i]->number ?? '-' }}
+                                        <?php echo e($awayActivePlayers[$i]->number ?? '-'); ?>
+
                                     </span>
                                     <!-- CONTENIDO AL FRENTE (A pie de número) -->
                                     <div class="relative z-10 flex flex-row items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/30 backdrop-blur-[2px] border border-white/40 shadow-sm text-[9px] md:text-[10px] text-gray-600 font-bold mb-1 leading-none">
-                                        <span>F: <span class="player-fouls text-gray-800 font-extrabold" id="away-{{ $awayActivePlayers[$i]->id }}-fouls">{{ $totalFouls }}</span></span>
-                                        <span>P: <span class="player-points text-gray-800 font-extrabold" id="away-{{ $awayActivePlayers[$i]->id }}-points">{{ $s['points'] }}</span></span>
+                                        <span>F: <span class="player-fouls text-gray-800 font-extrabold" id="away-<?php echo e($awayActivePlayers[$i]->id); ?>-fouls"><?php echo e($totalFouls); ?></span></span>
+                                        <span>P: <span class="player-points text-gray-800 font-extrabold" id="away-<?php echo e($awayActivePlayers[$i]->id); ?>-points"><?php echo e($s['points']); ?></span></span>
                                     </div>
                                 </div>
 
                                 <!-- BOTONES -->
                                 <div class="flex items-center gap-1 md:gap-1 lg:gap-1 overflow-x-auto hide-scrollbar w-full md:flex-1 justify-end min-w-0 mt-2 md:mt-0">
-                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordPoint({{ $awayActivePlayers[$i]->id }}, 'away', 1, {{ $i }})">+1</button>
-                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordPoint({{ $awayActivePlayers[$i]->id }}, 'away', 2, {{ $i }})">+2</button>
-                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordPoint({{ $awayActivePlayers[$i]->id }}, 'away', 3, {{ $i }})">+3</button>
+                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordPoint(<?php echo e($awayActivePlayers[$i]->id); ?>, 'away', 1, <?php echo e($i); ?>)">+1</button>
+                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordPoint(<?php echo e($awayActivePlayers[$i]->id); ?>, 'away', 2, <?php echo e($i); ?>)">+2</button>
+                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordPoint(<?php echo e($awayActivePlayers[$i]->id); ?>, 'away', 3, <?php echo e($i); ?>)">+3</button>
                                     <div class="w-px h-4 md:h-5 bg-gray-300 shrink-0 mx-0.5"></div>
-                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordFoul({{ $awayActivePlayers[$i]->id }}, 'away', 'foul_personal', {{ $i }})">P</button>
-                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordFoul({{ $awayActivePlayers[$i]->id }}, 'away', 'foul_unsportsmanlike', {{ $i }})">A</button>
-                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordFoul({{ $awayActivePlayers[$i]->id }}, 'away', 'foul_technical', {{ $i }})">T</button>
-                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordFoul({{ $awayActivePlayers[$i]->id }}, 'away', 'foul_disqualifying', {{ $i }})">D</button>
+                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordFoul(<?php echo e($awayActivePlayers[$i]->id); ?>, 'away', 'foul_personal', <?php echo e($i); ?>)">P</button>
+                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordFoul(<?php echo e($awayActivePlayers[$i]->id); ?>, 'away', 'foul_unsportsmanlike', <?php echo e($i); ?>)">A</button>
+                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordFoul(<?php echo e($awayActivePlayers[$i]->id); ?>, 'away', 'foul_technical', <?php echo e($i); ?>)">T</button>
+                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordFoul(<?php echo e($awayActivePlayers[$i]->id); ?>, 'away', 'foul_disqualifying', <?php echo e($i); ?>)">D</button>
                                     <div class="w-px h-4 md:h-5 bg-gray-300 shrink-0 mx-0.5"></div>
-                                    <button class="bg-gray-200 text-gray-400 border border-gray-300 rounded hover:bg-gray-300 active:bg-gray-400 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 change-player-btn shrink-0" data-team-side="away" data-player-id="{{ $awayActivePlayers[$i]->id }}" data-player-name="{{ $awayActivePlayers[$i]->name }}" data-player-number="{{ $awayActivePlayers[$i]->number ?? '' }}" data-slot-index="{{ $i }}" title="Cambiar Jugador">
+                                    <button class="bg-gray-200 text-gray-400 border border-gray-300 rounded hover:bg-gray-300 active:bg-gray-400 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 change-player-btn shrink-0" data-team-side="away" data-player-id="<?php echo e($awayActivePlayers[$i]->id); ?>" data-player-name="<?php echo e($awayActivePlayers[$i]->name); ?>" data-player-number="<?php echo e($awayActivePlayers[$i]->number ?? ''); ?>" data-slot-index="<?php echo e($i); ?>" title="Cambiar Jugador">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 md:w-5 md:h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 8H5M8 5l-3 3 3 3" /><path stroke-linecap="round" stroke-linejoin="round" d="M5 16H19M16 13l3 3-3 3" /></svg>
                                     </button>
                                 </div>
                             </li>
-                        @else
-                            <li id="away-row-{{ $i }}" class="flex flex-col md:flex-row md:justify-between items-center py-2 md:py-2.5 w-full border-b border-gray-50 last:border-0 overflow-visible">
+                        <?php else: ?>
+                            <li id="away-row-<?php echo e($i); ?>" class="flex flex-col md:flex-row md:justify-between items-center py-2 md:py-2.5 w-full border-b border-gray-50 last:border-0 overflow-visible">
                                 <!-- INFO VACANTE: CENTRADO, SIN STATS, NÚMERO TOSCO -->
                                 <div class="flex items-center justify-center w-full md:w-[12%] gap-2 border-b border-gray-100 md:border-b-0 pb-2 md:pb-0">
                                     <div class="flex flex-col items-center text-center w-full">
@@ -343,13 +354,13 @@
                                     <button class="bg-white text-gray-300 border border-gray-200 rounded text-[11px] md:text-xs lg:text-sm font-bold py-1.5 px-2 md:px-3 lg:px-4 cursor-not-allowed shrink-0" disabled>T</button>
                                     <button class="bg-white text-gray-300 border border-gray-200 rounded text-[11px] md:text-xs lg:text-sm font-bold py-1.5 px-2 md:px-3 lg:px-4 cursor-not-allowed shrink-0" disabled>D</button>
                                     <div class="w-px h-4 md:h-5 bg-gray-300 shrink-0 mx-0.5"></div>
-                                    <button class="bg-gray-200 text-gray-400 border border-gray-300 rounded hover:bg-gray-300 active:bg-gray-400 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-1.5 px-2 md:px-3 lg:px-4 change-player-btn shrink-0" data-team-side="away" data-player-id="null" data-player-name="Slot Vacante" data-player-number="" data-slot-index="{{ $i }}" title="Llenar Espacio">
+                                    <button class="bg-gray-200 text-gray-400 border border-gray-300 rounded hover:bg-gray-300 active:bg-gray-400 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-1.5 px-2 md:px-3 lg:px-4 change-player-btn shrink-0" data-team-side="away" data-player-id="null" data-player-name="Slot Vacante" data-player-number="" data-slot-index="<?php echo e($i); ?>" title="Llenar Espacio">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 md:w-5 md:h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 8H5M8 5l-3 3 3 3" /><path stroke-linecap="round" stroke-linejoin="round" d="M5 16H19M16 13l3 3-3 3" /></svg>
                                     </button>
                                 </div>
                             </li>
-                        @endif
-                    @endfor
+                        <?php endif; ?>
+                    <?php endfor; ?>
                 </ul>
             </div>
         </div>
@@ -358,161 +369,169 @@
         <div class="mt-6 bg-white p-4 rounded-lg shadow-md w-full">
             <h3 class="text-lg font-bold mb-3">Registro de Acciones</h3>
             <div class="max-h-64 overflow-y-auto" id="actionsLog">
-                @if(isset($actions) && $actions->count() > 0)
-                    @foreach($actions as $action)
+                <?php if(isset($actions) && $actions->count() > 0): ?>
+                    <?php $__currentLoopData = $actions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $action): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <div class="border-b pb-2 mb-2">
-                            @switch($action->action_type)
-                                @case('point_scored')
+                            <?php switch($action->action_type):
+                                case ('point_scored'): ?>
                                     <p class="text-sm">
                                         <!-- Línea NUEVA -->
 <td class="px-4 py-3 text-center text-gray-500 font-mono">
-    <span class="convert-to-local-time" data-time="{{ $action->created_at->toIso8601String() }}">...</span>
+    <span class="convert-to-local-time" data-time="<?php echo e($action->created_at->toIso8601String()); ?>">...</span>
 </td> - 
-                                        @if($action->player)
-                                            <span class="font-semibold {{ $action->team_side === 'local' ? 'text-blue-600' : 'text-red-600' }}">
-                                                {{ $action->player->name }} ({{ $action->player->number ?? 'N/A' }})
+                                        <?php if($action->player): ?>
+                                            <span class="font-semibold <?php echo e($action->team_side === 'local' ? 'text-blue-600' : 'text-red-600'); ?>">
+                                                <?php echo e($action->player->name); ?> (<?php echo e($action->player->number ?? 'N/A'); ?>)
                                             </span>
-                                        @else
-                                            <span class="font-semibold {{ $action->team_side === 'local' ? 'text-blue-600' : 'text-red-600' }}">
-                                                {{ $action->team_side === 'local' ? $game->localTeam->name : $game->awayTeam->name }}
+                                        <?php else: ?>
+                                            <span class="font-semibold <?php echo e($action->team_side === 'local' ? 'text-blue-600' : 'text-red-600'); ?>">
+                                                <?php echo e($action->team_side === 'local' ? $game->localTeam->name : $game->awayTeam->name); ?>
+
                                             </span>
-                                        @endif
-                                        : Anotó {{ $action->value }} punto{{ $action->value > 1 ? 's' : '' }}
+                                        <?php endif; ?>
+                                        : Anotó <?php echo e($action->value); ?> punto<?php echo e($action->value > 1 ? 's' : ''); ?>
+
                                     </p>
-                                    @break
-                                @case('foul_personal')
+                                    <?php break; ?>
+                                <?php case ('foul_personal'): ?>
                                     <p class="text-sm">
                                         <!-- Línea NUEVA -->
 <td class="px-4 py-3 text-center text-gray-500 font-mono">
-    <span class="convert-to-local-time" data-time="{{ $action->created_at->toIso8601String() }}">...</span>
+    <span class="convert-to-local-time" data-time="<?php echo e($action->created_at->toIso8601String()); ?>">...</span>
 </td> - 
-                                        @if($action->player)
-                                            <span class="font-semibold {{ $action->team_side === 'local' ? 'text-blue-600' : 'text-red-600' }}">
-                                                {{ $action->player->name }} ({{ $action->player->number ?? 'N/A' }})
+                                        <?php if($action->player): ?>
+                                            <span class="font-semibold <?php echo e($action->team_side === 'local' ? 'text-blue-600' : 'text-red-600'); ?>">
+                                                <?php echo e($action->player->name); ?> (<?php echo e($action->player->number ?? 'N/A'); ?>)
                                             </span>
-                                        @else
-                                            <span class="font-semibold {{ $action->team_side === 'local' ? 'text-blue-600' : 'text-red-600' }}">
-                                                {{ $action->team_side === 'local' ? $game->localTeam->name : $game->awayTeam->name }}
+                                        <?php else: ?>
+                                            <span class="font-semibold <?php echo e($action->team_side === 'local' ? 'text-blue-600' : 'text-red-600'); ?>">
+                                                <?php echo e($action->team_side === 'local' ? $game->localTeam->name : $game->awayTeam->name); ?>
+
                                             </span>
-                                        @endif
+                                        <?php endif; ?>
                                         : Falta Personal
                                     </p>
-                                    @break
-                                @case('foul_technical')
+                                    <?php break; ?>
+                                <?php case ('foul_technical'): ?>
                                     <p class="text-sm">
                                         <!-- Línea NUEVA -->
 <td class="px-4 py-3 text-center text-gray-500 font-mono">
-    <span class="convert-to-local-time" data-time="{{ $action->created_at->toIso8601String() }}">...</span>
+    <span class="convert-to-local-time" data-time="<?php echo e($action->created_at->toIso8601String()); ?>">...</span>
 </td> - 
-                                        @if($action->player)
-                                            <span class="font-semibold {{ $action->team_side === 'local' ? 'text-blue-600' : 'text-red-600' }}">
-                                                {{ $action->player->name }} ({{ $action->player->number ?? 'N/A' }})
+                                        <?php if($action->player): ?>
+                                            <span class="font-semibold <?php echo e($action->team_side === 'local' ? 'text-blue-600' : 'text-red-600'); ?>">
+                                                <?php echo e($action->player->name); ?> (<?php echo e($action->player->number ?? 'N/A'); ?>)
                                             </span>
-                                        @else
-                                            <span class="font-semibold {{ $action->team_side === 'local' ? 'text-blue-600' : 'text-red-600' }}">
-                                                {{ $action->team_side === 'local' ? $game->localTeam->name : $game->awayTeam->name }}
+                                        <?php else: ?>
+                                            <span class="font-semibold <?php echo e($action->team_side === 'local' ? 'text-blue-600' : 'text-red-600'); ?>">
+                                                <?php echo e($action->team_side === 'local' ? $game->localTeam->name : $game->awayTeam->name); ?>
+
                                             </span>
-                                        @endif
+                                        <?php endif; ?>
                                         : Falta Técnica
                                     </p>
-                                    @break
-                                @case('foul_unsportsmanlike')
+                                    <?php break; ?>
+                                <?php case ('foul_unsportsmanlike'): ?>
                                     <p class="text-sm">
                                         <!-- Línea NUEVA -->
 <td class="px-4 py-3 text-center text-gray-500 font-mono">
-    <span class="convert-to-local-time" data-time="{{ $action->created_at->toIso8601String() }}">...</span>
+    <span class="convert-to-local-time" data-time="<?php echo e($action->created_at->toIso8601String()); ?>">...</span>
 </td> - 
-                                        @if($action->player)
-                                            <span class="font-semibold {{ $action->team_side === 'local' ? 'text-blue-600' : 'text-red-600' }}">
-                                                {{ $action->player->name }} ({{ $action->player->number ?? 'N/A' }})
+                                        <?php if($action->player): ?>
+                                            <span class="font-semibold <?php echo e($action->team_side === 'local' ? 'text-blue-600' : 'text-red-600'); ?>">
+                                                <?php echo e($action->player->name); ?> (<?php echo e($action->player->number ?? 'N/A'); ?>)
                                             </span>
-                                        @else
-                                            <span class="font-semibold {{ $action->team_side === 'local' ? 'text-blue-600' : 'text-red-600' }}">
-                                                {{ $action->team_side === 'local' ? $game->localTeam->name : $game->awayTeam->name }}
+                                        <?php else: ?>
+                                            <span class="font-semibold <?php echo e($action->team_side === 'local' ? 'text-blue-600' : 'text-red-600'); ?>">
+                                                <?php echo e($action->team_side === 'local' ? $game->localTeam->name : $game->awayTeam->name); ?>
+
                                             </span>
-                                        @endif
+                                        <?php endif; ?>
                                         : Falta Antideportiva
                                     </p>
-                                    @break
-                                @case('foul_disqualifying')
+                                    <?php break; ?>
+                                <?php case ('foul_disqualifying'): ?>
                                     <p class="text-sm">
                                         <!-- Línea NUEVA -->
 <td class="px-4 py-3 text-center text-gray-500 font-mono">
-    <span class="convert-to-local-time" data-time="{{ $action->created_at->toIso8601String() }}">...</span>
+    <span class="convert-to-local-time" data-time="<?php echo e($action->created_at->toIso8601String()); ?>">...</span>
 </td> - 
-                                        @if($action->player)
-                                            <span class="font-semibold {{ $action->team_side === 'local' ? 'text-blue-600' : 'text-red-600' }}">
-                                                {{ $action->player->name }} ({{ $action->player->number ?? 'N/A' }})
+                                        <?php if($action->player): ?>
+                                            <span class="font-semibold <?php echo e($action->team_side === 'local' ? 'text-blue-600' : 'text-red-600'); ?>">
+                                                <?php echo e($action->player->name); ?> (<?php echo e($action->player->number ?? 'N/A'); ?>)
                                             </span>
-                                        @else
-                                            <span class="font-semibold {{ $action->team_side === 'local' ? 'text-blue-600' : 'text-red-600' }}">
-                                                {{ $action->team_side === 'local' ? $game->localTeam->name : $game->awayTeam->name }}
+                                        <?php else: ?>
+                                            <span class="font-semibold <?php echo e($action->team_side === 'local' ? 'text-blue-600' : 'text-red-600'); ?>">
+                                                <?php echo e($action->team_side === 'local' ? $game->localTeam->name : $game->awayTeam->name); ?>
+
                                             </span>
-                                        @endif
+                                        <?php endif; ?>
                                         : Falta Descalificatoria
                                     </p>
-                                    @break
-                                @case('timeout_called')
+                                    <?php break; ?>
+                                <?php case ('timeout_called'): ?>
                                     <p class="text-sm">
                                         <!-- Línea NUEVA -->
                                         <td class="px-4 py-3 text-center text-gray-500 font-mono">
-                                            <span class="convert-to-local-time" data-time="{{ $action->created_at->toIso8601String() }}">...</span>
+                                            <span class="convert-to-local-time" data-time="<?php echo e($action->created_at->toIso8601String()); ?>">...</span>
                                         </td> - 
-                                        <span class="font-semibold {{ $action->team_side === 'local' ? 'text-blue-600' : 'text-red-600' }}">
-                                            {{ $action->team_side === 'local' ? $game->localTeam->name : $game->awayTeam->name }}
+                                        <span class="font-semibold <?php echo e($action->team_side === 'local' ? 'text-blue-600' : 'text-red-600'); ?>">
+                                            <?php echo e($action->team_side === 'local' ? $game->localTeam->name : $game->awayTeam->name); ?>
+
                                         </span>
                                         : Tiempo Fuera
                                     </p>
-                                    @break
-                                @case('substitution')
-                                    @php
+                                    <?php break; ?>
+                                <?php case ('substitution'): ?>
+                                    <?php
                                         $playerOutName = 'Desconocido';
                                         if ($action->value) {
                                             $playerOut = \App\Models\Player::find($action->value);
                                             if ($playerOut) $playerOutName = $playerOut->name;
                                         }
-                                    @endphp
+                                    ?>
                                     <p class="text-sm">
                                         <!-- Línea NUEVA -->
 <td class="px-4 py-3 text-center text-gray-500 font-mono">
-    <span class="convert-to-local-time" data-time="{{ $action->created_at->toIso8601String() }}">...</span>
+    <span class="convert-to-local-time" data-time="<?php echo e($action->created_at->toIso8601String()); ?>">...</span>
 </td> - 
                                         <span class="font-semibold text-gray-600">Cambio</span>
-                                        @if($action->value)
-                                            : Sale {{ $playerOutName }}
-                                        @else
+                                        <?php if($action->value): ?>
+                                            : Sale <?php echo e($playerOutName); ?>
+
+                                        <?php else: ?>
                                             : Entra (Llena Vacante)
-                                        @endif
+                                        <?php endif; ?>
                                     </p>
-                                    @break
+                                    <?php break; ?>
                                 
-                                @case('overtime_started')
+                                <?php case ('overtime_started'): ?>
                                     <p class="text-sm">
                                         <!-- Línea NUEVA -->
 <td class="px-4 py-3 text-center text-gray-500 font-mono">
-    <span class="convert-to-local-time" data-time="{{ $action->created_at->toIso8601String() }}">...</span>
+    <span class="convert-to-local-time" data-time="<?php echo e($action->created_at->toIso8601String()); ?>">...</span>
 </td> - 
                                         <span class="font-semibold text-purple-600">Sistema</span>:
-                                        Inició Tiempo Extra ({{ $action->value }} min)
+                                        Inició Tiempo Extra (<?php echo e($action->value); ?> min)
                                     </p>
-                                    @break
+                                    <?php break; ?>
 
-                                @case('compensation_added')
+                                <?php case ('compensation_added'): ?>
                                     <p class="text-sm">
                                         <!-- Línea NUEVA -->
 <td class="px-4 py-3 text-center text-gray-500 font-mono">
-    <span class="convert-to-local-time" data-time="{{ $action->created_at->toIso8601String() }}">...</span>
+    <span class="convert-to-local-time" data-time="<?php echo e($action->created_at->toIso8601String()); ?>">...</span>
 </td> - 
                                         <span class="font-semibold text-yellow-600">Sistema</span>:
-                                        Agregó {{ $action->value }} min de compensación
+                                        Agregó <?php echo e($action->value); ?> min de compensación
                                     </p>
-                                    @break
-                            @endswitch
+                                    <?php break; ?>
+                            <?php endswitch; ?>
                         </div>
-                    @endforeach
-                @else
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                <?php else: ?>
                     <p class="text-sm text-gray-500">No hay acciones registradas aún.</p>
-                @endif
+                <?php endif; ?>
             </div>
         </div>      
     </div>
@@ -643,12 +662,12 @@
                                 
                                 <div class="mt-4 bg-gray-50 rounded-lg p-4 flex justify-around items-center border border-gray-200">
                                     <div class="text-center">
-                                        <p class="text-xs font-bold text-blue-600 uppercase">{{ $game->localTeam->name }}</p>
+                                        <p class="text-xs font-bold text-blue-600 uppercase"><?php echo e($game->localTeam->name); ?></p>
                                         <p class="text-4xl font-black text-gray-900" id="modalFinalLocalScore">0</p>
                                     </div>
                                     <div class="text-2xl text-gray-400 font-bold">VS</div>
                                     <div class="text-center">
-                                        <p class="text-xs font-bold text-red-600 uppercase">{{ $game->awayTeam->name }}</p>
+                                        <p class="text-xs font-bold text-red-600 uppercase"><?php echo e($game->awayTeam->name); ?></p>
                                         <p class="text-4xl font-black text-gray-900" id="modalFinalAwayScore">0</p>
                                     </div>
                                 </div>
@@ -727,52 +746,52 @@
 
         updateActionButtonsState();
     }
-    let gameId = {{ $game->id }};
-    let totalSeconds = {{ $game->seconds_remaining ?? ($gameDurationMinutes * 60) }};
+    let gameId = <?php echo e($game->id); ?>;
+    let totalSeconds = <?php echo e($game->seconds_remaining ?? ($gameDurationMinutes * 60)); ?>;
     let timeRemaining = totalSeconds * 1000;
-    let gameDurationConfig = {{ $gameDurationMinutes ?? 10 }} * 60;
-    let totalPeriodsConfig = {{ $totalPeriods ?? 4 }};
-    let currentPeriodDisplay = {{ $game->period ?? 1 }};
+    let gameDurationConfig = <?php echo e($gameDurationMinutes ?? 10); ?> * 60;
+    let totalPeriodsConfig = <?php echo e($totalPeriods ?? 4); ?>;
+    let currentPeriodDisplay = <?php echo e($game->period ?? 1); ?>;
 
  // --- NUEVAS VARIABLES: Contadores de Faltas de Equipo ---
-    let localTeamFouls = {{ $localTeamFouls ?? 0 }};
-    let awayTeamFouls = {{ $awayTeamFouls ?? 0 }};
+    let localTeamFouls = <?php echo e($localTeamFouls ?? 0); ?>;
+    let awayTeamFouls = <?php echo e($awayTeamFouls ?? 0); ?>;
     // -----------------------------------------------------
 
-    let maxTimeouts = {{ $timeoutsPerGame ?? 5 }};
-    let localTimeouts = {{ $localTimeoutsLeft ?? $timeoutsPerGame }}; 
-    let awayTimeouts = {{ $awayTimeoutsLeft ?? $timeoutsPerGame }};
+    let maxTimeouts = <?php echo e($timeoutsPerGame ?? 5); ?>;
+    let localTimeouts = <?php echo e($localTimeoutsLeft ?? $timeoutsPerGame); ?>; 
+    let awayTimeouts = <?php echo e($awayTimeoutsLeft ?? $timeoutsPerGame); ?>;
     
     // LÍMITES DE FALTAS DESDE CONFIGURACIÓN
-    let foulLimits = @json($foulLimits);
+    let foulLimits = <?php echo json_encode($foulLimits, 15, 512) ?>;
     let playerStats = {};
     let ejectedPlayerIds = []; // Lista para guardar IDs de jugadores expulsados
 
     // Inicializar estadísticas usando datos de la DB o 0 si es nuevo
-    @foreach($localActivePlayers as $player)
-        @php $s = $localStats[$player->id] ?? ['points' => 0, 'fouls' => ['personal' => 0, 'technical' => 0, 'unsportsmanlike' => 0, 'disqualifying' => 0]]; @endphp
-        playerStats['local-{{ $player->id }}'] = { 
-            points: {{ $s['points'] }}, 
+    <?php $__currentLoopData = $localActivePlayers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $player): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <?php $s = $localStats[$player->id] ?? ['points' => 0, 'fouls' => ['personal' => 0, 'technical' => 0, 'unsportsmanlike' => 0, 'disqualifying' => 0]]; ?>
+        playerStats['local-<?php echo e($player->id); ?>'] = { 
+            points: <?php echo e($s['points']); ?>, 
             fouls: { 
-                personal: {{ $s['fouls']['personal'] }}, 
-                technical: {{ $s['fouls']['technical'] }}, 
-                unsportsmanlike: {{ $s['fouls']['unsportsmanlike'] }}, 
-                disqualifying: {{ $s['fouls']['disqualifying'] }} 
+                personal: <?php echo e($s['fouls']['personal']); ?>, 
+                technical: <?php echo e($s['fouls']['technical']); ?>, 
+                unsportsmanlike: <?php echo e($s['fouls']['unsportsmanlike']); ?>, 
+                disqualifying: <?php echo e($s['fouls']['disqualifying']); ?> 
             } 
         };
-    @endforeach
-    @foreach($awayActivePlayers as $player)
-        @php $s = $awayStats[$player->id] ?? ['points' => 0, 'fouls' => ['personal' => 0, 'technical' => 0, 'unsportsmanlike' => 0, 'disqualifying' => 0]]; @endphp
-        playerStats['away-{{ $player->id }}'] = { 
-            points: {{ $s['points'] }}, 
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+    <?php $__currentLoopData = $awayActivePlayers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $player): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <?php $s = $awayStats[$player->id] ?? ['points' => 0, 'fouls' => ['personal' => 0, 'technical' => 0, 'unsportsmanlike' => 0, 'disqualifying' => 0]]; ?>
+        playerStats['away-<?php echo e($player->id); ?>'] = { 
+            points: <?php echo e($s['points']); ?>, 
             fouls: { 
-                personal: {{ $s['fouls']['personal'] }}, 
-                technical: {{ $s['fouls']['technical'] }}, 
-                unsportsmanlike: {{ $s['fouls']['unsportsmanlike'] }}, 
-                disqualifying: {{ $s['fouls']['disqualifying'] }} 
+                personal: <?php echo e($s['fouls']['personal']); ?>, 
+                technical: <?php echo e($s['fouls']['technical']); ?>, 
+                unsportsmanlike: <?php echo e($s['fouls']['unsportsmanlike']); ?>, 
+                disqualifying: <?php echo e($s['fouls']['disqualifying']); ?> 
             } 
         };
-    @endforeach
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
      // --- NUEVA FUNCIÓN PARA MOSTRAR EL MODAL DE EXPULSIÓN ---
     let pendingSubstitution = null; // Variable temporal para guardar datos del cambio
@@ -1374,9 +1393,9 @@
             actorName = `${action.player.name} (${action.player.number || 'N/A'})`;
         } else if (action.team_side === 'local') {
              // Fallback si es acción de equipo pero sin jugador (ej. timeout)
-             actorName = '{{ $game->localTeam->name }}';
+             actorName = '<?php echo e($game->localTeam->name); ?>';
         } else if (action.team_side === 'away') {
-             actorName = '{{ $game->awayTeam->name }}';
+             actorName = '<?php echo e($game->awayTeam->name); ?>';
         }
 
         switch(action.action_type) {
@@ -1756,7 +1775,7 @@
                     clearInterval(pollingInterval); // Detener polling
                     // Opcional: Redirigir al usuario
                     // alert('El partido ha finalizado por otro usuario.');
-                    // window.location.href = '/tournaments/' + {{ $game->tournament_id }} + '/schedule';
+                    // window.location.href = '/tournaments/' + <?php echo e($game->tournament_id); ?> + '/schedule';
                 }
             })
             .catch(error => console.log('Error al sincronizar:', error));
@@ -1947,4 +1966,13 @@
     });
 </script>
 
-</x-app-layout>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $attributes = $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $component = $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?><?php /**PATH C:\Users\luism\gemini-work\sistemaTorneos\resources\views/games/live.blade.php ENDPATH**/ ?>
