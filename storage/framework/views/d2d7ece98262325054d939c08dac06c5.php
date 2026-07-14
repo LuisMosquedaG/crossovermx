@@ -797,12 +797,25 @@
                 <div class="space-y-12">
                     <?php $__currentLoopData = $dashboardData; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tData): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-white/50 p-6 md:p-8">
-                            <div class="border-b border-gray-100 pb-4 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                            <div class="border-b border-gray-100 pb-4 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                 <h2 class="text-2xl font-black text-gray-900 tracking-tight uppercase"><?php echo e($tData['tournament_name']); ?></h2>
-                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-orange-50 text-orange-600 border border-orange-100 uppercase tracking-wider">
-                                    <?php echo e($tData['tournament_type'] === 'round_robin' ? 'Todos contra todos' : 'Eliminatoria'); ?>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-orange-50 text-orange-600 border border-orange-100 uppercase tracking-wider">
+                                        <?php echo e($tData['tournament_type'] === 'round_robin' ? 'Todos contra todos' : 'Eliminatoria'); ?>
 
-                                </span>
+                                    </span>
+                                    <?php if($tData['tournament_status'] === 'finished'): ?>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 border border-gray-200 uppercase tracking-wider">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-gray-500"></span>
+                                            Terminado
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200 uppercase tracking-wider">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                            Activo
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
                             </div>
 
                             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">

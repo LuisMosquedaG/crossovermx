@@ -865,6 +865,7 @@ public function store(Request $request)
                 $dashboardData[] = [
                     'tournament_name' => $t->name,
                     'tournament_type' => $tType,
+                    'tournament_status' => $t->status,
                     'top_scorers' => $topScorers,
                     'top_teams' => $topTeams,
                     'upcoming_games' => $upcoming
