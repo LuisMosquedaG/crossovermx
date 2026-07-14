@@ -1,4 +1,13 @@
-<x-app-layout>
+<?php if (isset($component)) { $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54 = $attributes; } ?>
+<?php $component = App\View\Components\AppLayout::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('app-layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\App\View\Components\AppLayout::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
     <!-- Chart.js CDN for beautiful animations and graphics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -12,7 +21,7 @@
                 <div class="bg-gradient-to-tr from-blue-50 to-white p-5 rounded-2xl border border-blue-100 shadow-sm flex items-center justify-between transition-all hover:shadow-md hover:scale-[1.01]">
                     <div>
                         <p class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Torneos Activos</p>
-                        <h3 class="text-3xl font-black text-slate-800 mt-1">{{ $activeTournamentsCount }}</h3>
+                        <h3 class="text-3xl font-black text-slate-800 mt-1"><?php echo e($activeTournamentsCount); ?></h3>
                         <p class="text-[10px] text-slate-500 mt-0.5">En curso actualmente</p>
                     </div>
                     <div class="bg-blue-500/10 p-3 rounded-full text-blue-600">
@@ -26,7 +35,7 @@
                 <div class="bg-gradient-to-tr from-green-50 to-white p-5 rounded-2xl border border-green-100 shadow-sm flex items-center justify-between transition-all hover:shadow-md hover:scale-[1.01]">
                     <div>
                         <p class="text-xs font-semibold text-green-600 uppercase tracking-wider">Total Jugadores</p>
-                        <h3 class="text-3xl font-black text-slate-800 mt-1">{{ $totalPlayersCount }}</h3>
+                        <h3 class="text-3xl font-black text-slate-800 mt-1"><?php echo e($totalPlayersCount); ?></h3>
                         <p class="text-[10px] text-slate-500 mt-0.5">Registrados en la plataforma</p>
                     </div>
                     <div class="bg-green-500/10 p-3 rounded-full text-green-600">
@@ -40,7 +49,7 @@
                 <div class="bg-gradient-to-tr from-purple-50 to-white p-5 rounded-2xl border border-purple-100 shadow-sm flex items-center justify-between transition-all hover:shadow-md hover:scale-[1.01]">
                     <div>
                         <p class="text-xs font-semibold text-purple-600 uppercase tracking-wider">Total Equipos</p>
-                        <h3 class="text-3xl font-black text-slate-800 mt-1">{{ $totalTeamsCount }}</h3>
+                        <h3 class="text-3xl font-black text-slate-800 mt-1"><?php echo e($totalTeamsCount); ?></h3>
                         <p class="text-[10px] text-slate-500 mt-0.5">Equipos inscritos</p>
                     </div>
                     <div class="bg-purple-500/10 p-3 rounded-full text-purple-600">
@@ -54,7 +63,7 @@
                 <div class="bg-gradient-to-tr from-amber-50 to-white p-5 rounded-2xl border border-amber-100 shadow-sm flex items-center justify-between transition-all hover:shadow-md hover:scale-[1.01]">
                     <div>
                         <p class="text-xs font-semibold text-amber-600 uppercase tracking-wider">Total Torneos</p>
-                        <h3 class="text-3xl font-black text-slate-800 mt-1">{{ $totalTournamentsCount }}</h3>
+                        <h3 class="text-3xl font-black text-slate-800 mt-1"><?php echo e($totalTournamentsCount); ?></h3>
                         <p class="text-[10px] text-slate-500 mt-0.5">Histórico registrado</p>
                     </div>
                     <div class="bg-amber-500/10 p-3 rounded-full text-amber-600">
@@ -68,7 +77,7 @@
                 <div class="bg-gradient-to-tr from-rose-50 to-white p-5 rounded-2xl border border-rose-100 shadow-sm flex items-center justify-between transition-all hover:shadow-md hover:scale-[1.01]">
                     <div>
                         <p class="text-xs font-semibold text-rose-600 uppercase tracking-wider">Total Árbitros</p>
-                        <h3 class="text-3xl font-black text-slate-800 mt-1">{{ $totalRefereesCount }}</h3>
+                        <h3 class="text-3xl font-black text-slate-800 mt-1"><?php echo e($totalRefereesCount); ?></h3>
                         <p class="text-[10px] text-slate-500 mt-0.5">Cuerpo arbitral activo</p>
                     </div>
                     <div class="bg-rose-500/10 p-3 rounded-full text-rose-600">
@@ -109,7 +118,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
                 <!-- Top 5 Scorers per Tournament -->
-                <div class="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-sm lg:col-span-2" x-data="{ activeTab: '{{ count($topScorersByTournament) > 0 ? $topScorersByTournament[0]['id'] : '' }}' }">
+                <div class="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-sm lg:col-span-2" x-data="{ activeTab: '<?php echo e(count($topScorersByTournament) > 0 ? $topScorersByTournament[0]['id'] : ''); ?>' }">
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-gray-100 pb-3 mb-4">
                         <div>
                             <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wide">Top 5 Anotadores por Torneo</h4>
@@ -117,26 +126,27 @@
                         </div>
                         
                         <!-- Tabs Navigation -->
-                        @if(count($topScorersByTournament) > 0)
+                        <?php if(count($topScorersByTournament) > 0): ?>
                         <div class="flex flex-wrap gap-1 bg-gray-50 p-1 rounded-lg border border-gray-200/60 max-h-24 overflow-y-auto hide-scrollbar">
-                            @foreach($topScorersByTournament as $tab)
+                            <?php $__currentLoopData = $topScorersByTournament; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tab): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <button 
-                                @click="activeTab = '{{ $tab['id'] }}'"
-                                :class="activeTab === '{{ $tab['id'] }}' ? 'bg-white text-slate-800 border-gray-200 shadow-sm' : 'text-slate-500 border-transparent hover:text-slate-800'"
+                                @click="activeTab = '<?php echo e($tab['id']); ?>'"
+                                :class="activeTab === '<?php echo e($tab['id']); ?>' ? 'bg-white text-slate-800 border-gray-200 shadow-sm' : 'text-slate-500 border-transparent hover:text-slate-800'"
                                 class="text-[10px] font-bold px-2.5 py-1 rounded-md border transition-all truncate max-w-[120px]"
-                                title="{{ $tab['name'] }}"
+                                title="<?php echo e($tab['name']); ?>"
                             >
-                                {{ $tab['name'] }}
+                                <?php echo e($tab['name']); ?>
+
                             </button>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
 
                     <!-- Tabs Content Tables -->
-                    @if(count($topScorersByTournament) > 0)
-                        @foreach($topScorersByTournament as $tab)
-                        <div x-show="activeTab === '{{ $tab['id'] }}'" x-transition class="overflow-x-auto">
+                    <?php if(count($topScorersByTournament) > 0): ?>
+                        <?php $__currentLoopData = $topScorersByTournament; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tab): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <div x-show="activeTab === '<?php echo e($tab['id']); ?>'" x-transition class="overflow-x-auto">
                             <table class="w-full text-left border-collapse">
                                 <thead>
                                     <tr class="border-b border-gray-100 text-[10px] font-black uppercase text-slate-400 tracking-wider">
@@ -148,37 +158,37 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-50">
-                                    @foreach($tab['scorers'] as $index => $scorer)
+                                    <?php $__currentLoopData = $tab['scorers']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $scorer): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <tr class="hover:bg-gray-50/50 transition-colors text-xs text-slate-700">
                                         <td class="py-3 px-3 text-center">
-                                            @if($index == 0)
+                                            <?php if($index == 0): ?>
                                                 <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-100 text-amber-800 font-extrabold text-[10px]">1🏆</span>
-                                            @elseif($index == 1)
+                                            <?php elseif($index == 1): ?>
                                                 <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-slate-800 font-extrabold text-[10px]">2🥈</span>
-                                            @elseif($index == 2)
+                                            <?php elseif($index == 2): ?>
                                                 <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-50 text-amber-700 font-extrabold text-[10px]">3🥉</span>
-                                            @else
-                                                <span class="font-bold text-slate-400">{{ $index + 1 }}</span>
-                                            @endif
+                                            <?php else: ?>
+                                                <span class="font-bold text-slate-400"><?php echo e($index + 1); ?></span>
+                                            <?php endif; ?>
                                         </td>
-                                        <td class="py-3 px-3 font-semibold text-slate-800">{{ $scorer->name }}</td>
-                                        <td class="py-3 px-3 text-center font-mono font-bold text-slate-600 bg-slate-50 border border-slate-100 rounded-md py-0.5 px-1.5">{{ $scorer->number ?? '-' }}</td>
-                                        <td class="py-3 px-3 text-slate-500">{{ $scorer->team_name }}</td>
-                                        <td class="py-3 px-3 text-right font-black text-slate-800 pr-4">{{ $scorer->total_points }} pts</td>
+                                        <td class="py-3 px-3 font-semibold text-slate-800"><?php echo e($scorer->name); ?></td>
+                                        <td class="py-3 px-3 text-center font-mono font-bold text-slate-600 bg-slate-50 border border-slate-100 rounded-md py-0.5 px-1.5"><?php echo e($scorer->number ?? '-'); ?></td>
+                                        <td class="py-3 px-3 text-slate-500"><?php echo e($scorer->team_name); ?></td>
+                                        <td class="py-3 px-3 text-right font-black text-slate-800 pr-4"><?php echo e($scorer->total_points); ?> pts</td>
                                     </tr>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </tbody>
                             </table>
                         </div>
-                        @endforeach
-                    @else
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    <?php else: ?>
                         <div class="py-12 text-center text-slate-400 text-xs">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 mx-auto mb-2 text-slate-300">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.182 16.318A4.486 4.486 0 0 0 12.016 15a4.486 4.486 0 0 0-3.198 1.318M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Z" />
                             </svg>
                             No hay estadísticas de anotación cargadas para los torneos actuales.
                         </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
 
                 <!-- Single Match Record Holder Highlight Card -->
@@ -197,11 +207,11 @@
                             <span class="text-[9px] font-semibold text-slate-400">En un Partido</span>
                         </div>
 
-                        @if($topSingleGamePlayer)
+                        <?php if($topSingleGamePlayer): ?>
                         <div class="mt-4 space-y-4">
                             <!-- Large record score bubble -->
                             <div class="flex items-baseline gap-2">
-                                <h2 class="text-6xl font-black text-amber-400 tracking-tighter leading-none">{{ $topSingleGamePlayer->points_scored }}</h2>
+                                <h2 class="text-6xl font-black text-amber-400 tracking-tighter leading-none"><?php echo e($topSingleGamePlayer->points_scored); ?></h2>
                                 <span class="text-sm font-bold text-slate-300">Puntos</span>
                             </div>
 
@@ -209,9 +219,11 @@
                             <div class="space-y-1 pt-2">
                                 <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Jugador Destacado</p>
                                 <h3 class="text-xl font-black text-white leading-tight">
-                                    {{ $topSingleGamePlayer->name }}
+                                    <?php echo e($topSingleGamePlayer->name); ?>
+
                                     <span class="text-xs font-bold text-slate-400 bg-white/5 border border-white/10 rounded px-1.5 py-0.5 ml-1 select-none">
-                                        #{{ $topSingleGamePlayer->number ?? '-' }}
+                                        #<?php echo e($topSingleGamePlayer->number ?? '-'); ?>
+
                                     </span>
                                 </h3>
                             </div>
@@ -220,19 +232,19 @@
                             <div class="grid grid-cols-2 gap-4 border-t border-slate-700/60 pt-4 text-xs">
                                 <div>
                                     <p class="text-slate-400 uppercase tracking-wider text-[10px] font-semibold">Equipo</p>
-                                    <p class="font-bold text-slate-200 mt-0.5 truncate">{{ $topSingleGamePlayer->team_name }}</p>
+                                    <p class="font-bold text-slate-200 mt-0.5 truncate"><?php echo e($topSingleGamePlayer->team_name); ?></p>
                                 </div>
                                 <div>
                                     <p class="text-slate-400 uppercase tracking-wider text-[10px] font-semibold">Torneo</p>
-                                    <p class="font-bold text-slate-200 mt-0.5 truncate">{{ $topSingleGamePlayer->tournament_name ?? '-' }}</p>
+                                    <p class="font-bold text-slate-200 mt-0.5 truncate"><?php echo e($topSingleGamePlayer->tournament_name ?? '-'); ?></p>
                                 </div>
                             </div>
                         </div>
-                        @else
+                        <?php else: ?>
                         <div class="py-12 text-center text-slate-400 text-xs">
                             No hay partidos o anotaciones registradas aún en el sistema.
                         </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
 
                     <div class="mt-6 border-t border-slate-700/40 pt-4 text-[10px] text-slate-400 flex items-center gap-1.5">
@@ -253,34 +265,37 @@
                     <span class="text-[10px] font-semibold text-slate-400 uppercase bg-slate-100 px-2.5 py-1 rounded-full">Cronológico</span>
                 </div>
 
-                @if($upcomingGames->isNotEmpty())
+                <?php if($upcomingGames->isNotEmpty()): ?>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                    @foreach($upcomingGames as $game)
+                    <?php $__currentLoopData = $upcomingGames; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $game): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <div class="bg-slate-50 hover:bg-slate-100/70 border border-slate-200/60 rounded-xl p-4 flex flex-col justify-between transition-all hover:shadow-sm hover:scale-[1.01]">
                         <!-- Top Info: Tournament & Court -->
                         <div class="space-y-1">
-                            <span class="block text-[8px] font-extrabold uppercase text-slate-400 tracking-wider truncate" title="{{ $game->tournament->name }}">
-                                {{ $game->tournament->name }}
+                            <span class="block text-[8px] font-extrabold uppercase text-slate-400 tracking-wider truncate" title="<?php echo e($game->tournament->name); ?>">
+                                <?php echo e($game->tournament->name); ?>
+
                             </span>
                             <div class="flex items-center gap-1 text-[10px] font-semibold text-slate-600">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 text-slate-400">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
                                 </svg>
-                                <span class="truncate">{{ $game->court ? $game->court->name : 'Sin asignar' }}</span>
+                                <span class="truncate"><?php echo e($game->court ? $game->court->name : 'Sin asignar'); ?></span>
                             </div>
                         </div>
 
                         <!-- Mid Info: VS Matchup -->
                         <div class="my-4 space-y-1.5 text-center border-y border-slate-200/40 py-2.5">
-                            <p class="text-xs font-black text-blue-600 truncate" title="{{ $game->localTeam->name }}">
-                                {{ $game->localTeam->name }}
+                            <p class="text-xs font-black text-blue-600 truncate" title="<?php echo e($game->localTeam->name); ?>">
+                                <?php echo e($game->localTeam->name); ?>
+
                             </p>
                             <span class="inline-block text-[9px] font-black text-slate-400 bg-white border border-slate-200 px-2 py-0.5 rounded shadow-2xs leading-none">
                                 VS
                             </span>
-                            <p class="text-xs font-black text-red-600 truncate" title="{{ $game->awayTeam->name }}">
-                                {{ $game->awayTeam->name }}
+                            <p class="text-xs font-black text-red-600 truncate" title="<?php echo e($game->awayTeam->name); ?>">
+                                <?php echo e($game->awayTeam->name); ?>
+
                             </p>
                         </div>
 
@@ -289,10 +304,12 @@
                             <div class="bg-white border border-slate-200/50 rounded-lg p-2 text-center">
                                 <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Fecha y Hora</p>
                                 <p class="text-xs font-black text-slate-800 font-mono mt-0.5">
-                                    {{ $game->date_time ? $game->date_time->format('d/m/Y') : 'No programado' }}
+                                    <?php echo e($game->date_time ? $game->date_time->format('d/m/Y') : 'No programado'); ?>
+
                                 </p>
                                 <p class="text-[10px] font-bold text-slate-600 font-mono">
-                                    {{ $game->date_time ? $game->date_time->format('h:i A') : '' }}
+                                    <?php echo e($game->date_time ? $game->date_time->format('h:i A') : ''); ?>
+
                                 </p>
                             </div>
                             
@@ -304,16 +321,16 @@
                             </div>
                         </div>
                     </div>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
-                @else
+                <?php else: ?>
                 <div class="py-12 text-center text-slate-400 text-xs">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 mx-auto mb-2 text-slate-300">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
                     </svg>
                     No hay próximos juegos programados en este momento.
                 </div>
-                @endif
+                <?php endif; ?>
             </div>
 
         </div>
@@ -331,10 +348,11 @@
                     datasets: [{
                         label: 'Total Registrado',
                         data: [
-                            {{ $totalPlayersCount }},
-                            {{ $totalTeamsCount }},
-                            {{ $totalTournamentsCount }},
-                            {{ $totalRefereesCount }}
+                            <?php echo e($totalPlayersCount); ?>,
+                            <?php echo e($totalTeamsCount); ?>,
+                            <?php echo e($totalTournamentsCount); ?>,
+                            <?php echo e($totalRefereesCount); ?>
+
                         ],
                         backgroundColor: [
                             'rgba(34, 197, 94, 0.85)',  // Green
@@ -403,9 +421,10 @@
                     labels: ['Activos', 'Finalizados', 'Otros/Pendientes'],
                     datasets: [{
                         data: [
-                            {{ $activeTournamentsCount }},
-                            {{ $finishedTournamentsCount }},
-                            {{ $pendingTournamentsCount }}
+                            <?php echo e($activeTournamentsCount); ?>,
+                            <?php echo e($finishedTournamentsCount); ?>,
+                            <?php echo e($pendingTournamentsCount); ?>
+
                         ],
                         backgroundColor: [
                             'rgba(59, 130, 246, 0.85)',  // Blue
@@ -442,4 +461,14 @@
         });
     </script>
 
-</x-app-layout>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $attributes = $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $component = $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php /**PATH C:\Users\luism\gemini-work\sistemaTorneos\resources\views/dashboard.blade.php ENDPATH**/ ?>

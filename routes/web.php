@@ -11,6 +11,7 @@ use App\Http\Controllers\GameController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\TermsController;
 use App\Http\Controllers\StrengthController;
+use App\Http\Controllers\DashboardController;
 
 Route::post('/aceptar-terminos', [TermsController::class, 'accept'])->name('terms.accept');
 
@@ -20,9 +21,7 @@ Route::get('/', function () {
 
 Route::get('/posiciones', [TournamentController::class, 'publicStandings'])->name('public.standings');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 
 // --- Rutas para la gestión de torneos ---
