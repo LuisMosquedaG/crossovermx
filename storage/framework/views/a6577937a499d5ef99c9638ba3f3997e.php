@@ -131,10 +131,17 @@
     <div class="relative z-10 grid grid-cols-3 gap-1 md:gap-2 items-center text-center">
 
     <!-- Equipo Local -->
-    <div>
-    <h3 class="text-[9px] md:text-lg font-bold uppercase tracking-wider truncate text-blue-400 drop-shadow-md"><?php echo e($game->localTeam->name); ?></h3>
-    <!-- CAMBIOS: Fuente reducida para ahorrar altura (md:text-7xl -> md:text-6xl, lg:text-8xl -> lg:text-7xl) -->
-    <p class="text-2xl md:text-6xl lg:text-7xl font-black font-mono text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)] leading-none" id="localScore"><?php echo e($game->local_team_score ?? 0); ?></p>
+    <div class="relative flex items-center justify-center h-16 md:h-28 overflow-visible">
+        <!-- Nombre del equipo detrás de los puntos -->
+        <h3 class="absolute w-full text-center font-black uppercase text-2xl md:text-5xl lg:text-6xl text-blue-400/25 tracking-wider pointer-events-none select-none z-0 leading-none truncate px-1">
+            <?php echo e($game->localTeam->name); ?>
+
+        </h3>
+        <!-- Puntos/Score al frente -->
+        <p class="relative z-10 text-2xl md:text-6xl lg:text-7xl font-black font-mono text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)] leading-none animate-pulse-once" id="localScore">
+            <?php echo e($game->local_team_score ?? 0); ?>
+
+        </p>
     </div>
 
     <!-- Centro -->
@@ -147,10 +154,17 @@
     </div>
 
     <!-- Equipo Visitante -->
-    <div>
-    <h3 class="text-[9px] md:text-lg font-bold uppercase tracking-wider truncate text-red-400 drop-shadow-md"><?php echo e($game->awayTeam->name); ?></h3>
-    <!-- CAMBIOS: Fuente reducida para ahorrar altura (md:text-7xl -> md:text-6xl, lg:text-8xl -> lg:text-7xl) -->
-    <p class="text-2xl md:text-6xl lg:text-7xl font-black font-mono text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)] leading-none" id="awayScore"><?php echo e($game->away_team_score ?? 0); ?></p>
+    <div class="relative flex items-center justify-center h-16 md:h-28 overflow-visible">
+        <!-- Nombre del equipo detrás de los puntos -->
+        <h3 class="absolute w-full text-center font-black uppercase text-2xl md:text-5xl lg:text-6xl text-red-400/25 tracking-wider pointer-events-none select-none z-0 leading-none truncate px-1">
+            <?php echo e($game->awayTeam->name); ?>
+
+        </h3>
+        <!-- Puntos/Score al frente -->
+        <p class="relative z-10 text-2xl md:text-6xl lg:text-7xl font-black font-mono text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)] leading-none animate-pulse-once" id="awayScore">
+            <?php echo e($game->away_team_score ?? 0); ?>
+
+        </p>
     </div>
     </div>
     </div>
@@ -182,8 +196,8 @@
     Finalizar
     </button>
     <!-- ESTADO DEL PARTIDO -->
-    <div id="matchStatusPill" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] md:text-xs font-black bg-gray-100 text-gray-800 border border-gray-200 uppercase tracking-wider shadow-sm shrink-0">
-        <span id="matchStatusDot" class="h-1.5 w-1.5 rounded-full bg-gray-500"></span>
+    <div id="matchStatusPill" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] md:text-xs font-black bg-yellow-50 text-yellow-700 border border-yellow-200 uppercase tracking-wider shadow-sm shrink-0">
+        <span id="matchStatusDot" class="h-1.5 w-1.5 rounded-full bg-yellow-500"></span>
         <span id="matchStatusText">Pausado</span>
     </div>
     <!-- BOTÓN DESHACER (NUEVO) -->
@@ -246,8 +260,8 @@
                                     <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordFoul(<?php echo e($localActivePlayers[$i]->id); ?>, 'local', 'foul_technical', <?php echo e($i); ?>)">T</button>
                                     <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordFoul(<?php echo e($localActivePlayers[$i]->id); ?>, 'local', 'foul_disqualifying', <?php echo e($i); ?>)">D</button>
                                     <div class="w-px h-4 md:h-5 bg-gray-300 shrink-0 mx-0.5"></div>
-                                    <button class="bg-gray-200 text-gray-400 border border-gray-300 rounded hover:bg-gray-300 active:bg-gray-400 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 change-player-btn shrink-0" data-team-side="local" data-player-id="<?php echo e($localActivePlayers[$i]->id); ?>" data-player-name="<?php echo e($localActivePlayers[$i]->name); ?>" data-player-number="<?php echo e($localActivePlayers[$i]->number ?? ''); ?>" data-slot-index="<?php echo e($i); ?>" title="Cambiar Jugador">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 md:w-5 md:h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 8H5M8 5l-3 3 3 3" /><path stroke-linecap="round" stroke-linejoin="round" d="M5 16H19M16 13l3 3-3 3" /></svg>
+                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 change-player-btn shrink-0" data-team-side="local" data-player-id="<?php echo e($localActivePlayers[$i]->id); ?>" data-player-name="<?php echo e($localActivePlayers[$i]->name); ?>" data-player-number="<?php echo e($localActivePlayers[$i]->number ?? ''); ?>" data-slot-index="<?php echo e($i); ?>" title="Cambiar Jugador">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 md:w-5 md:h-5 text-gray-400"><path stroke-linecap="round" stroke-linejoin="round" d="M19 8H5M8 5l-3 3 3 3" /><path stroke-linecap="round" stroke-linejoin="round" d="M5 16H19M16 13l3 3-3 3" /></svg>
                                     </button>
                                 </div>
                             </li>
@@ -324,8 +338,8 @@
                                     <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordFoul(<?php echo e($awayActivePlayers[$i]->id); ?>, 'away', 'foul_technical', <?php echo e($i); ?>)">T</button>
                                     <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 whitespace-nowrap shrink-0" onclick="recordFoul(<?php echo e($awayActivePlayers[$i]->id); ?>, 'away', 'foul_disqualifying', <?php echo e($i); ?>)">D</button>
                                     <div class="w-px h-4 md:h-5 bg-gray-300 shrink-0 mx-0.5"></div>
-                                    <button class="bg-gray-200 text-gray-400 border border-gray-300 rounded hover:bg-gray-300 active:bg-gray-400 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 change-player-btn shrink-0" data-team-side="away" data-player-id="<?php echo e($awayActivePlayers[$i]->id); ?>" data-player-name="<?php echo e($awayActivePlayers[$i]->name); ?>" data-player-number="<?php echo e($awayActivePlayers[$i]->number ?? ''); ?>" data-slot-index="<?php echo e($i); ?>" title="Cambiar Jugador">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 md:w-5 md:h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 8H5M8 5l-3 3 3 3" /><path stroke-linecap="round" stroke-linejoin="round" d="M5 16H19M16 13l3 3-3 3" /></svg>
+                                    <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 change-player-btn shrink-0" data-team-side="away" data-player-id="<?php echo e($awayActivePlayers[$i]->id); ?>" data-player-name="<?php echo e($awayActivePlayers[$i]->name); ?>" data-player-number="<?php echo e($awayActivePlayers[$i]->number ?? ''); ?>" data-slot-index="<?php echo e($i); ?>" title="Cambiar Jugador">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 md:w-5 md:h-5 text-gray-400"><path stroke-linecap="round" stroke-linejoin="round" d="M19 8H5M8 5l-3 3 3 3" /><path stroke-linecap="round" stroke-linejoin="round" d="M5 16H19M16 13l3 3-3 3" /></svg>
                                     </button>
                                 </div>
                             </li>
@@ -739,8 +753,8 @@
             dot.className = "h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse";
             text.textContent = "Tiempo Fuera";
         } else { // pausado
-            pill.className = "inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] md:text-xs font-black bg-gray-100 text-gray-800 border border-gray-200 uppercase tracking-wider shadow-sm shrink-0";
-            dot.className = "h-1.5 w-1.5 rounded-full bg-gray-500";
+            pill.className = "inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] md:text-xs font-black bg-yellow-50 text-yellow-700 border border-yellow-200 uppercase tracking-wider shadow-sm shrink-0";
+            dot.className = "h-1.5 w-1.5 rounded-full bg-yellow-500";
             text.textContent = "Pausado";
         }
 
@@ -1688,14 +1702,14 @@
                             
                             <div class="w-px h-4 md:h-5 bg-gray-300 shrink-0 mx-0.5"></div>
                             
-                            <button class="bg-gray-200 text-gray-400 border border-gray-300 rounded hover:bg-gray-300 active:bg-gray-400 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 change-player-btn shrink-0" 
+                            <button class="bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all text-[11px] md:text-xs lg:text-sm font-bold py-2.5 px-2 md:px-3 lg:px-4 change-player-btn shrink-0" 
                                 data-team-side="${teamSide}" 
                                 data-player-id="${playerIn.id}" 
                                 data-player-name="${playerIn.name}" 
                                 data-player-number="${playerIn.number ?? ''}"
                                 data-slot-index="${slotIndex}"
                                 title="Cambiar Jugador">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 md:w-5 md:h-5">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 md:w-5 md:h-5 text-gray-400">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19 8H5M8 5l-3 3 3 3" />
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 16H19M16 13l3 3-3 3" />
                                 </svg>
