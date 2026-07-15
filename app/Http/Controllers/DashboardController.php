@@ -107,7 +107,11 @@ class DashboardController extends Controller
 
         // 5. Upcoming games
         $upcomingGames = \App\Models\Game::where('status', 'pending')
-            ->when($clientId, fn($q) => $q->where('client_id', $clientId))
+            ->when($clientId, function($q) use ($clientId) {
+                $q->whereHas('tournament', function($t) use ($clientId) {
+                    $t->where('client_id', $clientId);
+                });
+            })
             ->with(['localTeam', 'awayTeam', 'court', 'tournament'])
             ->orderBy('date_time', 'asc')
             ->limit(5)

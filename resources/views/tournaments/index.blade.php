@@ -71,7 +71,7 @@
                                             <div class="flex items-center justify-center space-x-3">
 
                                                 <!-- NUEVO BOTÓN VER EQUIPOS REGISTRADOS -->
-                                                <button onclick="showTeamsListModal({{ $tournament->id }}, '{{ addslashes($tournament->name) }}')" class="text-orange-600 hover:text-orange-900" title="Ver Equipos Registrados">
+                                                <button onclick="showTeamsListModal({{ $tournament->id }}, '{{ addslashes($tournament->name) }}', '{{ $tournament->status }}')" class="text-orange-600 hover:text-orange-900" title="Ver Equipos Registrados">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
                                                     </svg>
@@ -413,7 +413,7 @@
                     </div>
                     <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
                         @if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach'))
-                            <button type="button" onclick="openCreateTeamModalFromList()" class="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded text-sm transition duration-150 ease-in-out sm:ml-3">
+                            <button type="button" id="btnCreateTeamFromList" onclick="openCreateTeamModalFromList()" class="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded text-sm transition duration-150 ease-in-out sm:ml-3">
                                 Crear Nuevo Equipo
                             </button>
                         @endif
@@ -710,7 +710,7 @@
                     </div>
                     <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
                         @if(!auth()->user()->hasRole('Arbitro'))
-                            <button type="button" onclick="openCreatePlayerModalFromList()" class="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded text-sm transition duration-150 ease-in-out sm:ml-3">
+                            <button type="button" id="btnCreatePlayerFromList" onclick="openCreatePlayerModalFromList()" class="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded text-sm transition duration-150 ease-in-out sm:ml-3">
                                 Nuevo Jugador
                             </button>
                         @endif
@@ -1380,10 +1380,25 @@ saveButton.className = 'inline-flex items-center px-4 py-2 bg-orange-600 border 
     let currentTournamentTeams = [];
     let currentActiveTournamentId = null;
     let currentActiveTournamentName = '';
+    let currentActiveTournamentStatus = '';
 
-    async function showTeamsListModal(tournamentId, tournamentName) {
+    async function showTeamsListModal(tournamentId, tournamentName, status = '') {
         currentActiveTournamentId = tournamentId;
         currentActiveTournamentName = tournamentName;
+        if (status) {
+            currentActiveTournamentStatus = status;
+        }
+
+        // Hide/show Create Team button based on status
+        const btnCreateTeam = document.getElementById('btnCreateTeamFromList');
+        if (btnCreateTeam) {
+            if (currentActiveTournamentStatus === 'active' || currentActiveTournamentStatus === 'finished') {
+                btnCreateTeam.classList.add('hidden');
+            } else {
+                btnCreateTeam.classList.remove('hidden');
+            }
+        }
+
         document.getElementById('teamsListModalTitle').innerText = `Equipos del Torneo: ${tournamentName}`;
         document.getElementById('teamsTableBody').innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">Cargando equipos...</td></tr>';
         document.getElementById('noTeamsMessage').classList.add('hidden');
@@ -1605,6 +1620,17 @@ saveButton.className = 'inline-flex items-center px-4 py-2 bg-orange-600 border 
         currentActiveTeamId = teamId;
         const team = currentTournamentTeams.find(t => t.id === teamId);
         const teamName = team ? team.name : 'Desconocido';
+
+        // Hide/show Create Player button based on tournament status
+        const btnCreatePlayer = document.getElementById('btnCreatePlayerFromList');
+        if (btnCreatePlayer) {
+            if (currentActiveTournamentStatus === 'active' || currentActiveTournamentStatus === 'finished') {
+                btnCreatePlayer.classList.add('hidden');
+            } else {
+                btnCreatePlayer.classList.remove('hidden');
+            }
+        }
+
         document.getElementById('playersListModalTitle').innerText = `Jugadores del equipo: ${teamName}`;
         document.getElementById('playersTableBody').innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">Cargando jugadores...</td></tr>';
         document.getElementById('noPlayersMessage').classList.add('hidden');

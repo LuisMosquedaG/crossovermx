@@ -241,7 +241,9 @@
                         </svg>
                         Datos históricos verificados del torneo actual
                     </div>
-            </div>
+                </div>
+
+            </div> <!-- CLOSE 3-COLUMN GRID ROW -->
 
             <!-- 4. UPCOMING GAMES SECTION -->
             <div class="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-sm">
@@ -271,17 +273,23 @@
                             </div>
                         </div>
 
-                        <!-- Mid Info: VS Matchup -->
-                        <div class="my-4 space-y-1.5 text-center border-y border-slate-200/40 py-2.5">
-                            <p class="text-xs font-black text-blue-600 truncate" title="{{ $game->localTeam->name }}">
-                                {{ $game->localTeam->name }}
-                            </p>
-                            <span class="inline-block text-[9px] font-black text-slate-400 bg-white border border-slate-200 px-2 py-0.5 rounded shadow-2xs leading-none">
-                                VS
-                            </span>
-                            <p class="text-xs font-black text-red-600 truncate" title="{{ $game->awayTeam->name }}">
-                                {{ $game->awayTeam->name }}
-                            </p>
+                        <!-- Mid Info: VS Matchup (Horizontal) -->
+                        <div class="my-4 flex items-center justify-between gap-1.5 border-y border-slate-200/40 py-2.5">
+                            <div class="w-[42%] text-right">
+                                <p class="text-[10px] md:text-xs font-black text-blue-600 truncate" title="{{ $game->localTeam->name }}">
+                                    {{ $game->localTeam->name }}
+                                </p>
+                            </div>
+                            <div class="shrink-0 text-center">
+                                <span class="inline-block text-[8px] md:text-[9px] font-black text-slate-400 bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-2xs leading-none">
+                                    VS
+                                </span>
+                            </div>
+                            <div class="w-[42%] text-left">
+                                <p class="text-[10px] md:text-xs font-black text-red-600 truncate" title="{{ $game->awayTeam->name }}">
+                                    {{ $game->awayTeam->name }}
+                                </p>
+                            </div>
                         </div>
 
                         <!-- Bottom Info: DateTime & Status -->
