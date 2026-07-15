@@ -389,12 +389,11 @@ public function update(Request $request, Team $team)
 
     public function stats(Team $team)
     {
-        // Agregamos ->whereNotNull('tournament_id') para excluir partidos manuales (independientes)
+        // Obtenemos todos los partidos finalizados (tanto de torneo como independientes)
         $games = \App\Models\Game::where(function($query) use ($team) {
             $query->where('local_team_id', $team->id)
                   ->orWhere('away_team_id', $team->id);
         })->where('status', 'finished')
-          ->whereNotNull('tournament_id') // <--- LÍNEA CLAVE: Solo partidos con torneo
           ->with('actions')->get();
 
         $accumulatedStats = [];
