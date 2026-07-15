@@ -125,37 +125,37 @@
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <!-- Columna 1: Acciones (MOVIDA AL INICIO) -->
-                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-[11%]">
                                             Acciones
                                         </th>
                                         
                                         <!-- Columna 2: Combinada Fecha/Cancha -->
-                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-[14%]">
                                             Fecha / Cancha
                                         </th>
                                         
                                         <!-- Columna 3: Equipo Local -->
-                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%]">
                                             Local
                                         </th>
                                         
                                         <!-- Columna 4: Equipo Visitante -->
-                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%]">
                                             Visitante
                                         </th>
                                         
                                         <!-- Columna 5: Combinada Categoria/Fuerza -->
-                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
+                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%]">
                                             Categoría / Fuerza
                                         </th>
                                         
                                         <!-- Columna 6: Estado -->
-                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
+                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%]">
                                             Estado
                                         </th>
                                         
                                         <!-- Columna 7: Árbitro -->
-                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%]">
                                             Árbitro
                                         </th>
                                     </tr>
@@ -259,7 +259,7 @@
                                             </td>
 
                                             <!-- 2. COLUMNA: FECHA y CANCHA -->
-                                            <td class="px-4 py-3 whitespace-nowrap text-center">
+                                            <td class="px-4 py-3 whitespace-nowrap text-center align-middle">
                                                 <div class="flex flex-col justify-center leading-tight">
                                             <!-- Cambié max-w-[120px] por max-w-[180px] o más, según necesites -->
                                             <span class="font-bold text-gray-900 text-sm truncate max-w-[180px] mx-auto">
@@ -272,8 +272,8 @@
                                             </td>
                                                                                         
                                             <!-- 3. COLUMNA: EQUIPO LOCAL -->
-                                            <td class="px-4 py-3 whitespace-nowrap text-center">
-                                                <div class="flex flex-col justify-center items-center leading-tight max-w-[110px] mx-auto">
+                                            <td class="px-4 py-3 whitespace-nowrap text-center align-middle">
+                                                <div class="flex flex-col justify-center items-center leading-tight mx-auto">
                                                     @if($game->status === 'finished')
                                                         <span class="font-bold text-gray-900 text-sm truncate w-full text-center">{{ $game->localTeam->name }}</span>
                                                         <!-- Text-sm y leading-none para mantener la fila compacta -->
@@ -287,8 +287,8 @@
                                             </td>
 
                                             <!-- 4. COLUMNA: EQUIPO VISITANTE -->
-                                            <td class="px-4 py-3 whitespace-nowrap text-center">
-                                                <div class="flex flex-col justify-center items-center leading-tight max-w-[110px] mx-auto">
+                                            <td class="px-4 py-3 whitespace-nowrap text-center align-middle">
+                                                <div class="flex flex-col justify-center items-center leading-tight mx-auto">
                                                     @if($game->status === 'finished')
                                                         <span class="font-medium text-gray-700 text-sm truncate w-full text-center">{{ $game->awayTeam->name }}</span>
                                                         <span class="font-black text-orange-600 text-sm leading-none mt-0.5">
@@ -301,7 +301,7 @@
                                             </td>
                                             
                                             <!-- 5. COLUMNA: CATEGORÍA y FUERZA (Fila Doble) -->
-                                            <td class="px-4 py-3 whitespace-nowrap text-center">
+                                            <td class="px-4 py-3 whitespace-nowrap text-center align-middle">
                                                 <div class="flex flex-col justify-center items-center leading-tight space-y-1">
                                                     
                                                     @if($game->localTeam->category == 'Femenil')
@@ -327,20 +327,20 @@
                                             </td>
 
                                             <!-- 6. COLUMNA: ESTADO -->
-                                            <td class="px-4 py-3 whitespace-nowrap text-center">
+                                            <td class="px-4 py-3 whitespace-nowrap text-center align-middle">
                                                 @if($game->status === 'playing')
                                                     <span class="px-2 py-1 inline-flex text-xs leading-4 font-semibold rounded-full bg-green-100 text-green-800">En Juego</span>
                                                 @elseif($game->status === 'finished')
-                                                    <span class="px-2 py-1 inline-flex text-xs leading-4 font-semibold rounded-full bg-gray-800 text-white">Finalizado</span>
+                                                    <span class="px-2 py-1 inline-flex text-xs leading-4 font-semibold rounded-full bg-gray-200 text-gray-800">Finalizado</span>
                                                 @else
                                                     <span class="px-2 py-1 inline-flex text-xs leading-4 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pendiente</span>
                                                 @endif
                                             </td>
                                             
                                             <!-- 7. COLUMNA: ÁRBITRO -->
-                                            <td class="px-4 py-3 whitespace-nowrap text-center">
+                                            <td class="px-4 py-3 whitespace-nowrap text-center align-middle">
                                                 @if($game->referee)
-                                                    <div class="text-sm font-medium text-gray-900 truncate max-w-[110px] mx-auto" title="{{ $game->referee->name }}">
+                                                    <div class="text-sm font-medium text-gray-900 truncate mx-auto" title="{{ $game->referee->name }}">
                                                         {{ $game->referee->name }}
                                                     </div>
                                                 @else

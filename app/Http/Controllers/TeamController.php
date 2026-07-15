@@ -147,7 +147,7 @@ class TeamController extends Controller
             ],
             'coach_name' => 'nullable|string|max:255',
             'coach_id' => 'nullable|exists:users,id',
-            'tournament_id' => 'required|exists:tournaments,id',
+            'tournament_id' => 'nullable|exists:tournaments,id',
             'status' => 'required|string|in:active,pending,suspended',
             'category' => 'nullable|in:Varonil,Femenil,Mixto,Infantil',
             'strength' => 'nullable|string|max:100',
@@ -166,15 +166,19 @@ class TeamController extends Controller
         }
 
         // --- NUEVO: ASIGNAR CLIENTE DEL TORNEO ---
-        // Buscamos el torneo para obtener su client_id
-        $tournament = Tournament::find($request->tournament_id);
-        if ($tournament) {
-            $data['client_id'] = $tournament->client_id;
-        } else {
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json(['message' => 'El torneo seleccionado no es válido.'], 422);
+        if ($request->filled('tournament_id')) {
+            $tournament = Tournament::find($request->tournament_id);
+            if ($tournament) {
+                $data['client_id'] = $tournament->client_id;
+            } else {
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['message' => 'El torneo seleccionado no es válido.'], 422);
+                }
+                return back()->withErrors(['tournament_id' => 'El torneo seleccionado no es válido.']);
             }
-            return back()->withErrors(['tournament_id' => 'El torneo seleccionado no es válido.']);
+        } else {
+            $data['client_id'] = auth()->user()->client_id;
+            $data['tournament_id'] = null;
         }
         // ------------------------------------------
 
@@ -241,7 +245,7 @@ public function update(Request $request, Team $team)
         ],
         'coach_name' => 'nullable|string|max:255',
         'coach_id' => 'nullable|exists:users,id',
-        'tournament_id' => 'required|exists:tournaments,id',
+        'tournament_id' => 'nullable|exists:tournaments,id',
         'status' => 'required|string|in:active,pending,suspended',
         'category' => 'nullable|in:Varonil,Femenil,Mixto,Infantil',
         'strength' => 'nullable|string|max:100', 
@@ -264,38 +268,94 @@ public function update(Request $request, Team $team)
     // -----------------------------------------------------
 
     $data = $request->all();
+    unset($data['image']); // Eliminar de data para evitar errores en update
 
-    // Lógica de imagen
-    if ($request->hasFile('image')) {
-        if ($team->image_path) {
-            Storage::disk('public')->delete($team->image_path);
+    $currentTournament = $team->tournament;
+    if ($currentTournament && $currentTournament->status === 'finished') {
+        // Si el torneo actual está terminado y el usuario asigna uno nuevo diferente
+        if ($request->filled('tournament_id') && $request->tournament_id != $team->tournament_id) {
+            // 1. Replicamos el equipo en el nuevo torneo
+            $newTeam = $team->replicate();
+            $newTeam->tournament_id = $request->tournament_id;
+            
+            $newTournamentObj = Tournament::find($request->tournament_id);
+            if ($newTournamentObj) {
+                $newTeam->client_id = $newTournamentObj->client_id;
+            }
+            
+            $newTeam->status = 'pending';
+            $newTeam->contract_accepted_at = null; // Nueva firma requerida
+            
+            if ($request->hasFile('image')) {
+                $imagePath = $request->file('image')->store('teams', 'public');
+                $newTeam->image_path = $imagePath;
+            }
+            
+            $newTeam->save();
+
+            // 2. Replicamos los jugadores
+            $players = \App\Models\Player::where('team_id', $team->id)->get();
+            foreach ($players as $player) {
+                $newPlayer = $player->replicate();
+                $newPlayer->team_id = $newTeam->id;
+                $newPlayer->save();
+            }
+
+            // Recalcular el nuevo torneo
+            $nuevoTorneo = $newTeam->tournament;
+            if ($nuevoTorneo) {
+                $this->recalcularDatosTorneo($nuevoTorneo);
+            }
         }
-        $imagePath = $request->file('image')->store('teams', 'public');
-        $data['image_path'] = $imagePath;
-    }
-    
-    // Eliminar campo 'image' del array (importante)
-    unset($data['image']);
 
-    // Actualizar client_id
-    $tournament = Tournament::find($request->tournament_id);
-    if ($tournament) {
-        $data['client_id'] = $tournament->client_id;
-    }
+        // El equipo original se queda en el torneo terminado.
+        // Si hay cambios en los datos (nombre, entrenador, etc.), los actualizamos,
+        // pero FORZAMOS que su torneo siga siendo el terminado (no se borra ni se altera).
+        $data['tournament_id'] = $team->tournament_id;
+        $data['client_id'] = $team->client_id;
+        
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('teams', 'public');
+            $data['image_path'] = $imagePath;
+        }
+        
+        $team->update($data);
 
-    // Actualizar equipo
-    $team->update($data);
+    } else {
+        // Lógica normal para equipos que no están en torneos terminados
+        if ($request->hasFile('image')) {
+            if ($team->image_path) {
+                Storage::disk('public')->delete($team->image_path);
+            }
+            $imagePath = $request->file('image')->store('teams', 'public');
+            $data['image_path'] = $imagePath;
+        }
 
-    // Recalcular torneos
-    $nuevoTorneo = $team->fresh()->tournament;
-    if ($nuevoTorneo) {
-        $this->recalcularDatosTorneo($nuevoTorneo);
-    }
+        // Actualizar client_id y tournament_id
+        if ($request->filled('tournament_id')) {
+            $tournament = Tournament::find($request->tournament_id);
+            if ($tournament) {
+                $data['client_id'] = $tournament->client_id;
+            }
+        } else {
+            $data['tournament_id'] = null;
+            $data['client_id'] = auth()->user()->client_id;
+        }
 
-    if ($viejoTorneoId != $nuevoTorneoId) {
-        $viejoTorneo = Tournament::find($viejoTorneoId);
-        if ($viejoTorneo) {
-            $this->recalcularDatosTorneo($viejoTorneo);
+        // Actualizar equipo
+        $team->update($data);
+
+        // Recalcular torneos
+        $nuevoTorneo = $team->fresh()->tournament;
+        if ($nuevoTorneo) {
+            $this->recalcularDatosTorneo($nuevoTorneo);
+        }
+
+        if ($viejoTorneoId != $nuevoTorneoId) {
+            $viejoTorneo = Tournament::find($viejoTorneoId);
+            if ($viejoTorneo) {
+                $this->recalcularDatosTorneo($viejoTorneo);
+            }
         }
     }
 

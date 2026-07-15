@@ -400,9 +400,10 @@
                                 <div class="mb-4">
                                     <x-input-label for="modal_tournament_id" :value="__('Torneo')" />
                                     <!-- CAMBIO: Indigo -> Orange -->
-                                    <select id="modal_tournament_id" name="tournament_id" class="border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md shadow-sm mt-1 block w-full">
+                                    <select id="modal_tournament_id" name="tournament_id" class="border-gray-300 focus-border-orange-500 focus-ring-orange-500 rounded-md shadow-sm mt-1 block w-full">
+                                        <option value="">-- Sin torneo (Opcional) --</option>
                                         @foreach ($tournaments as $tournament)
-                                            <option value="{{ $tournament->id }}">{{ $tournament->name }}</option>
+                                            <option value="{{ $tournament->id }}" data-status="{{ $tournament->status }}">{{ $tournament->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -605,9 +606,10 @@
                                 <div class="mb-4">
                                     <x-input-label for="modal_tournament_id" :value="__('Torneo')" />
                                     <!-- CAMBIO: Indigo -> Orange -->
-                                    <select id="modal_tournament_id" name="tournament_id" class="border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md shadow-sm mt-1 block w-full">
+                                    <select id="modal_tournament_id" name="tournament_id" class="border-gray-300 focus-border-orange-500 focus-ring-orange-500 rounded-md shadow-sm mt-1 block w-full">
+                                        <option value="">-- Sin torneo (Opcional) --</option>
                                         @foreach ($tournaments as $tournament)
-                                            <option value="{{ $tournament->id }}">{{ $tournament->name }}</option>
+                                            <option value="{{ $tournament->id }}" data-status="{{ $tournament->status }}">{{ $tournament->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -1241,6 +1243,7 @@
 
     function openCreateModal() {
         resetTeamForm();
+        filterTournamentSelect(null, '');
         document.getElementById('modalTitle').innerText = 'Crear Nuevo Equipo';
         document.getElementById('form_method').value = 'POST';
         document.getElementById('teamForm').action = '{{ route("teams.store") }}';
@@ -1252,15 +1255,26 @@
 
     function openEditModal(team) {
         resetTeamForm();
+        
+        let tournamentId = team.tournament_id;
+        const tournamentStatus = team.tournament ? team.tournament.status : '';
+        
+        // Si el torneo ya finalizó, liberamos al equipo asignando torneo nulo/vacío para que no se muestre
+        if (tournamentStatus === 'finished') {
+            tournamentId = null;
+        }
+        
+        filterTournamentSelect(tournamentId, tournamentStatus);
+
         document.getElementById('modalTitle').innerText = 'Editar Equipo: ' + team.name;
         document.getElementById('form_method').value = 'PUT';
         document.getElementById('teamForm').action = '{{ route("teams.update", ":id") }}'.replace(':id', team.id);
 
         const saveButton = document.getElementById('saveButton');
-    saveButton.className = 'inline-flex items-center px-4 py-2 bg-orange-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-orange-700 focus:bg-orange-700 active:bg-orange-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition ease-in-out duration-150 w-full sm:ml-3 sm:w-auto';
+        saveButton.className = 'inline-flex items-center px-4 py-2 bg-orange-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-orange-700 focus:bg-orange-700 active:bg-orange-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition ease-in-out duration-150 w-full sm:ml-3 sm:w-auto';
         document.getElementById('modal_name').value = team.name;
         document.getElementById('modal_coach_id').value = team.coach_id || '';
-        document.getElementById('modal_tournament_id').value = team.tournament_id;
+        document.getElementById('modal_tournament_id').value = tournamentId || '';
         document.getElementById('modal_status').value = team.status || 'active';
 
         // Categoría: Se asigna al select
@@ -1278,6 +1292,43 @@
 
     function resetTeamForm() {
         document.getElementById('teamForm').reset();
+    }
+
+    function filterTournamentSelect(currentTournamentId, currentTournamentStatus) {
+        const selects = document.querySelectorAll('select[name="tournament_id"]');
+        selects.forEach(select => {
+            // Habilita el selector por defecto
+            select.disabled = false;
+            
+            // Filtra las opciones de torneos
+            Array.from(select.options).forEach(option => {
+                const val = option.value;
+                const status = option.getAttribute('data-status');
+
+                if (val === '') {
+                    // Opción vacía siempre disponible
+                    option.hidden = false;
+                    option.style.display = '';
+                } else if (currentTournamentId && String(val) === String(currentTournamentId)) {
+                    // Torneo actual del equipo siempre visible para que no aparezca en blanco
+                    option.hidden = false;
+                    option.style.display = '';
+                } else if (status === 'pending') {
+                    // Mostrar otros torneos pendientes
+                    option.hidden = false;
+                    option.style.display = '';
+                } else {
+                    // Ocultar torneos activos y terminados de la selección
+                    option.hidden = true;
+                    option.style.display = 'none';
+                }
+            });
+
+            // Si el torneo actual está activo, bloqueamos la selección
+            if (currentTournamentId && currentTournamentStatus === 'active') {
+                select.disabled = true;
+            }
+        });
     }
 
     async function submitPlayerForm(event) {

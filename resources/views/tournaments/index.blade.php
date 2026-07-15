@@ -97,7 +97,7 @@
                                                 <!-- 2. Botón de Calendario (Solo Admin) -->
                                                 @if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach'))
                                                     @if($tournament->games()->exists())
-                                                        <button onclick="openViewCalendarModal({{ $tournament->id }})" class="text-blue-600 hover:text-blue-900" title="Ver Configuración del Calendario">
+                                                        <button onclick="openViewCalendarModal({{ $tournament->id }}, '{{ $tournament->status }}')" class="text-blue-600 hover:text-blue-900" title="Ver Configuración del Calendario">
                                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -197,7 +197,7 @@
                                             @elseif($tournament->status == 'active')
                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Activo</span>
                                             @elseif($tournament->status == 'finished')
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-800 text-white">Terminado</span>
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-200 text-gray-800">Terminado</span>
                                             @else
                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">{{ $tournament->status }}</span>
                                             @endif
@@ -513,8 +513,11 @@
                                     <div class="mb-4">
                                         <x-input-label for="team_modal_tournament_id" :value="__('Torneo')" />
                                         <select id="team_modal_tournament_id" name="tournament_id" class="border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md shadow-sm mt-1 block w-full">
+                                            <option value="">-- Sin torneo (Opcional) --</option>
                                             @foreach ($tournaments as $t)
-                                                <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                                @if ($t->status === 'pending')
+                                                    <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                                @endif
                                             @endforeach
                                         </select>
                                     </div>
@@ -857,7 +860,7 @@ saveButton.className = 'inline-flex items-center px-4 py-2 bg-orange-600 border 
         document.getElementById('calendarModal').classList.remove('hidden');
     }
 
-    async function openViewCalendarModal(tournamentId) {
+    async function openViewCalendarModal(tournamentId, status) {
         resetCalendarModal();
         document.getElementById('calendar_tournament_id').value = tournamentId;
         try {
@@ -866,7 +869,7 @@ saveButton.className = 'inline-flex items-center px-4 py-2 bg-orange-600 border 
             const settings = await response.json();
             document.getElementById('calendarModalTitle').innerText = 'Configuración del Calendario';
             populateViewForm(settings);
-            setViewActions(tournamentId);
+            setViewActions(tournamentId, status);
             document.getElementById('calendarModal').classList.remove('hidden');
         } catch (error) { alert(error.message); console.error(error); }
     }
@@ -1232,9 +1235,15 @@ saveButton.className = 'inline-flex items-center px-4 py-2 bg-orange-600 border 
         `;
     }
 
-    function setViewActions(tournamentId) {
+    function setViewActions(tournamentId, status) {
+        let cloneButton = '';
+        if (status === 'finished') {
+            cloneButton = `<button type="button" onclick="cloneTournament(${tournamentId})" class="inline-flex justify-center rounded-md border border-transparent bg-orange-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 sm:ml-3 sm:w-auto transition duration-150 ease-in-out">Crear Torneo Nuevo</button>`;
+        }
+
         document.getElementById('calendarModalActions').innerHTML = `
-            <button type="button" onclick="deleteCalendar(${tournamentId})" class="inline-flex justify-center rounded-md border border-transparent bg-red-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:ml-3 sm:w-auto">Eliminar Calendario</button>
+            ${cloneButton}
+            <button type="button" onclick="deleteCalendar(${tournamentId})" class="inline-flex justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:ml-3 sm:w-auto">Eliminar Calendario</button>
             <button type="button" onclick="closeCalendarModal()" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Cerrar</button>
         `;
     }
@@ -1277,6 +1286,43 @@ saveButton.className = 'inline-flex items-center px-4 py-2 bg-orange-600 border 
             showSuccessModal(data.message, data.redirect_url);
         } else {
             alert(data.message || 'Ocurrió un error al eliminar.');
+        }
+    }
+
+    async function cloneTournament(tournamentId) {
+        if (!confirm('¿Estás seguro de que quieres crear un torneo nuevo como copia exacta de este torneo (configuración y equipos registrados)?')) return;
+        
+        const saveBtn = document.querySelector(`button[onclick="cloneTournament(${tournamentId})"]`);
+        const originalText = saveBtn ? saveBtn.innerText : '';
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.innerText = 'Clonando...';
+        }
+
+        try {
+            const response = await fetch(`/tournaments/${tournamentId}/clone`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                closeCalendarModal();
+                showSuccessModal(data.message, '/tournaments');
+            } else {
+                alert(data.message || 'Ocurrió un error al clonar el torneo.');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Ocurrió un error inesperado al procesar la solicitud.');
+        } finally {
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.innerText = originalText;
+            }
         }
     }
 
@@ -1601,8 +1647,8 @@ saveButton.className = 'inline-flex items-center px-4 py-2 bg-orange-600 border 
 
         document.getElementById('team_modal_name').value = team.name;
         document.getElementById('team_modal_coach_id').value = team.coach_id || '';
-        document.getElementById('team_modal_tournament_id').value = team.tournament_id;
-        document.getElementById('team_modal_tournament_id').disabled = false; // Desbloquea para permitir cambios en edición si es necesario
+        document.getElementById('team_modal_tournament_id').value = team.tournament_id || '';
+        document.getElementById('team_modal_tournament_id').disabled = true; // Bloquea el select del torneo en edición también
         document.getElementById('team_modal_status').value = team.status || 'active';
         document.getElementById('team_modal_category').value = team.category || '';
         document.getElementById('team_modal_strength').value = team.strength || '';

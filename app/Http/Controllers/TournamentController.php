@@ -1790,6 +1790,66 @@ public function store(Request $request)
             ], 500);
         }
     }
+
+    /**
+     * Clona el torneo, su configuración de calendario y sus equipos registrados
+     * con sus respectivos jugadores en un nuevo torneo con estado 'pendiente'.
+     */
+    public function cloneTournament(Request $request, Tournament $tournament)
+    {
+        try {
+            \Illuminate\Support\Facades\DB::beginTransaction();
+
+            // 1. Clonar el Torneo
+            $newTournament = $tournament->replicate();
+            $newName = $tournament->name . ' - Copia';
+            
+            // Garantizar que no sobrepase los 255 caracteres
+            $newTournament->name = substr($newName, 0, 255);
+            $newTournament->status = 'pending';
+            $newTournament->save();
+
+            // 2. Clonar configuraciones del torneo (TournamentSetting)
+            $settings = TournamentSetting::where('tournament_id', $tournament->id)->get();
+            foreach ($settings as $setting) {
+                $newSetting = $setting->replicate();
+                $newSetting->tournament_id = $newTournament->id;
+                $newSetting->save();
+            }
+
+            // 3. Clonar los equipos y sus jugadores
+            $teams = Team::where('tournament_id', $tournament->id)->get();
+            foreach ($teams as $team) {
+                $newTeam = $team->replicate();
+                $newTeam->tournament_id = $newTournament->id;
+                $newTeam->save();
+
+                // Clonar jugadores de este equipo
+                $players = \App\Models\Player::where('team_id', $team->id)->get();
+                foreach ($players as $player) {
+                    $newPlayer = $player->replicate();
+                    $newPlayer->team_id = $newTeam->id;
+                    $newPlayer->save();
+                }
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Torneo clonado exitosamente en estado pendiente.',
+                'tournament' => $newTournament
+            ]);
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al clonar el torneo: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     /**
      * Calcula la siguiente potencia de 2 mayor o igual al número dado.
      * Ej: 5 -> 8, 6 -> 8, 9 -> 16.

@@ -36,6 +36,7 @@ Route::post('/tournaments/{tournament}/generate-elimination', [TournamentControl
 Route::post('/tournaments/{tournament}/update-progression', [TournamentController::class, 'updateProgression'])->name('tournaments.update-progression');
 Route::post('/tournaments/{tournament}/swap-global', [TournamentController::class, 'swapTeamsGlobal'])->name('tournaments.swap-global');
 Route::get('/tournaments/{tournament}/teams/json', [TournamentController::class, 'getTeamsByTournamentJson'])->name('tournaments.teamsJson')->middleware(['auth', 'verified']);
+Route::post('/tournaments/{tournament}/clone', [TournamentController::class, 'cloneTournament'])->name('tournaments.clone')->middleware(['auth', 'verified']);
 
 // --- Rutas para la gestión de partidos ---
 // CORRECCIÓN: Rutas movidas y actualizadas para usar GameController
