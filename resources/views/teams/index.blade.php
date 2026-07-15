@@ -311,7 +311,7 @@
                                         </td>
 
                                         <!-- 6. COLUMNA: TORNEO -->
-                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{{ $team->tournament->name }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{{ $team->tournament->name ?? 'Sin torneo' }}</td>
                                         
                                         <!-- 7. COLUMNA: ESTATUS -->
                                         <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
