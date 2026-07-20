@@ -1,4 +1,13 @@
-<x-app-layout>
+<?php if (isset($component)) { $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54 = $attributes; } ?>
+<?php $component = App\View\Components\AppLayout::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('app-layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\App\View\Components\AppLayout::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
 
 <style>
 /* --- MODO CLARO FINAL --- */
@@ -218,30 +227,30 @@ TARJETA CAMPEÓN
 
                         <!-- 1. CABEZERA (VOLVER + BOTONES) -->
                         <div class="mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
-                            <a href="{{ route('tournaments.index') }}" class="w-full md:w-auto shrink-0 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded shadow transition duration-150 ease-in-out flex items-center justify-center">
+                            <a href="<?php echo e(route('tournaments.index')); ?>" class="w-full md:w-auto shrink-0 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded shadow transition duration-150 ease-in-out flex items-center justify-center">
                                 ← Volver a Torneos
                             </a>
                         </div>
 
                         <!-- LOOP PRINCIPAL DE GRUPOS / ETAPAS -->
-                        @foreach($standingsData as $groupName => $data)
-                            @if($groupName === 'mode') @continue @endif
+                        <?php $__currentLoopData = $standingsData; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $groupName => $data): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php if($groupName === 'mode'): ?> <?php continue; ?> <?php endif; ?>
                             <div class="mb-10 bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
                                 
                             <!-- ================================================================= -->
                             <!--        CASO NUEVO (DISEÑO EN CASCADA): DOBLE ELIMINATORIA         -->
                             <!-- ================================================================= -->
-                            @if(isset($data['mode']) && $data['mode'] === 'double_elimination_grouped')
+                            <?php if(isset($data['mode']) && $data['mode'] === 'double_elimination_grouped'): ?>
                                 
                                 <!-- BLOQUE PHP PARA CALCULAR EQUIPOS -->
-                                @php
+                                <?php
                                     $totalEquipos = 0;
                                     // Verificamos si existe el bracket de ganadores y la primera ronda
                                     if (isset($data['bracket']['winner_bracket']) && isset($data['bracket']['winner_bracket'][0])) {
                                         // El número de equipos es igual a (partidos en ronda 1) * 2
                                         $totalEquipos = count($data['bracket']['winner_bracket'][0]) * 2;
                                     }
-                                @endphp
+                                ?>
 
                                 <!-- 1. NUEVO ENCABEZADO (Estilo Liga Estándar) -->
                                 <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 border-b pb-2 border-gray-300 gap-4">
@@ -249,17 +258,18 @@ TARJETA CAMPEÓN
                                     <!-- IZQUIERDA: Título del Grupo -->
                                     <div>
                                         <h3 class="text-xl font-bold text-gray-800">
-                                            <span class="text-gray-400 text-base font-normal mr-2">Grupo:</span>{{ $groupName }}
+                                            <span class="text-gray-400 text-base font-normal mr-2">Grupo:</span><?php echo e($groupName); ?>
+
                                         </h3>
                                         <!-- Mostramos la variable calculada -->
                                         <span class="text-sm text-gray-500">
-                                            {{ $totalEquipos }} Equipos
+                                            <?php echo e($totalEquipos); ?> Equipos
                                         </span>
                                     </div>
 
                                     <!-- DERECHA: Icono de Calendario -->
                                     <div class="flex items-center gap-2 w-full md:w-auto justify-end">
-                                        <a href="{{ route('tournaments.schedule', ['tournament' => $tournament, 'group' => $groupName]) }}" 
+                                        <a href="<?php echo e(route('tournaments.schedule', ['tournament' => $tournament, 'group' => $groupName])); ?>" 
                                         class="text-orange-500 hover:text-orange-700 hover:bg-orange-50 rounded-full p-1.5 transition-all duration-200 shrink-0"
                                         title="Ver calendario de este grupo">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -292,8 +302,8 @@ TARJETA CAMPEÓN
                                                 </div>
 
                                                 <div class="flex flex-row items-center gap-2 md:gap-4 h-full">
-                                                    @foreach($data['bracket']['winner_bracket'] as $roundIndex => $games)
-                                                        @if(!$loop->first)
+                                                    <?php $__currentLoopData = $data['bracket']['winner_bracket']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $roundIndex => $games): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <?php if(!$loop->first): ?>
                                                             <!-- Línea / Conector Visual entre Rondas (Winner Bracket) -->
                                                             <div class="flex items-center justify-center shrink-0 w-8">
                                                                 <div class="w-full h-0.5 bg-gradient-to-r from-blue-300 to-blue-500 relative flex items-center justify-center">
@@ -302,45 +312,46 @@ TARJETA CAMPEÓN
                                                                     </svg>
                                                                 </div>
                                                             </div>
-                                                        @endif
+                                                        <?php endif; ?>
 
                                                         <div class="flex flex-col justify-around gap-6 h-full min-w-[240px]">
                                                             <!-- Encabezado de Ronda -->
                                                             <div class="text-center">
                                                                 <span class="inline-block text-[11px] font-extrabold text-blue-900 bg-blue-100 uppercase tracking-widest px-3 py-1 rounded-full border border-blue-200 shadow-sm">
-                                                                    Ronda {{ $roundIndex + 1 }}
+                                                                    Ronda <?php echo e($roundIndex + 1); ?>
+
                                                                 </span>
                                                             </div>
 
                                                             <!-- Partidos de la Ronda -->
                                                             <div class="flex flex-col justify-around gap-6 flex-1">
-                                                                @foreach($games as $game)
+                                                                <?php $__currentLoopData = $games; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $game): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                                     <div class="nba-card w-60 shadow-md hover:shadow-xl transition-all duration-200 border-l-4 border-l-blue-500">
                                                                         <!-- Local -->
-                                                                        <div @class([
+                                                                        <div class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                                                                             'nba-team-row',
                                                                             'nba-winner' => $game->local_team_score > $game->away_team_score,
                                                                             'nba-loser' => $game->away_team_score > $game->local_team_score
-                                                                        ])>
-                                                                            <img src="{{ asset('storage/' . ($game->localTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
-                                                                            <span class="nba-team-name">{{ $game->localTeam->name ?? 'Por definir' }}</span>
-                                                                            <span class="nba-team-score">{{ $game->local_team_score ?? '-' }}</span>
+                                                                        ]); ?>">
+                                                                            <img src="<?php echo e(asset('storage/' . ($game->localTeam->image_path ?? ''))); ?>" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
+                                                                            <span class="nba-team-name"><?php echo e($game->localTeam->name ?? 'Por definir'); ?></span>
+                                                                            <span class="nba-team-score"><?php echo e($game->local_team_score ?? '-'); ?></span>
                                                                         </div>
                                                                         <!-- Visitante -->
-                                                                        <div @class([
+                                                                        <div class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                                                                             'nba-team-row',
                                                                             'nba-winner' => $game->away_team_score > $game->local_team_score,
                                                                             'nba-loser' => $game->local_team_score > $game->away_team_score
-                                                                        ])>
-                                                                            <img src="{{ asset('storage/' . ($game->awayTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
-                                                                            <span class="nba-team-name">{{ $game->awayTeam->name ?? 'Por definir' }}</span>
-                                                                            <span class="nba-team-score">{{ $game->away_team_score ?? '-' }}</span>
+                                                                        ]); ?>">
+                                                                            <img src="<?php echo e(asset('storage/' . ($game->awayTeam->image_path ?? ''))); ?>" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
+                                                                            <span class="nba-team-name"><?php echo e($game->awayTeam->name ?? 'Por definir'); ?></span>
+                                                                            <span class="nba-team-score"><?php echo e($game->away_team_score ?? '-'); ?></span>
                                                                         </div>
                                                                     </div>
-                                                                @endforeach
+                                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                             </div>
                                                         </div>
-                                                    @endforeach
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
                                                     <!-- Conector Final de Winner Bracket a Gran Final -->
                                                     <div class="flex items-center justify-center shrink-0 w-8">
@@ -364,53 +375,53 @@ TARJETA CAMPEÓN
                                                 </div>
 
                                                 <!-- 1. PARTIDO DE GRAN FINAL (GF) -->
-                                                @if(isset($data['bracket']['grand_final']))
-                                                    @php 
+                                                <?php if(isset($data['bracket']['grand_final'])): ?>
+                                                    <?php 
                                                         $gf = $data['bracket']['grand_final']; 
                                                         $wfLocal = $gf->local_team_score > $gf->away_team_score; 
-                                                    @endphp
+                                                    ?>
                                                     
                                                     <div class="w-72 relative z-10">
                                                         <div class="nba-card border-2 border-yellow-500 shadow-2xl bg-white relative overflow-hidden">
-                                                            @if($gf->status === 'finished')
+                                                            <?php if($gf->status === 'finished'): ?>
                                                                 <div class="absolute inset-0 bg-gradient-to-t from-yellow-100/50 to-transparent opacity-60 z-0 pointer-events-none"></div>
-                                                            @endif
+                                                            <?php endif; ?>
 
                                                             <div class="bg-yellow-500 text-gray-900 py-1 text-center font-black text-[10px] uppercase tracking-widest shadow-inner">
                                                                 Partido Definitorio
                                                             </div>
 
                                                             <!-- LOCAL -->
-                                                            <div @class([
+                                                            <div class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                                                                 'nba-team-row relative z-10',
                                                                 'nba-winner' => $wfLocal,
                                                                 'nba-loser' => !$wfLocal && $gf->status === 'finished'
-                                                            ])>
-                                                                <img src="{{ asset('storage/' . ($gf->localTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
-                                                                <span class="nba-team-name">{{ $gf->localTeam->name ?? 'Campeón Winner' }}</span>
-                                                                <span class="nba-team-score">{{ $gf->local_team_score ?? '-' }}</span>
+                                                            ]); ?>">
+                                                                <img src="<?php echo e(asset('storage/' . ($gf->localTeam->image_path ?? ''))); ?>" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
+                                                                <span class="nba-team-name"><?php echo e($gf->localTeam->name ?? 'Campeón Winner'); ?></span>
+                                                                <span class="nba-team-score"><?php echo e($gf->local_team_score ?? '-'); ?></span>
                                                             </div>
 
                                                             <!-- VISITANTE -->
-                                                            <div @class([
+                                                            <div class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                                                                 'nba-team-row relative z-10',
                                                                 'nba-winner' => !$wfLocal && $gf->status === 'finished',
                                                                 'nba-loser' => $wfLocal
-                                                            ])>
-                                                                <img src="{{ asset('storage/' . ($gf->awayTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
-                                                                <span class="nba-team-name">{{ $gf->awayTeam->name ?? 'Campeón Loser' }}</span>
-                                                                <span class="nba-team-score">{{ $gf->away_team_score ?? '-' }}</span>
+                                                            ]); ?>">
+                                                                <img src="<?php echo e(asset('storage/' . ($gf->awayTeam->image_path ?? ''))); ?>" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
+                                                                <span class="nba-team-name"><?php echo e($gf->awayTeam->name ?? 'Campeón Loser'); ?></span>
+                                                                <span class="nba-team-score"><?php echo e($gf->away_team_score ?? '-'); ?></span>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                @endif
+                                                <?php endif; ?>
 
                                                 <!-- 2. PARTIDO DE REVANCHA (GR) -->
-                                                @if(isset($data['bracket']['reset_game']))
-                                                    @php 
+                                                <?php if(isset($data['bracket']['reset_game'])): ?>
+                                                    <?php 
                                                         $g = $data['bracket']['reset_game']; 
                                                         $wLocal = $g->local_team_score > $g->away_team_score; 
-                                                    @endphp
+                                                    ?>
                                                     
                                                     <div class="w-72 mt-2">
                                                         <div class="text-center mb-2">
@@ -421,35 +432,35 @@ TARJETA CAMPEÓN
                                                         
                                                         <div class="nba-card border-2 border-yellow-400 shadow-lg bg-white">
                                                             <!-- LOCAL -->
-                                                            <div @class([
+                                                            <div class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                                                                 'nba-team-row',
                                                                 'nba-winner' => $wLocal,
                                                                 'nba-loser' => !$wLocal && $g->status === 'finished'
-                                                            ])>
-                                                                <img src="{{ asset('storage/' . ($g->localTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
-                                                                <span class="nba-team-name">{{ $g->localTeam->name ?? 'Por definir' }}</span>
-                                                                <span class="nba-team-score">{{ $g->local_team_score ?? '-' }}</span>
+                                                            ]); ?>">
+                                                                <img src="<?php echo e(asset('storage/' . ($g->localTeam->image_path ?? ''))); ?>" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
+                                                                <span class="nba-team-name"><?php echo e($g->localTeam->name ?? 'Por definir'); ?></span>
+                                                                <span class="nba-team-score"><?php echo e($g->local_team_score ?? '-'); ?></span>
                                                             </div>
                                                             
                                                             <!-- VISITANTE -->
-                                                            <div @class([
+                                                            <div class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                                                                 'nba-team-row',
                                                                 'nba-winner' => !$wLocal && $g->status === 'finished',
                                                                 'nba-loser' => $wLocal
-                                                            ])>
-                                                                <img src="{{ asset('storage/' . ($g->awayTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
-                                                                <span class="nba-team-name">{{ $g->awayTeam->name ?? 'Por definir' }}</span>
-                                                                <span class="nba-team-score">{{ $g->away_team_score ?? '-' }}</span>
+                                                            ]); ?>">
+                                                                <img src="<?php echo e(asset('storage/' . ($g->awayTeam->image_path ?? ''))); ?>" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
+                                                                <span class="nba-team-name"><?php echo e($g->awayTeam->name ?? 'Por definir'); ?></span>
+                                                                <span class="nba-team-score"><?php echo e($g->away_team_score ?? '-'); ?></span>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                @endif
+                                                <?php endif; ?>
 
-                                                @if(!isset($data['bracket']['grand_final']) && !isset($data['bracket']['reset_game']))
+                                                <?php if(!isset($data['bracket']['grand_final']) && !isset($data['bracket']['reset_game'])): ?>
                                                     <div class="w-full text-center py-8 px-4 border-2 border-dashed border-gray-300 rounded-xl bg-white shadow-inner">
                                                         <p class="text-gray-400 font-bold uppercase tracking-widest text-xs">Esperando Finalistas</p>
                                                     </div>
-                                                @endif
+                                                <?php endif; ?>
                                             </div>
 
                                             <!-- ================================================================= -->
@@ -462,8 +473,8 @@ TARJETA CAMPEÓN
 
                                                 <!-- flex-row-reverse coloca la Ronda 1 en el extremo derecho y avanza hacia la izquierda -->
                                                 <div class="flex flex-row-reverse items-center gap-2 md:gap-4 h-full">
-                                                    @foreach($data['bracket']['loser_bracket'] as $roundIndex => $games)
-                                                        @if(!$loop->first)
+                                                    <?php $__currentLoopData = $data['bracket']['loser_bracket']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $roundIndex => $games): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <?php if(!$loop->first): ?>
                                                             <!-- Línea / Conector Visual entre Rondas (Loser Bracket) -->
                                                             <div class="flex items-center justify-center shrink-0 w-8">
                                                                 <div class="w-full h-0.5 bg-gradient-to-l from-red-300 to-red-500 relative flex items-center justify-center">
@@ -472,45 +483,46 @@ TARJETA CAMPEÓN
                                                                     </svg>
                                                                 </div>
                                                             </div>
-                                                        @endif
+                                                        <?php endif; ?>
 
                                                         <div class="flex flex-col justify-around gap-6 h-full min-w-[240px]">
                                                             <!-- Encabezado de Ronda -->
                                                             <div class="text-center">
                                                                 <span class="inline-block text-[11px] font-extrabold text-red-900 bg-red-100 uppercase tracking-widest px-3 py-1 rounded-full border border-red-200 shadow-sm">
-                                                                    Ronda {{ $roundIndex + 1 }}
+                                                                    Ronda <?php echo e($roundIndex + 1); ?>
+
                                                                 </span>
                                                             </div>
 
                                                             <!-- Partidos de la Ronda -->
                                                             <div class="flex flex-col justify-around gap-6 flex-1">
-                                                                @foreach($games as $game)
+                                                                <?php $__currentLoopData = $games; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $game): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                                     <div class="nba-card w-60 shadow-md hover:shadow-xl transition-all duration-200 border-r-4 border-r-red-500">
                                                                         <!-- Local -->
-                                                                        <div @class([
+                                                                        <div class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                                                                             'nba-team-row',
                                                                             'nba-winner' => $game->local_team_score > $game->away_team_score,
                                                                             'nba-loser' => $game->away_team_score > $game->local_team_score
-                                                                        ])>
-                                                                            <img src="{{ asset('storage/' . ($game->localTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
-                                                                            <span class="nba-team-name">{{ $game->localTeam->name ?? 'Por definir' }}</span>
-                                                                            <span class="nba-team-score">{{ $game->local_team_score ?? '-' }}</span>
+                                                                        ]); ?>">
+                                                                            <img src="<?php echo e(asset('storage/' . ($game->localTeam->image_path ?? ''))); ?>" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
+                                                                            <span class="nba-team-name"><?php echo e($game->localTeam->name ?? 'Por definir'); ?></span>
+                                                                            <span class="nba-team-score"><?php echo e($game->local_team_score ?? '-'); ?></span>
                                                                         </div>
                                                                         <!-- Visitante -->
-                                                                        <div @class([
+                                                                        <div class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                                                                             'nba-team-row',
                                                                             'nba-winner' => $game->away_team_score > $game->local_team_score,
                                                                             'nba-loser' => $game->local_team_score > $game->away_team_score
-                                                                        ])>
-                                                                            <img src="{{ asset('storage/' . ($game->awayTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
-                                                                            <span class="nba-team-name">{{ $game->awayTeam->name ?? 'Por definir' }}</span>
-                                                                            <span class="nba-team-score">{{ $game->away_team_score ?? '-' }}</span>
+                                                                        ]); ?>">
+                                                                            <img src="<?php echo e(asset('storage/' . ($game->awayTeam->image_path ?? ''))); ?>" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
+                                                                            <span class="nba-team-name"><?php echo e($game->awayTeam->name ?? 'Por definir'); ?></span>
+                                                                            <span class="nba-team-score"><?php echo e($game->away_team_score ?? '-'); ?></span>
                                                                         </div>
                                                                     </div>
-                                                                @endforeach
+                                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                             </div>
                                                         </div>
-                                                    @endforeach
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
                                                     <!-- Conector Final de Loser Bracket a Gran Final -->
                                                     <div class="flex items-center justify-center shrink-0 w-8">
@@ -530,13 +542,13 @@ TARJETA CAMPEÓN
                                 <!-- FIN BLOQUE DOBLE ELIMINATORIA -->
                                 <!-- ================================================================= -->
 
-                                @else
+                                <?php else: ?>
                                 <!-- ================================================================= -->
                                 <!-- CASO ESTÁNDAR (LIGA O ELIMINACIÓN SIMPLE) -->
                                 <!-- ================================================================= -->
 
                                 <!-- LÓGICA ACTUALIZADA: PRIORIDAD A 'team_ids' -->
-                                @php
+                                <?php
                                     $equiposHeader = 0;
                                     
                                     // 1. Intentar contar usando 'team_ids' (El array que se pasa al modal de playoffs)
@@ -568,7 +580,7 @@ TARJETA CAMPEÓN
                                         }
                                         $equiposHeader = count(array_unique($idsEncontrados));
                                     }
-                                @endphp
+                                ?>
 
                                 <!-- CABECERA DEL GRUPO -->
                                 <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 border-b pb-2 border-gray-300 gap-4">
@@ -576,37 +588,38 @@ TARJETA CAMPEÓN
                                     <!-- IZQUIERDA: Título del Grupo -->
                                     <div>
                                         <h3 class="text-xl font-bold text-gray-800">
-                                            <span class="text-gray-400 text-base font-normal mr-2">Grupo:</span>{{ $groupName }}
+                                            <span class="text-gray-400 text-base font-normal mr-2">Grupo:</span><?php echo e($groupName); ?>
+
                                         </h3>
                                         <span class="text-sm text-gray-500">
-                                            {{ $equiposHeader }} Equipos
+                                            <?php echo e($equiposHeader); ?> Equipos
                                         </span>
                                     </div>
 
                                     <!-- DERECHA: Botones de Acción + Icono de Calendario -->
                                     <div class="flex items-center gap-2 w-full md:w-auto">
                                         
-                                        @if( (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin')) && isset($data['is_finished']) && $data['is_finished'] && isset($data['has_playoffs']) && !$data['has_playoffs'] )
+                                        <?php if( (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin')) && isset($data['is_finished']) && $data['is_finished'] && isset($data['has_playoffs']) && !$data['has_playoffs'] ): ?>
                                             
                                             <!-- Botón Vuelta -->
-                                            <button onclick="openRoundModal('{{ $groupName }}', {{ json_encode($data['team_ids'] ?? []) }})" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-4 rounded shadow transition duration-150 ease-in-out flex items-center justify-center">
+                                            <button onclick="openRoundModal('<?php echo e($groupName); ?>', <?php echo e(json_encode($data['team_ids'] ?? [])); ?>)" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-4 rounded shadow transition duration-150 ease-in-out flex items-center justify-center">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-2">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                                 </svg>
-                                                {{ $data['round_ordinal'] ?? '' }} Vuelta
+                                                <?php echo e($data['round_ordinal'] ?? ''); ?> Vuelta
                                             </button>
 
                                             <!-- Botón Playoffs -->
-                                            <button onclick="openEliminationModal('{{ $groupName }}', {{ json_encode($data['team_ids'] ?? []) }})" class="w-full md:w-auto bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-2 px-4 rounded shadow transition duration-150 ease-in-out flex items-center justify-center">
+                                            <button onclick="openEliminationModal('<?php echo e($groupName); ?>', <?php echo e(json_encode($data['team_ids'] ?? [])); ?>)" class="w-full md:w-auto bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-2 px-4 rounded shadow transition duration-150 ease-in-out flex items-center justify-center">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-2">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
                                                 </svg>
                                                 Playoffs
                                             </button>
-                                        @endif
+                                        <?php endif; ?>
 
                                         <!-- ICONO CALENDARIO -->
-                                        <a href="{{ route('tournaments.schedule', ['tournament' => $tournament, 'group' => $groupName]) }}" 
+                                        <a href="<?php echo e(route('tournaments.schedule', ['tournament' => $tournament, 'group' => $groupName])); ?>" 
                                         class="text-orange-500 hover:text-orange-700 hover:bg-orange-50 rounded-full p-1.5 transition-all duration-200 shrink-0"
                                         title="Ver calendario de este grupo">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
@@ -620,7 +633,7 @@ TARJETA CAMPEÓN
                                 <!-- ================================================================= -->
                                 <!-- VISUALIZACIÓN DE PLAYOFFS (FINAL) -->
                                 <!-- ================================================================= -->
-                                @if(isset($data['has_playoffs']) && $data['has_playoffs'])
+                                <?php if(isset($data['has_playoffs']) && $data['has_playoffs']): ?>
                                 <div class="mt-6 nba-bg p-4 md:p-6 shadow-inner">
 
                                     <!-- 1. TÍTULO -->
@@ -631,100 +644,102 @@ TARJETA CAMPEÓN
                                     </div>
 
                                     <div class="flex flex-row gap-6 overflow-x-auto pb-6 nba-scroll snap-x rounds-flex items-center">
-                                        @foreach($data['playoff_rounds'] ?? [] as $round)
+                                        <?php $__currentLoopData = $data['playoff_rounds'] ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $round): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <div class="flex-shrink-0 w-full md:w-72 snap-center flex flex-col gap-4">
 
                                             <!-- Título de la Ronda -->
                                             <div class="nba-header rounded">
-                                                {{ $round['name'] ?? 'Ronda' }}
+                                                <?php echo e($round['name'] ?? 'Ronda'); ?>
+
                                             </div>
 
                                             <!-- Lista de Partidos -->
-                                            @foreach($round['games'] ?? [] as $game)
+                                            <?php $__currentLoopData = $round['games'] ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $game): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                             <div class="nba-card">
 
                                                 <!-- FILA LOCAL -->
-                                                <div @class([
+                                                <div class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                                                     'nba-team-row',
                                                     'nba-winner' => isset($game->local_team_score) && isset($game->away_team_score) && $game->local_team_score > $game->away_team_score,
                                                     'nba-loser' => isset($game->local_team_score) && isset($game->away_team_score) && $game->away_team_score > $game->local_team_score
-                                                ])>
+                                                ]); ?>">
 
                                                     <!-- LOGO -->
-                                                    @if(isset($game->localTeam) && $game->localTeam->image_path)
-                                                    <img src="{{ asset('storage/' . $game->localTeam->image_path) }}" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
-                                                    @endif
+                                                    <?php if(isset($game->localTeam) && $game->localTeam->image_path): ?>
+                                                    <img src="<?php echo e(asset('storage/' . $game->localTeam->image_path)); ?>" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
+                                                    <?php endif; ?>
 
                                                     <!-- NOMBRE DEL EQUIPO -->
-                                                    @if(isset($game->localTeam))
-                                                        <span class="nba-team-name">{{ $game->localTeam->name }}</span>
-                                                    @else
+                                                    <?php if(isset($game->localTeam)): ?>
+                                                        <span class="nba-team-name"><?php echo e($game->localTeam->name); ?></span>
+                                                    <?php else: ?>
                                                         <span class="nba-team-name text-gray-400 italic">Pendiente</span>
-                                                    @endif
+                                                    <?php endif; ?>
 
                                                     <!-- MARCADOR -->
-                                                    <span class="nba-team-score">{{ $game->local_team_score ?? '-' }}</span>
+                                                    <span class="nba-team-score"><?php echo e($game->local_team_score ?? '-'); ?></span>
                                                 </div>
 
                                                 <!-- FILA VISITANTE -->
-                                                <div @class([
+                                                <div class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                                                     'nba-team-row',
                                                     'nba-winner' => isset($game->local_team_score) && isset($game->away_team_score) && $game->away_team_score > $game->local_team_score,
                                                     'nba-loser' => isset($game->local_team_score) && isset($game->away_team_score) && $game->local_team_score > $game->away_team_score
-                                                ])>
+                                                ]); ?>">
 
                                                     <!-- LOGO -->
-                                                    @if(isset($game->awayTeam) && $game->awayTeam->image_path)
-                                                    <img src="{{ asset('storage/' . $game->awayTeam->image_path) }}" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
-                                                    @endif
+                                                    <?php if(isset($game->awayTeam) && $game->awayTeam->image_path): ?>
+                                                    <img src="<?php echo e(asset('storage/' . $game->awayTeam->image_path)); ?>" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
+                                                    <?php endif; ?>
 
                                                     <!-- NOMBRE DEL EQUIPO -->
-                                                    @if(isset($game->awayTeam))
-                                                        <span class="nba-team-name">{{ $game->awayTeam->name }}</span>
-                                                    @else
+                                                    <?php if(isset($game->awayTeam)): ?>
+                                                        <span class="nba-team-name"><?php echo e($game->awayTeam->name); ?></span>
+                                                    <?php else: ?>
                                                         <span class="nba-team-name text-gray-400 italic">Pendiente</span>
-                                                    @endif
+                                                    <?php endif; ?>
 
                                                     <!-- MARCADOR -->
-                                                    <span class="nba-team-score">{{ $game->away_team_score ?? '-' }}</span>
+                                                    <span class="nba-team-score"><?php echo e($game->away_team_score ?? '-'); ?></span>
                                                 </div>
                                             </div>
-                                            @endforeach
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                         </div>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
                                         <!-- CAMPEÓN -->
-                                        @if(isset($data['playoff_champion']))
+                                        <?php if(isset($data['playoff_champion'])): ?>
                                         <div class="flex-shrink-0 w-full md:w-64 snap-center">
                                             <div class="nba-champion-card">
-                                                @if(isset($data['playoff_champion_logo']))
-                                                <img src="{{ asset('storage/' . $data['playoff_champion_logo']) }}" class="champion-bg-logo" alt="logo campeon" onerror="this.style.display='none'">
-                                                @else
-                                                <img src="{{ asset('storage/' . ($game->awayTeam->image_path ?? '')) }}" class="champion-bg-logo" alt="logo campeon" onerror="this.style.display='none'">
-                                                @endif
+                                                <?php if(isset($data['playoff_champion_logo'])): ?>
+                                                <img src="<?php echo e(asset('storage/' . $data['playoff_champion_logo'])); ?>" class="champion-bg-logo" alt="logo campeon" onerror="this.style.display='none'">
+                                                <?php else: ?>
+                                                <img src="<?php echo e(asset('storage/' . ($game->awayTeam->image_path ?? ''))); ?>" class="champion-bg-logo" alt="logo campeon" onerror="this.style.display='none'">
+                                                <?php endif; ?>
                                                 <div class="champion-content">
                                                     <div class="champion-label">Campeón</div>
                                                     <div class="champion-name">
-                                                        {{ $data['playoff_champion'] }}
+                                                        <?php echo e($data['playoff_champion']); ?>
+
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        @else
+                                        <?php else: ?>
                                         <div class="flex-shrink-0 w-full md:w-64 snap-center">
                                             <div class="flex items-center justify-center h-full border border-dashed border-gray-300 rounded-lg min-h-[150px]">
                                                 <span class="text-gray-400 text-sm uppercase tracking-widest">Pendiente</span>
                                             </div>
                                         </div>
-                                        @endif
+                                        <?php endif; ?>
 
                                     </div>
                                 </div>
-                                @endif
+                                <?php endif; ?>
                                 <!-- ================================================================= -->
 
                                 <!-- Tabla de Posiciones (Regular) -->
-                                @if(isset($data['standings']) && count($data['standings']) > 0)
+                                <?php if(isset($data['standings']) && count($data['standings']) > 0): ?>
                                 <div class="overflow-x-auto mt-6">
                                     <table class="min-w-full divide-y divide-gray-200">
                                         <thead class="bg-gray-50">
@@ -739,51 +754,61 @@ TARJETA CAMPEÓN
                                             </tr>
                                         </thead>
                                         <tbody class="bg-white divide-y divide-gray-200">
-                                            @php $pos = 1; @endphp
-                                            @foreach($data['standings'] as $tid => $stats)
+                                            <?php $pos = 1; ?>
+                                            <?php $__currentLoopData = $data['standings']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tid => $stats): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                             <tr>
-                                                <td scope="row" class="px-4 py-3 whitespace-nowrap text-center text-sm font-medium text-gray-900">{{ $pos++ }}</td>
+                                                <td scope="row" class="px-4 py-3 whitespace-nowrap text-center text-sm font-medium text-gray-900"><?php echo e($pos++); ?></td>
                                                 <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                                                     <div class="flex items-center">
-                                                        @if(isset($data['teams'][$tid]))
-                                                        @if($data['teams'][$tid]->image_path)
-                                                        <img src="{{ asset('storage/' . $data['teams'][$tid]->image_path) }}"
-                                                            alt="{{ $data['teams'][$tid]->name }}"
+                                                        <?php if(isset($data['teams'][$tid])): ?>
+                                                        <?php if($data['teams'][$tid]->image_path): ?>
+                                                        <img src="<?php echo e(asset('storage/' . $data['teams'][$tid]->image_path)); ?>"
+                                                            alt="<?php echo e($data['teams'][$tid]->name); ?>"
                                                             class="h-8 w-8 rounded-full object-cover mr-3 border border-gray-200" onerror="this.style.display='none'">
-                                                        @else
+                                                        <?php else: ?>
                                                         <div class="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xs font-bold mr-3 border border-gray-200">
-                                                            {{ substr($data['teams'][$tid]->name, 0, 1) }}
+                                                            <?php echo e(substr($data['teams'][$tid]->name, 0, 1)); ?>
+
                                                         </div>
-                                                        @endif
-                                                        <span>{{ $data['teams'][$tid]->name }}</span>
-                                                        @else
-                                                        <span class="text-gray-400 italic">Equipo Eliminado (ID: {{ $tid }})</span>
-                                                        @endif
+                                                        <?php endif; ?>
+                                                        <span><?php echo e($data['teams'][$tid]->name); ?></span>
+                                                        <?php else: ?>
+                                                        <span class="text-gray-400 italic">Equipo Eliminado (ID: <?php echo e($tid); ?>)</span>
+                                                        <?php endif; ?>
                                                     </div>
                                                 </td>
-                                                <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-gray-500">{{ $stats['played'] ?? 0 }}</td>
-                                                <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-green-600 font-bold">{{ $stats['won'] ?? 0 }}</td>
-                                                <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-yellow-600 font-bold">{{ $stats['drawn'] ?? 0 }}</td>
-                                                <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-red-600 font-bold">{{ $stats['lost'] ?? 0 }}</td>
-                                                <td class="px-4 py-3 whitespace-nowrap text-center text-sm font-bold bg-emerald-50">{{ $stats['points'] ?? 0 }}</td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-gray-500"><?php echo e($stats['played'] ?? 0); ?></td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-green-600 font-bold"><?php echo e($stats['won'] ?? 0); ?></td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-yellow-600 font-bold"><?php echo e($stats['drawn'] ?? 0); ?></td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-red-600 font-bold"><?php echo e($stats['lost'] ?? 0); ?></td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-center text-sm font-bold bg-emerald-50"><?php echo e($stats['points'] ?? 0); ?></td>
                                             </tr>
-                                            @endforeach
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                         </tbody>
                                     </table>
                                 </div>
-                                @else
-                                @endif
+                                <?php else: ?>
+                                <?php endif; ?>
 
-                                @endif
+                                <?php endif; ?>
                             </div>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
                     </div>
                 </div>
             </div>
         </div>
         
-</x-app-layout>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $attributes = $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $component = $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
 
     <!-- ================================================================= -->
     <!-- MODALES Y SCRIPTS -->
@@ -796,7 +821,7 @@ TARJETA CAMPEÓN
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative w-full max-w-lg transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all">
                     <form id="roundForm" onsubmit="submitRound(event)">
-                        @csrf
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" name="team_ids" id="round_team_ids" value="">
                         
                         <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
@@ -841,7 +866,7 @@ TARJETA CAMPEÓN
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative w-full max-w-lg transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all">
                     <form id="eliminationForm" onsubmit="submitElimination(event)">
-                        @csrf
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" name="team_ids" id="elimination_team_ids" value="">
                         
                         <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
@@ -907,7 +932,7 @@ TARJETA CAMPEÓN
             event.preventDefault();
             const form = event.target;
             const formData = new FormData(form);
-            const url = '{{ route("tournaments.secondRound", $tournament) }}';
+            const url = '<?php echo e(route("tournaments.secondRound", $tournament)); ?>';
 
             try {
                 const response = await fetch(url, {
@@ -959,7 +984,7 @@ TARJETA CAMPEÓN
                 return;
             }
 
-            const url = '{{ route("tournaments.elimination", $tournament) }}';
+            const url = '<?php echo e(route("tournaments.elimination", $tournament)); ?>';
 
             try {
                 const response = await fetch(url, {
@@ -983,4 +1008,4 @@ TARJETA CAMPEÓN
                 alert('Ocurrió un error inesperado.');
             }
         }
-    </script>
+    </script><?php /**PATH C:\Users\luism\gemini-work\sistemaTorneos\resources\views/tournaments/standings.blade.php ENDPATH**/ ?>
