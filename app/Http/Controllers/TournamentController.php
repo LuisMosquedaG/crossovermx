@@ -1585,9 +1585,15 @@ public function store(Request $request)
                     $tempSettings['wb_total_rounds'] = $groupData['wb_total_rounds'] ?? 1;
                     $tempSettings['wb_current_round'] = $groupData['wb_current_round'] ?? 1;
                     $tempSettings['wb_byes'] = $groupData['wb_byes'] ?? [];
+                    $tempSettings['late_teams'] = $groupData['late_teams'] ?? ($settings['late_teams'] ?? []);
+                    $tempSettings['lb_pending_pool'] = $groupData['lb_pending_pool'] ?? ($settings['lb_pending_pool'] ?? []);
+                    $tempSettings['byes_count'] = $groupData['byes_count'] ?? ($settings['byes_count'] ?? []);
                 } else {
                     $tempSettings['wb_byes'] = [];
                     $tempSettings['wb_current_round'] = 1;
+                    $tempSettings['late_teams'] = $settings['late_teams'] ?? [];
+                    $tempSettings['lb_pending_pool'] = $settings['lb_pending_pool'] ?? [];
+                    $tempSettings['byes_count'] = $settings['byes_count'] ?? [];
                 }
 
                 // --- NUEVO: AUTO-REPARACIÓN DE BYES (DETECTIVA) ---
@@ -1638,8 +1644,9 @@ public function store(Request $request)
                     // 6. PERSISTENCIA: Guardar el nuevo estado
                     $settings['brackets_data'][$groupName]['wb_current_round'] = $tempSettings['wb_current_round'];
                     $settings['brackets_data'][$groupName]['wb_byes'] = $tempSettings['wb_byes'];
-                    // AGREGAR ESTA LÍNEA:
                     $settings['brackets_data'][$groupName]['lb_pending_pool'] = $tempSettings['lb_pending_pool'] ?? [];
+                    $settings['brackets_data'][$groupName]['late_teams'] = $tempSettings['late_teams'] ?? [];
+                    $settings['brackets_data'][$groupName]['byes_count'] = $tempSettings['byes_count'] ?? [];
                     
                     if (isset($tempSettings['wb_total_rounds'])) {
                          $settings['brackets_data'][$groupName]['wb_total_rounds'] = $tempSettings['wb_total_rounds'];
@@ -1847,6 +1854,36 @@ public function store(Request $request)
                 'success' => false,
                 'message' => 'Error al clonar el torneo: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Inscribe un equipo tardío en un torneo de Doble Eliminatoria en curso (activo).
+     */
+    public function addLateTeam(Request $request, Tournament $tournament)
+    {
+        $request->validate([
+            'team_id' => 'required|exists:teams,id',
+            'category_group' => 'nullable|string'
+        ]);
+
+        $settings = $tournament->settings ? $tournament->settings->settings : [];
+        $tournamentType = $settings['tournament_type'] ?? ($tournament->tournament_settings['tournament_type'] ?? null);
+        $hasDoubleElimGames = $tournament->games()->where('is_playoff', true)->whereIn('group_name', ['WB_R1', 'LB_R1'])->exists();
+
+        if ($tournamentType !== 'double_elimination' && !$hasDoubleElimGames) {
+            return back()->with('error', 'La inscripción tardía en torneo iniciado solo está disponible para Doble Eliminatoria.');
+        }
+
+        $teamId = (int) $request->team_id;
+
+        try {
+            $doubleElimService = app(\App\Services\DoubleEliminationService::class);
+            $doubleElimService->addLateTeam($tournament, $teamId, $request->category_group);
+
+            return back()->with('success', 'Equipo inscrito tardíamente con éxito. Se ha integrado directamente al Bracket de Perdedores con 1 derrota técnica.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al inscribir equipo tardío: ' . $e->getMessage());
         }
     }
 

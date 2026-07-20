@@ -165,11 +165,13 @@ class TeamController extends Controller
             $data['image_path'] = $imagePath;
         }
 
-        // --- NUEVO: ASIGNAR CLIENTE DEL TORNEO ---
-        if ($request->filled('tournament_id')) {
-            $tournament = Tournament::find($request->tournament_id);
+        // --- NUEVO: ASIGNAR CLIENTE Y TORNEO ---
+        $tournamentId = $request->input('tournament_id');
+        if (!empty($tournamentId)) {
+            $tournament = Tournament::find($tournamentId);
             if ($tournament) {
                 $data['client_id'] = $tournament->client_id;
+                $data['tournament_id'] = $tournament->id;
             } else {
                 if ($request->ajax() || $request->wantsJson()) {
                     return response()->json(['message' => 'El torneo seleccionado no es válido.'], 422);
@@ -185,6 +187,28 @@ class TeamController extends Controller
         $nuevoEquipo = Team::create($data);
 
         $this->actualizarFuerzaTorneo($nuevoEquipo);
+
+        // --- INTEGRACIÓN AUTOMÁTICA DE EQUIPO TARDÍO EN DOBLE ELIMINATORIA ---
+        if ($nuevoEquipo->tournament_id) {
+            $tournament = Tournament::find($nuevoEquipo->tournament_id);
+            if ($tournament && in_array($tournament->status, ['active', 'in_progress'])) {
+                $settings = $tournament->settings ? $tournament->settings->settings : [];
+                $tType = $settings['tournament_type'] ?? ($tournament->tournament_settings['tournament_type'] ?? null);
+                $hasDE = $tournament->games()->where('is_playoff', true)->whereIn('group_name', ['WB_R1', 'LB_R1'])->exists();
+
+                if ($tType === 'double_elimination' || $hasDE) {
+                    try {
+                        $cat = trim($nuevoEquipo->category ?? 'General');
+                        $str = trim($nuevoEquipo->strength ?? 'General');
+                        $categoryGroup = $cat . ' - ' . $str;
+                        app(\App\Services\DoubleEliminationService::class)->addLateTeam($tournament, $nuevoEquipo->id, $categoryGroup);
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::error("Error al integrar equipo tardío en Doble Eliminatoria: " . $e->getMessage());
+                    }
+                }
+            }
+        }
+        // -----------------------------------------------------------------------------
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([

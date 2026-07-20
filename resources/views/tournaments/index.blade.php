@@ -1435,10 +1435,10 @@ saveButton.className = 'inline-flex items-center px-4 py-2 bg-orange-600 border 
             currentActiveTournamentStatus = status;
         }
 
-        // Hide/show Create Team button based on status
+        // Hide/show Create Team button based on status (hidden only when tournament is finished)
         const btnCreateTeam = document.getElementById('btnCreateTeamFromList');
         if (btnCreateTeam) {
-            if (currentActiveTournamentStatus === 'active' || currentActiveTournamentStatus === 'finished') {
+            if (currentActiveTournamentStatus === 'finished') {
                 btnCreateTeam.classList.add('hidden');
             } else {
                 btnCreateTeam.classList.remove('hidden');
@@ -1628,7 +1628,7 @@ saveButton.className = 'inline-flex items-center px-4 py-2 bg-orange-600 border 
         document.getElementById('team_modal_name').value = '';
         document.getElementById('team_modal_coach_id').value = '';
         document.getElementById('team_modal_tournament_id').value = currentActiveTournamentId;
-        document.getElementById('team_modal_tournament_id').disabled = true; // Bloquea el select del torneo
+        document.getElementById('team_modal_tournament_id').disabled = false;
         document.getElementById('team_modal_status').value = 'active';
         document.getElementById('team_modal_category').value = '';
         document.getElementById('team_modal_strength').value = '';
@@ -1832,7 +1832,12 @@ saveButton.className = 'inline-flex items-center px-4 py-2 bg-orange-600 border 
 
         addField('name', 'team_modal_name');
         addField('coach_id', 'team_modal_coach_id');
-        addField('tournament_id', 'team_modal_tournament_id');
+        
+        const tourIdVal = document.getElementById('team_modal_tournament_id')?.value || currentActiveTournamentId;
+        if (tourIdVal) {
+            formData.append('tournament_id', tourIdVal);
+        }
+
         addField('status', 'team_modal_status');
         addField('category', 'team_modal_category');
         addField('strength', 'team_modal_strength');

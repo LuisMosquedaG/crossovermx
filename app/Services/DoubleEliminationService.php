@@ -114,7 +114,7 @@ class DoubleEliminationService
 
         // 1. Identificar al GANADOR del Winner Bracket (si existe)
         $wbChampionId = null;
-        $finalWbRoundName = 'WB_R' . ($config['wb_total_rounds']);
+        $finalWbRoundName = 'WB_R' . ($config['wb_total_rounds'] ?? 1);
         $finalWbGame = $tournament->games()
             ->where('is_playoff', true)
             ->where('group_name', $finalWbRoundName)
@@ -144,6 +144,14 @@ class DoubleEliminationService
             }
         }
 
+        // 2b. Incluir equipos tardíos registrados directamente en el Loser Bracket
+        $lateTeams = $config['late_teams'] ?? [];
+        foreach ($lateTeams as $ltId) {
+            if ($ltId != $wbChampionId) {
+                $pool[] = (int) $ltId;
+            }
+        }
+
         // 3. Obtener juegos LB finalizadas y procesarlos cronológicamente
         $lbGames = $tournament->games()
             ->where('is_playoff', true)
@@ -154,7 +162,7 @@ class DoubleEliminationService
             ->get();
 
         // Verificamos si el WB ya terminó completamente
-        $isWbFinished = ($config['wb_current_round'] > $config['wb_total_rounds']);
+        $isWbFinished = (($config['wb_current_round'] ?? 1) > ($config['wb_total_rounds'] ?? 1));
 
         foreach ($lbGames as $game) {
             $winnerId = ($game->local_team_score > $game->away_team_score) ? $game->local_team_id : $game->away_team_id;
@@ -474,12 +482,14 @@ class DoubleEliminationService
     {
         $setting = \App\Models\TournamentSetting::where('tournament_id', $tournament->id)->first();
         if ($setting) {
-            $currentSettings = $setting->settings;
+            $currentSettings = is_array($setting->settings) ? $setting->settings : (json_decode($setting->settings, true) ?: []);
             $groupName = $config['group_name'] ?? null;
 
             $mergedSettings = array_merge($currentSettings, $config);
             
-            if (isset($currentSettings['brackets_data'])) {
+            if (isset($config['brackets_data'])) {
+                $mergedSettings['brackets_data'] = $config['brackets_data'];
+            } elseif (isset($currentSettings['brackets_data'])) {
                 $mergedSettings['brackets_data'] = $currentSettings['brackets_data'];
                 
                 if ($groupName && isset($mergedSettings['brackets_data'][$groupName])) {
@@ -491,6 +501,9 @@ class DoubleEliminationService
                     }
                     if (isset($config['wb_byes'])) {
                         $mergedSettings['brackets_data'][$groupName]['wb_byes'] = $config['wb_byes'];
+                    }
+                    if (isset($config['late_teams'])) {
+                        $mergedSettings['brackets_data'][$groupName]['late_teams'] = $config['late_teams'];
                     }
                 }
             }
@@ -615,6 +628,68 @@ class DoubleEliminationService
             'matchups' => $matchups,
             'config' => $configData
         ];
+    }
+
+    /**
+     * Inscribe un equipo tardío en un torneo en curso.
+     * El equipo ingresa directamente con 1 derrota técnica al Loser Bracket.
+     */
+    public function addLateTeam(Tournament $tournament, int $teamId, ?string $categoryGroup = null)
+    {
+        // 1. Asociar el equipo al torneo si no lo está
+        $team = \App\Models\Team::find($teamId);
+        if ($team) {
+            $team->tournament_id = $tournament->id;
+            if ($categoryGroup && str_contains($categoryGroup, ' - ')) {
+                $parts = explode(' - ', $categoryGroup, 2);
+                if (empty($team->category)) {
+                    $team->category = trim($parts[0]);
+                }
+                if (empty($team->strength)) {
+                    $team->strength = trim($parts[1]);
+                }
+            }
+            $team->save();
+        }
+
+        // 2. Obtener la configuración actual del torneo
+        $settingsObj = \App\Models\TournamentSetting::where('tournament_id', $tournament->id)->first();
+        $baseSettings = [];
+        if ($settingsObj && $settingsObj->settings) {
+            $baseSettings = is_array($settingsObj->settings) ? $settingsObj->settings : (json_decode($settingsObj->settings, true) ?: []);
+        }
+        $config = array_merge($baseSettings, $tournament->tournament_settings ?? []);
+
+        // Si es multitabla por categorías, ubicar la sección correspondiente
+        if ($categoryGroup && isset($config['brackets_data'][$categoryGroup])) {
+            $bracketConfig = &$config['brackets_data'][$categoryGroup];
+        } else {
+            $bracketConfig = &$config;
+        }
+
+        if (!isset($bracketConfig['late_teams'])) {
+            $bracketConfig['late_teams'] = [];
+        }
+
+        if (!in_array($teamId, $bracketConfig['late_teams'])) {
+            $bracketConfig['late_teams'][] = $teamId;
+        }
+
+        if (!isset($bracketConfig['lb_pending_pool'])) {
+            $bracketConfig['lb_pending_pool'] = [];
+        }
+
+        // 3. Insertar el equipo tardío en la piscina de perdedores del Loser Bracket
+        if (!in_array($teamId, $bracketConfig['lb_pending_pool'])) {
+            $bracketConfig['lb_pending_pool'][] = $teamId;
+        }
+
+        $this->saveConfig($tournament, $config);
+
+        // 4. Reconstruir y procesar la piscina de perdedores para emparejarlo si hay un rival disponible
+        $bracketConfig['lb_pending_pool'] = $this->rebuildLoserPool($tournament, $bracketConfig, $categoryGroup);
+        $this->processLoserPool($tournament, $bracketConfig);
+        $this->saveConfig($tournament, $config);
     }
 
 }

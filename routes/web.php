@@ -34,9 +34,10 @@ Route::get('/tournaments/{tournament}/standings', [TournamentController::class, 
 Route::post('/tournaments/{tournament}/generate-second-round', [TournamentController::class, 'generateSecondRound'])->name('tournaments.secondRound')->middleware(['auth', 'verified']);
 Route::post('/tournaments/{tournament}/generate-elimination', [TournamentController::class, 'generateElimination'])->name('tournaments.elimination')->middleware(['auth', 'verified']);
 Route::post('/tournaments/{tournament}/update-progression', [TournamentController::class, 'updateProgression'])->name('tournaments.update-progression');
-Route::post('/tournaments/{tournament}/swap-global', [TournamentController::class, 'swapTeamsGlobal'])->name('tournaments.swap-global');
+Route::post('/tournaments/{tournament}/swap-global', [TournamentController::class, 'swapTeamsGlobal'])->name('tournaments.swap-global')->middleware(['auth', 'verified']);
 Route::get('/tournaments/{tournament}/teams/json', [TournamentController::class, 'getTeamsByTournamentJson'])->name('tournaments.teamsJson')->middleware(['auth', 'verified']);
 Route::post('/tournaments/{tournament}/clone', [TournamentController::class, 'cloneTournament'])->name('tournaments.clone')->middleware(['auth', 'verified']);
+Route::post('/tournaments/{tournament}/add-late-team', [TournamentController::class, 'addLateTeam'])->name('tournaments.add-late-team')->middleware(['auth', 'verified']);
 
 // --- Rutas para la gestión de partidos ---
 // CORRECCIÓN: Rutas movidas y actualizadas para usar GameController
