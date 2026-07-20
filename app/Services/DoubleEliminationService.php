@@ -194,11 +194,43 @@ class DoubleEliminationService
 
         $currentByes = $config['wb_byes'] ?? [];
         $survivorPool = array_merge($currentByes, $winners);
-        shuffle($survivorPool);
+
+        if (!isset($config['byes_count'])) {
+            $config['byes_count'] = [];
+        }
 
         $nextMatchups = [];
         $newByes = [];
-        
+
+        // Si la cantidad de sobrevivientes es impar, dar el BYE preferentemente a un equipo que HAYA JUGADO en la ronda anterior
+        if (count($survivorPool) % 2 !== 0) {
+            // Candidatos que SÍ jugaron en la ronda anterior (excluye a quienes ya venían de BYE)
+            $eligibleForBye = array_values(array_diff($winners, []));
+
+            if (empty($eligibleForBye)) {
+                $eligibleForBye = $survivorPool;
+            }
+
+            usort($eligibleForBye, function($a, $b) use ($config) {
+                $countA = $config['byes_count'][$a] ?? 0;
+                $countB = $config['byes_count'][$b] ?? 0;
+                if ($countA === $countB) {
+                    return rand(-1, 1);
+                }
+                return $countA <=> $countB;
+            });
+
+            // Extraemos el equipo que jugó en la ronda anterior y tiene menor conteo de BYEs
+            $byeTeam = $eligibleForBye[0];
+            $newByes[] = $byeTeam;
+            $config['byes_count'][$byeTeam] = ($config['byes_count'][$byeTeam] ?? 0) + 1;
+
+            // Removemos al byeTeam del conjunto de sobrevivientes para que los demás (incluyendo los de BYE anterior) JUEGUEN
+            $survivorPool = array_values(array_diff($survivorPool, [$byeTeam]));
+        }
+
+        // Barajamos los sobrevivientes restantes (los que venían de BYE anterior ahora SÍ JUEGAN obligatoriamente)
+        shuffle($survivorPool);
         for ($i = 0; $i < count($survivorPool); $i += 2) {
             if (isset($survivorPool[$i + 1])) {
                 $nextMatchups[] = [
@@ -207,8 +239,6 @@ class DoubleEliminationService
                     'group_name' => $nextRoundName,
                     'category_group' => $config['group_name'] ?? null
                 ];
-            } else {
-                $newByes[] = $survivorPool[$i];
             }
         }
 
@@ -239,61 +269,73 @@ class DoubleEliminationService
 
     private function processLoserPool($tournament, &$config)
     {
-        // Si hay menos de 2 equipos, no se puede jugar
+        // Si hay menos de 2 equipos en la piscina, no se puede realizar enfrentamiento
         if (!isset($config['lb_pending_pool']) || count($config['lb_pending_pool']) < 2) {
             return; 
         }
 
+        if (!isset($config['byes_count'])) {
+            $config['byes_count'] = [];
+        }
+
+        // Si la piscina tiene un número impar de equipos, priorizar a quienes TENGAN MENOS BYEs para recibir el pase
+        if (count($config['lb_pending_pool']) % 2 !== 0) {
+            usort($config['lb_pending_pool'], function($a, $b) use ($config) {
+                $countA = $config['byes_count'][$a] ?? 0;
+                $countB = $config['byes_count'][$b] ?? 0;
+                if ($countA === $countB) {
+                    return rand(-1, 1);
+                }
+                // Los equipos con MAYOR conteo de BYEs quedan al frente para forzarlos a jugar
+                return $countB <=> $countA;
+            });
+
+            // El equipo al final del arreglo es el que tiene MENOS BYEs previos: se queda en reserva (BYE)
+            $byeTeam = end($config['lb_pending_pool']);
+            $config['byes_count'][$byeTeam] = ($config['byes_count'][$byeTeam] ?? 0) + 1;
+        }
+
         // 1. Obtenemos el último juego existente como referencia de fecha inicial
         $lastGame = $tournament->games()->orderBy('created_at', 'desc')->first();
-        // Usamos este juego como "base" para calcular el inicio del primero de la tanda
         $currentReferenceGames = $lastGame ? collect([$lastGame]) : collect();
 
-        // 2. Contamos cuántos juegos de LB existen YA para no repetir números de ronda
-        $existingLbCount = $tournament->games()
+        // 2. Determinamos la siguiente ronda del Loser Bracket (LB_R1, LB_R2, etc.)
+        $existingLbRounds = $tournament->games()
             ->where('is_playoff', true)
-            ->where('group_name', 'like', 'LB_%')
+            ->where('group_name', 'like', 'LB_R%')
             ->when(isset($config['group_name']), fn($q) => $q->where('category_group', $config['group_name']))
-            ->count();
+            ->pluck('group_name');
 
-        // 3. CICLO PRINCIPAL: Mientras tengamos al menos 2 equipos, seguimos creando juegos
-        // Esto soluciona tu problema: si hay 4 equipos, crea 2 juegos seguidos.
+        $maxLbRoundNum = 0;
+        foreach ($existingLbRounds as $gName) {
+            $num = (int) str_replace('LB_R', '', $gName);
+            if ($num > $maxLbRoundNum) {
+                $maxLbRoundNum = $num;
+            }
+        }
+
+        $nextRoundName = 'LB_R' . ($maxLbRoundNum + 1);
+
+        // 3. Agrupamos TODOS los enfrentamientos de esta ronda en un solo paquete
+        $matchups = [];
         while (count($config['lb_pending_pool']) >= 2) {
-            
             $team1 = array_shift($config['lb_pending_pool']);
             $team2 = array_shift($config['lb_pending_pool']);
 
-            // Incrementamos el contador para el nombre de la ronda (LB_R3, LB_R4, etc.)
-            $existingLbCount++;
-            $roundName = 'LB_R' . $existingLbCount;
-
-            $matchups = [[
+            $matchups[] = [
                 'local' => $team1,
                 'away' => $team2,
-                'group_name' => $roundName,
+                'group_name' => $nextRoundName,
                 'category_group' => $config['group_name'] ?? null
-            ]];
+            ];
+        }
 
-            // Programamos el juego.
-            // Nota: Pasamos $currentReferenceGames que contiene el juego anterior.
-            // scheduleNextRound calculará la fecha sumando el buffer al juego anterior.
+        // 4. Programamos todos los partidos de esta ronda juntos
+        if (!empty($matchups)) {
             $this->scheduleNextRound($tournament, $matchups, $currentReferenceGames, $config);
-
-            // 4. ACTUALIZACIÓN CRÍTICA DE REFERENCIA
-            // Buscamos el juego que acabamos de crear para que el SIGUIENTE bucle
-            // use la fecha de ESTE juego como punto de partida.
-            $newlyCreatedGame = $tournament->games()
-                ->where('group_name', $roundName)
-                ->where('category_group', $config['group_name'] ?? null)
-                ->orderBy('created_at', 'desc')
-                ->first();
-            
-            if ($newlyCreatedGame) {
-                $currentReferenceGames = collect([$newlyCreatedGame]);
-            }
         }
         
-        // Guardamos el estado final de la piscina (que podría estar vacía o con 1 equipo sobrante)
+        // Guardamos el estado final de la piscina (preservando eventuales BYEs sobrantes)
         $this->saveConfig($tournament, $config);
     }
 
