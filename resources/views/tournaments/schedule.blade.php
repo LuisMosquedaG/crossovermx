@@ -924,21 +924,35 @@
                 });
         }
 
+        function getPlayerAvatarHtml(player) {
+            if (player.image_path) {
+                return `<img src="/storage/${player.image_path}" alt="${player.name}" class="w-8 h-8 rounded-full object-cover ml-2 mr-2 shrink-0 border border-gray-200">`;
+            } else if (player.gender === 'hombre') {
+                return `<img src="/images/hombre.png" alt="Hombre" class="w-8 h-8 rounded-full object-cover ml-2 mr-2 shrink-0 border border-gray-200">`;
+            } else if (player.gender === 'mujer') {
+                return `<img src="/images/mujer.png" alt="Mujer" class="w-8 h-8 rounded-full object-cover ml-2 mr-2 shrink-0 border border-gray-200">`;
+            } else {
+                return `<div class="w-8 h-8 rounded-full bg-gray-200 border border-gray-300 flex items-center justify-center text-gray-600 text-xs font-bold ml-2 mr-2 shrink-0">${player.name ? player.name.substring(0,1) : 'J'}</div>`;
+            }
+        }
+
         function populatePlayerList(containerId, players, teamPrefix) {
             const container = document.getElementById(containerId);
             container.innerHTML = ''; 
             players.forEach(player => {
                 const playerDiv = document.createElement('div');
-                playerDiv.className = 'flex items-center';
+                playerDiv.className = 'flex items-center py-1.5 border-b border-gray-50 last:border-0';
                 
                 const isSuspended = (player.status === 'suspended');
                 const disabledAttr = isSuspended ? 'disabled' : '';
-                const labelClass = isSuspended ? 'text-red-500 line-through' : 'ml-2 text-sm text-gray-700';
+                const labelClass = isSuspended ? 'text-red-500 line-through' : 'text-sm text-gray-700 font-medium';
                 const labelSuffix = isSuspended ? ' (SUSPENDIDO)' : '';
+                const avatarHtml = getPlayerAvatarHtml(player);
 
                 playerDiv.innerHTML = `
                     <input type="checkbox" id="player_${teamPrefix}_${player.id}" name="players[${teamPrefix}][]" value="${player.id}" class="rounded border-gray-300 text-orange-600 shadow-sm focus:ring-0 focus:outline-none player-checkbox" data-team="${teamPrefix}" onchange="updateSelectedCount('${teamPrefix}')" ${disabledAttr}>
-                    <label for="player_${teamPrefix}_${player.id}" class="${labelClass}">${player.name} (${player.number})${labelSuffix}</label>
+                    ${avatarHtml}
+                    <label for="player_${teamPrefix}_${player.id}" class="${labelClass}">${player.name} (#${player.number})${labelSuffix}</label>
                 `;
                 container.appendChild(playerDiv);
             });
@@ -1367,10 +1381,12 @@
                     
                     // Construimos el objeto jugador simulado para la UI
                     const newPlayer = {
-                        id: data.player.id, // Asegúrate que tu backend devuelva el ID
-                        name: formData.get('name'),
-                        number: formData.get('number'),
-                        status: 'active' // Asumimos activo
+                        id: data.player.id,
+                        name: data.player.name || formData.get('name'),
+                        number: data.player.number || formData.get('number'),
+                        gender: data.player.gender || formData.get('gender'),
+                        image_path: data.player.image_path,
+                        status: 'active'
                     };
 
                     // Agregar al DOM
@@ -1400,12 +1416,14 @@
             const teamPrefix = side; // 'local' o 'away'
 
             const playerDiv = document.createElement('div');
-            playerDiv.className = 'flex items-center';
+            playerDiv.className = 'flex items-center py-1.5 border-b border-gray-50 last:border-0';
+            const avatarHtml = getPlayerAvatarHtml(player);
             
             // Replicamos la estructura HTML de populatePlayerList
             playerDiv.innerHTML = `
                 <input type="checkbox" id="player_${teamPrefix}_${player.id}" name="players[${teamPrefix}][]" value="${player.id}" class="rounded border-gray-300 text-orange-600 shadow-sm focus:ring-0 focus:outline-none player-checkbox" data-team="${teamPrefix}" onchange="updateSelectedCount('${teamPrefix}')">
-                <label for="player_${teamPrefix}_${player.id}" class="ml-2 text-sm text-gray-700 font-medium">${player.name} (#${player.number})</label>
+                ${avatarHtml}
+                <label for="player_${teamPrefix}_${player.id}" class="text-sm text-gray-700 font-medium">${player.name} (#${player.number})</label>
             `;
             
             container.appendChild(playerDiv);
