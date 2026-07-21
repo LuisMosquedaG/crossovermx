@@ -55,14 +55,28 @@
                         placeholder="nombre@ejemplo.com" value="{{ old('email') }}">
                 </div>
                 
-                <!-- Input Contraseña (Estilo Cajón Redondeado) -->
+                <!-- Input Contraseña (Estilo Cajón Redondeado con Ojito) -->
                 <div class="group">
                     <label for="password" class="block text-xs font-bold text-[#1e293b] uppercase tracking-wider mb-2 group-focus-within:text-[#ff6b00] transition-colors">
                         Contraseña
                     </label>
-                    <input id="password" name="password" type="password" autocomplete="current-password" required 
-                        class="input-pro appearance-none block w-full px-4 py-3.5 border border-slate-200 placeholder-slate-400 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#ff6b00] focus:border-transparent sm:text-sm" 
-                        placeholder="••••••••">
+                    <div class="relative">
+                        <input id="password" name="password" type="password" autocomplete="current-password" required 
+                            class="input-pro appearance-none block w-full pl-4 pr-11 py-3.5 border border-slate-200 placeholder-slate-400 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#ff6b00] focus:border-transparent sm:text-sm" 
+                            placeholder="••••••••">
+                        <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-[#ff6b00] focus:outline-none transition-colors" title="Mostrar/Ocultar contraseña">
+                            <!-- Eye Open Icon -->
+                            <svg id="eye-open" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <!-- Eye Closed Icon -->
+                            <svg id="eye-closed" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858-5.908a10.046 10.046 0 013.122-.463c4.478 0 8.268 2.943 9.542 7a9.97 9.97 0 01-2.163 3.693M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -100,4 +114,22 @@
             </div>
         </form>
     </div>
+
+    <script>
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const eyeOpen = document.getElementById('eye-open');
+            const eyeClosed = document.getElementById('eye-closed');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeOpen.classList.add('hidden');
+                eyeClosed.classList.remove('hidden');
+            } else {
+                passwordInput.type = 'password';
+                eyeOpen.classList.remove('hidden');
+                eyeClosed.classList.add('hidden');
+            }
+        }
+    </script>
 </x-guest-layout>
