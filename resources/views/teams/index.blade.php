@@ -157,6 +157,18 @@
                                 </select>
                             </div>
 
+                            <!-- Filtro: Torneo -->
+                            <div class="w-full md:w-48">
+                                <select name="tournament_id" onchange="this.form.submit()" class="block w-full rounded-md border-gray-300 border py-2 px-3 bg-white shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm">
+                                    <option value="">Todos los Torneos</option>
+                                    @foreach ($tournaments as $t)
+                                        <option value="{{ $t->id }}" {{ request('tournament_id') == $t->id ? 'selected' : '' }}>
+                                            {{ $t->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
                             <!-- Filtro: Fuerza (Dentro del formulario de búsqueda superior) -->
                             <div class="w-full md:w-48">
                                 <select name="strength" onchange="this.form.submit()" class="block w-full rounded-md border-gray-300 border py-2 px-3 bg-white shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm">

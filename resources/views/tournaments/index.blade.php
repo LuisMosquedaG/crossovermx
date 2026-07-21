@@ -6,27 +6,87 @@
         <div class="w-[96%] md:w-[90%] mx-auto mb-[10vh]">
             <div class="bg-white overflow-hidden shadow-xl rounded-2xl border border-gray-200">
                 <div class="p-6 md:p-8 bg-white border-b border-gray-200">
-                    <!-- Contenedor Flex: Botón y Buscador -->
-                    <div class="mb-6 flex flex-col md:flex-row items-center gap-4">
-        
-                        <!-- 1. El Botón (Condicional para ocultar a Árbitros) -->
+                    <!-- Contenedor Flex: Botón y Formulario de Búsqueda y Filtros Unificados (Idéntico a Equipos) -->
+                    <div class="mb-6 flex flex-col xl:flex-row items-center gap-3">
+                        
+                        <!-- 1. El Botón Crear -->
                         @if(!auth()->user()->hasRole('Arbitro'))
-                            <button onclick="openCreateModal()" class="w-full md:w-auto shrink-0 bg-orange-600 text-white font-bold py-2 px-4 rounded hover:bg-orange-700 transition duration-150 ease-in-out">
+                            <button onclick="openCreateModal()" class="w-full xl:w-auto shrink-0 bg-orange-600 text-white font-bold py-2 px-4 rounded hover:bg-orange-700 transition duration-150 ease-in-out">
                                 Crear Nuevo Torneo
                             </button>
                         @endif
 
-                        <!-- 2. El Buscador (Formulario GET) -->
-                        <form action="{{ route('tournaments.index') }}" method="GET" class="relative w-full md:flex-1">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                    <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
-                                </svg>
+                        <!-- 2. FORMULARIO UNIFICADO DE BÚSQUEDA Y FILTROS -->
+                        <form action="{{ route('tournaments.index') }}" method="GET" class="w-full xl:flex-1 flex flex-col md:flex-row flex-wrap xl:flex-nowrap gap-2.5 items-center">
+                            
+                            <!-- Buscador de Texto -->
+                            <div class="relative w-full md:flex-1 min-w-[200px]">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                <input type="text" name="search" value="{{ request('search') }}" 
+                                    class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 sm:text-sm transition duration-150 ease-in-out" 
+                                    placeholder="Buscar por nombre, ubicación...">
                             </div>
-                            <!-- name="search" y value son claves para la paginación -->
-                            <input type="text" name="search" value="{{ request('search') }}" 
-                                class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 sm:text-sm transition duration-150 ease-in-out" 
-                                placeholder="Buscar torneo por nombre, categoría, fechas o ubicación...">
+
+                            <!-- Filtro: Tipo de Torneo -->
+                            <div class="w-full md:w-auto">
+                                <select name="tournament_type" onchange="this.form.submit()" class="block w-full rounded-md border-gray-300 border py-2 px-3 bg-white shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm">
+                                    <option value="">Todos los Tipos</option>
+                                    <option value="round_robin" {{ request('tournament_type') == 'round_robin' ? 'selected' : '' }}>Liga</option>
+                                    <option value="elimination" {{ request('tournament_type') == 'elimination' ? 'selected' : '' }}>Eliminatoria Directa</option>
+                                    <option value="double_elimination" {{ request('tournament_type') == 'double_elimination' ? 'selected' : '' }}>Doble Eliminatoria</option>
+                                </select>
+                            </div>
+
+                            <!-- Filtro: Categoría -->
+                            <div class="w-full md:w-auto">
+                                <select name="category" onchange="this.form.submit()" class="block w-full rounded-md border-gray-300 border py-2 px-3 bg-white shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm">
+                                    <option value="">Todas las Categorías</option>
+                                    <option value="Varonil" {{ request('category') == 'Varonil' ? 'selected' : '' }}>Varonil</option>
+                                    <option value="Femenil" {{ request('category') == 'Femenil' ? 'selected' : '' }}>Femenil</option>
+                                    <option value="Mixto" {{ request('category') == 'Mixto' ? 'selected' : '' }}>Mixto</option>
+                                    <option value="Infantil" {{ request('category') == 'Infantil' ? 'selected' : '' }}>Infantil</option>
+                                    <option value="Varios" {{ request('category') == 'Varios' ? 'selected' : '' }}>Varios</option>
+                                </select>
+                            </div>
+
+                            <!-- Filtro: Fuerza -->
+                            <div class="w-full md:w-auto">
+                                <select name="fuerza" onchange="this.form.submit()" class="block w-full rounded-md border-gray-300 border py-2 px-3 bg-white shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm">
+                                    <option value="">Todas las Fuerzas</option>
+                                    @foreach ($strengths as $str)
+                                        <option value="{{ $str->name }}" {{ request('fuerza') == $str->name ? 'selected' : '' }}>
+                                            {{ $str->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Filtro: Estado -->
+                            <div class="w-full md:w-auto">
+                                <select name="status" onchange="this.form.submit()" class="block w-full rounded-md border-gray-300 border py-2 px-3 bg-white shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm">
+                                    <option value="">Todos los Estados</option>
+                                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pendiente</option>
+                                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Activo</option>
+                                    <option value="finished" {{ request('status') == 'finished' ? 'selected' : '' }}>Finalizado</option>
+                                </select>
+                            </div>
+
+                            <!-- Filtro: Fecha Inicio -->
+                            <div class="w-full md:w-auto flex items-center gap-1">
+                                <span class="text-xs text-gray-500 font-medium whitespace-nowrap">Desde:</span>
+                                <input type="date" name="start_date" value="{{ request('start_date') }}" onchange="this.form.submit()" class="block rounded-md border-gray-300 border py-1.5 px-2 bg-white shadow-sm focus:border-orange-500 focus:ring-orange-500 text-xs">
+                            </div>
+
+                            <!-- Filtro: Fecha Fin -->
+                            <div class="w-full md:w-auto flex items-center gap-1">
+                                <span class="text-xs text-gray-500 font-medium whitespace-nowrap">Hasta:</span>
+                                <input type="date" name="end_date" value="{{ request('end_date') }}" onchange="this.form.submit()" class="block rounded-md border-gray-300 border py-1.5 px-2 bg-white shadow-sm focus:border-orange-500 focus:ring-orange-500 text-xs">
+                            </div>
+
                         </form>
 
                     </div>
@@ -53,11 +113,11 @@
                                     <!-- CAMBIO: Columna Acciones movida al inicio -->
                                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo de Torneo</th>
                                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
                                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Fuerza</th>
                                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Inicio</th>
                                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Fin</th>
-                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
                                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
                                 </tr>
                             </thead>
@@ -146,8 +206,28 @@
                                             </div>
                                         </td>
 
-                                        <!-- Se añade la clase "text-center" a cada celda de datos -->
+                                        <!-- CELDA NOMBRE -->
                                         <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-900">{{ $tournament->name }}</td>
+                                        
+                                        <!-- CELDA TIPO DE TORNEO (Estilo Pastilla idéntico a Configuración de Calendario) -->
+                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
+                                            @php
+                                                $tSettings = $tournament->settings ? $tournament->settings->settings : [];
+                                                $tType = $tSettings['tournament_type'] ?? 'round_robin';
+                                                $typeLabels = [
+                                                    'round_robin' => 'Liga (Todos contra todos + Playoffs)',
+                                                    'elimination' => 'Eliminatoria Directa',
+                                                    'single_elimination' => 'Eliminatoria Directa',
+                                                    'double_elimination' => 'Doble Eliminatoria',
+                                                    'groups' => 'Fase de Grupos',
+                                                    'groups_and_playoffs' => 'Grupos y Liguilla',
+                                                ];
+                                                $labelText = $typeLabels[$tType] ?? ucfirst(str_replace('_', ' ', $tType));
+                                            @endphp
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-800 border border-orange-200">
+                                                {{ $labelText }}
+                                            </span>
+                                        </td>
                                         
                                         <!-- ... dentro de tu tabla tbody ... -->
 
@@ -190,7 +270,6 @@
                                             @endif
                                         </td>
 
-                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{{ $tournament->location }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-center">
                                             @if($tournament->status == 'pending')
                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pendiente</span>
@@ -1105,7 +1184,7 @@ saveButton.className = 'inline-flex items-center px-4 py-2 bg-orange-600 border 
                         </span>
                     </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 text-sm">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-8 text-sm">
                         <div>
                             <span class="block text-xs text-slate-500 font-medium mb-1">Días de Juego</span>
                             <div class="text-slate-800 font-medium">${selectedDays}</div>
@@ -1113,6 +1192,16 @@ saveButton.className = 'inline-flex items-center px-4 py-2 bg-orange-600 border 
                         <div>
                             <span class="block text-xs text-slate-500 font-medium mb-1">Reglas de Descanso</span>
                             <div>${selectedRestRules}</div>
+                        </div>
+                        <div>
+                            <span class="block text-xs text-slate-500 font-medium mb-1">Ubicación</span>
+                            <div class="text-slate-800 font-medium flex items-center gap-1">
+                                <svg class="w-4 h-4 text-orange-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <span>${settings.location || 'No definida'}</span>
+                            </div>
                         </div>
                     </div>
                 </div>

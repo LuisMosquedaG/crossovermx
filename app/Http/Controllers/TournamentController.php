@@ -33,15 +33,19 @@ class TournamentController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
+        $tournamentType = $request->input('tournament_type');
+        $category = $request->input('category');
+        $fuerza = $request->input('fuerza');
+        $status = $request->input('status');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
 
         $tournamentsQuery = Tournament::query();
 
         // --- NUEVA LÓGICA: FILTRO POR CLIENTE ---
-        // Si el usuario tiene client_id asignado, solo ve sus torneos
         if (auth()->check() && auth()->user()->client_id) {
             $tournamentsQuery->where('client_id', auth()->user()->client_id);
         }
-        // ------------------------------------------------
 
         // --- LÓGICA ÁRBITRO ---
         if (auth()->user()->hasRole('Arbitro')) {
@@ -54,22 +58,59 @@ class TournamentController extends Controller
             $tournamentIds = Team::where('coach_id', auth()->id())->pluck('tournament_id')->unique();
             $tournamentsQuery->whereIn('id', $tournamentIds);
         }
-        // ----------------------------------
 
-        // --- NUEVO: LÓGICA DE BÚSQUEDA ---
+        // --- BÚSQUEDA GENERAL DE TEXTO ---
         if ($search) {
             $tournamentsQuery->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('category', 'like', "%{$search}%")
+                  ->orWhere('fuerza', 'like', "%{$search}%")
                   ->orWhere('location', 'like', "%{$search}%")
                   ->orWhere('start_date', 'like', "%{$search}%")
                   ->orWhere('end_date', 'like', "%{$search}%");
             });
         }
-        // ----------------------------------------
 
-        // Paginamos (15 registros) y mantenemos el parámetro de búsqueda
-        $tournaments = $tournamentsQuery->orderBy('name')->paginate(15)->appends(['search' => $search]);
+        // --- FILTRO POR TIPO DE TORNEO ---
+        if ($tournamentType) {
+            $tournamentsQuery->whereHas('settings', function($q) use ($tournamentType) {
+                $q->where('settings->tournament_type', $tournamentType);
+            });
+        }
+
+        // --- FILTRO POR CATEGORÍA ---
+        if ($category) {
+            $tournamentsQuery->where('category', $category);
+        }
+
+        // --- FILTRO POR FUERZA ---
+        if ($fuerza) {
+            $tournamentsQuery->where('fuerza', $fuerza);
+        }
+
+        // --- FILTRO POR ESTADO ---
+        if ($status) {
+            if ($status === 'active') {
+                $tournamentsQuery->whereIn('status', ['active', 'in_progress']);
+            } else {
+                $tournamentsQuery->where('status', $status);
+            }
+        }
+
+        // --- FILTRO POR FECHA INICIO ---
+        if ($startDate) {
+            $tournamentsQuery->whereDate('start_date', '>=', $startDate);
+        }
+
+        // --- FILTRO POR FECHA FIN ---
+        if ($endDate) {
+            $tournamentsQuery->whereDate('end_date', '<=', $endDate);
+        }
+
+        // Paginamos conservando todos los parámetros de filtrado
+        $tournaments = $tournamentsQuery->orderBy('name')
+            ->paginate(15)
+            ->appends($request->only(['search', 'tournament_type', 'category', 'fuerza', 'status', 'start_date', 'end_date']));
         
          // --- NUEVO: FILTRAR CANCHAS PARA EL MODAL DE CALENDARIO ---
         $courtsQuery = Court::orderBy('name');
@@ -141,7 +182,7 @@ public function store(Request $request)
     // 3. Crear
     Tournament::create($data);
 
-    return redirect()->route('tournaments.index')->with('message', 'Torneo creado exitosamente.');
+    return redirect()->back()->with('message', 'Torneo creado exitosamente.');
 }
 
     /**
@@ -182,14 +223,14 @@ public function store(Request $request)
             // 3. Actualizar
             $tournament->update($data);
 
-            return redirect()->route('tournaments.index')->with('message', 'Torneo actualizado exitosamente.');
+            return redirect()->back()->with('message', 'Torneo actualizado exitosamente.');
         }
 
     public function destroy(Tournament $tournament)
         {
             $this->authorize('delete', $tournament); // <--- AGREGAR
             if ($tournament->teams()->exists()) {
-                return redirect()->route('tournaments.index')
+                return redirect()->back()
                     ->with('error', 'No se puede eliminar el torneo porque tiene equipos asignados.');
             }
 
@@ -198,7 +239,7 @@ public function store(Request $request)
             // los equipos y jugadores, pero al no entrar aquí si hay equipos, estamos seguros.
             $tournament->delete();
 
-            return redirect()->route('tournaments.index')
+            return redirect()->back()
                 ->with('message', 'Torneo eliminado exitosamente.');
         }
 
@@ -329,12 +370,14 @@ public function store(Request $request)
     }
 
     public function getCalendarSettings(Tournament $tournament)
-        {
-            if (!$tournament->settings) {
-                return response()->json(['message' => 'No se encontró configuración para este torneo.'], 404);
-            }
-            return response()->json($tournament->settings->settings);
+    {
+        if (!$tournament->settings) {
+            return response()->json(['message' => 'No se encontró configuración para este torneo.'], 404);
         }
+        $settings = $tournament->settings->settings;
+        $settings['location'] = $tournament->location;
+        return response()->json($settings);
+    }
 
     public function deleteCalendar(Tournament $tournament)
     {

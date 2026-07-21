@@ -1095,15 +1095,34 @@ public function showLiveGame(Game $game)
         // FILTRO: Solo partidos manuales (sin torneo) Y de este cliente
         $query = Game::with(['localTeam', 'awayTeam', 'court'])
             ->whereNull('tournament_id') 
-            ->where('client_id', $clientId) // <--- AGREGAR ESTE FILTRO
+            ->where('client_id', $clientId)
             ->orderBy('date_time', 'desc');
+
+        // Si el usuario es Árbitro, solo ve los partidos donde esté asignado
+        if (auth()->user()->hasRole('Arbitro')) {
+            $query->where('referee_id', auth()->id());
+        }
+
+        // Si el usuario es Coach, solo ve los partidos donde su equipo participe
+        if (auth()->user()->hasRole('Coach')) {
+            $coachId = auth()->id();
+            $query->where(function($q) use ($coachId) {
+                $q->whereHas('localTeam', function($t) use ($coachId) {
+                    $t->where('coach_id', $coachId);
+                })->orWhereHas('awayTeam', function($t) use ($coachId) {
+                    $t->where('coach_id', $coachId);
+                });
+            });
+        }
 
         // Lógica de búsqueda
         if ($search = request('search')) {
-            $query->whereHas('localTeam', function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%");
-            })->orWhereHas('awayTeam', function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->whereHas('localTeam', function($t) use ($search) {
+                    $t->where('name', 'like', "%{$search}%");
+                })->orWhereHas('awayTeam', function($t) use ($search) {
+                    $t->where('name', 'like', "%{$search}%");
+                });
             });
         }
 

@@ -9,7 +9,7 @@
         
         <!-- 1. IZQUIERDA: LOGO (Actúa como Dashboard/Inicio) -->
         <div class="shrink-0 flex items-center">
-            <a href="<?php echo e(route('dashboard')); ?>" class="flex items-center gap-2 group pl-2 pr-4 py-1 rounded-full hover:bg-orange-50 transition-colors" title="Inicio / Dashboard">
+            <a href="<?php echo e(auth()->user()->hasRole('Arbitro') ? route('tournaments.index') : route('dashboard')); ?>" class="flex items-center gap-2 group pl-2 pr-4 py-1 rounded-full hover:bg-orange-50 transition-colors" title="Inicio">
                 <img src="<?php echo e(asset('images/logo.png')); ?>" alt="Logo" class="h-8 w-auto transition-transform group-hover:scale-105">
                 <span class="hidden md:block font-bold text-xl tracking-wide uppercase" style="color: #1e293b;">
                     Crossover<span style="color: #ff6b00;">MX</span>
@@ -68,7 +68,7 @@
 
         <!-- 3. CENTRO: LINKS DE TEXTO (SOLO ESCRITORIO) -->
         <div class="hidden lg:flex items-center space-x-6">
-            <?php if(!auth()->user()->hasRole('Master Admin') && !auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach')): ?>
+            <?php if(!auth()->user()->hasRole('Master Admin') && !auth()->user()->hasRole('Arbitro')): ?>
                 <a href="<?php echo e(route('dashboard')); ?>" class="text-sm font-semibold text-gray-600 hover:text-orange-500 transition-colors <?php echo e(request()->routeIs('dashboard') ? 'text-orange-600' : ''); ?>">
                     Dashboard
                 </a>

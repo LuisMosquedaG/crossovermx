@@ -246,10 +246,26 @@ TARJETA CAMPEÓN
                                 <!-- 1. NUEVO ENCABEZADO (Estilo Liga Estándar) -->
                                 <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 border-b pb-2 border-gray-300 gap-4">
                                     
-                                    <!-- IZQUIERDA: Título del Grupo -->
+                                    <!-- IZQUIERDA: Título del Grupo y Tipo de Torneo -->
                                     <div>
-                                        <h3 class="text-xl font-bold text-gray-800">
-                                            <span class="text-gray-400 text-base font-normal mr-2">Grupo:</span>{{ $groupName }}
+                                        <h3 class="text-xl font-bold text-gray-800 flex items-center gap-3">
+                                            <span><span class="text-gray-400 text-base font-normal mr-2">Grupo:</span>{{ $groupName }}</span>
+                                            @php
+                                                $tSettings = $tournament->settings ? $tournament->settings->settings : [];
+                                                $tType = $tSettings['tournament_type'] ?? 'round_robin';
+                                                $typeLabels = [
+                                                    'round_robin' => 'Liga (Todos contra todos + Playoffs)',
+                                                    'elimination' => 'Eliminatoria Directa',
+                                                    'single_elimination' => 'Eliminatoria Directa',
+                                                    'double_elimination' => 'Doble Eliminatoria',
+                                                    'groups' => 'Fase de Grupos',
+                                                    'groups_and_playoffs' => 'Grupos y Liguilla',
+                                                ];
+                                                $labelText = $typeLabels[$tType] ?? ucfirst(str_replace('_', ' ', $tType));
+                                            @endphp
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-800 border border-orange-200">
+                                                {{ $labelText }}
+                                            </span>
                                         </h3>
                                         <!-- Mostramos la variable calculada -->
                                         <span class="text-sm text-gray-500">
@@ -615,10 +631,26 @@ TARJETA CAMPEÓN
                                 <!-- CABECERA DEL GRUPO -->
                                 <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 border-b pb-2 border-gray-300 gap-4">
                                     
-                                    <!-- IZQUIERDA: Título del Grupo -->
+                                    <!-- IZQUIERDA: Título del Grupo y Tipo de Torneo -->
                                     <div>
-                                        <h3 class="text-xl font-bold text-gray-800">
-                                            <span class="text-gray-400 text-base font-normal mr-2">Grupo:</span>{{ $groupName }}
+                                        <h3 class="text-xl font-bold text-gray-800 flex items-center gap-3">
+                                            <span><span class="text-gray-400 text-base font-normal mr-2">Grupo:</span>{{ $groupName }}</span>
+                                            @php
+                                                $tSettings = $tournament->settings ? $tournament->settings->settings : [];
+                                                $tType = $tSettings['tournament_type'] ?? 'round_robin';
+                                                $typeLabels = [
+                                                    'round_robin' => 'Liga (Todos contra todos + Playoffs)',
+                                                    'elimination' => 'Eliminatoria Directa',
+                                                    'single_elimination' => 'Eliminatoria Directa',
+                                                    'double_elimination' => 'Doble Eliminatoria',
+                                                    'groups' => 'Fase de Grupos',
+                                                    'groups_and_playoffs' => 'Grupos y Liguilla',
+                                                ];
+                                                $labelText = $typeLabels[$tType] ?? ucfirst(str_replace('_', ' ', $tType));
+                                            @endphp
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-800 border border-orange-200">
+                                                {{ $labelText }}
+                                            </span>
                                         </h3>
                                         <span class="text-sm text-gray-500">
                                             {{ $equiposHeader }} Equipos

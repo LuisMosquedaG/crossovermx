@@ -14,8 +14,9 @@ class TeamController extends Controller
     {
         // 1. Obtenemos todos los parámetros de búsqueda
         $search = $request->input('search');
-        $category = $request->input('category'); // <--- AGREGADO
-        $strength = $request->input('strength'); // <--- AGREGADO
+        $category = $request->input('category');
+        $strength = $request->input('strength');
+        $tournamentId = $request->input('tournament_id');
 
         $teamsQuery = Team::with('tournament', 'coach', 'tournament.client');
 
@@ -44,27 +45,30 @@ class TeamController extends Controller
                   });
             });
         }
-        // -------------------------------------------
 
-        // --- NUEVO: Lógica de Filtro por Categoría ---
+        // --- Lógica de Filtro por Categoría ---
         if ($category) {
             $teamsQuery->where('category', $category);
         }
-        // -------------------------------------------
 
-        // --- NUEVO: Lógica de Filtro por Fuerza ---
+        // --- Lógica de Filtro por Fuerza ---
         if ($strength) {
             $teamsQuery->where('strength', $strength);
         }
-        // -------------------------------------------
 
-        // Paginamos (15 registros) y mantenemos los parámetros en la paginación
+        // --- Lógica de Filtro por Torneo ---
+        if ($tournamentId) {
+            $teamsQuery->where('tournament_id', $tournamentId);
+        }
+
+        // Paginamos conservando todos los parámetros
         $teams = $teamsQuery->orderBy('name')
             ->paginate(15)
             ->appends([
                 'search' => $search, 
-                'category' => $category, // <--- AGREGADO para que paginación 2, 3... conserve el filtro
-                'strength' => $strength   // <--- AGREGADO
+                'category' => $category,
+                'strength' => $strength,
+                'tournament_id' => $tournamentId
             ]);
 
         // --- PREPARAR DATOS PARA EL MODAL ---
@@ -408,7 +412,7 @@ public function update(Request $request, Team $team)
             }
         }
 
-        return redirect()->route('teams.index')->with('message', 'Equipo eliminado exitosamente.');
+        return redirect()->back()->with('message', 'Equipo eliminado exitosamente.');
     }
 
     public function stats(Team $team)
