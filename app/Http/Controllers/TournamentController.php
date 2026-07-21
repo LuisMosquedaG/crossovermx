@@ -456,11 +456,9 @@ public function store(Request $request)
         }
 
         // --- FECHAS ---
-        $startDate = $request->input('start_date');
-        if (empty($startDate)) {
-            $startDate = now()->setTimezone('America/Mexico_City')->toDateString();
+        if ($request->filled('start_date')) {
+            $gamesQuery->whereDate('date_time', '>=', $request->input('start_date'));
         }
-        $gamesQuery->whereDate('date_time', '>=', $startDate);
 
         if ($request->filled('end_date')) {
             $gamesQuery->whereDate('date_time', '<=', $request->input('end_date'));
