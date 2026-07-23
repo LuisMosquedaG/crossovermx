@@ -50,8 +50,15 @@ class GameController extends Controller
 
 public function showLiveGame(Game $game)
 {
-    
     $this->authorize('view', $game);
+
+    if ($game->status === 'finished') {
+        if ($game->tournament_id) {
+            return redirect()->route('tournaments.schedule', $game->tournament_id)->with('error', 'Este partido ya ha finalizado.');
+        }
+        return redirect()->route('games.index')->with('error', 'Este partido ya ha finalizado.');
+    }
+
     // Delegamos TODA la lógica pesada al Servicio
     // El controlador solo se encarga de recibir la petición y devolver la vista
     $data = $this->liveGameService->getGameData($game);

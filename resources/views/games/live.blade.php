@@ -806,6 +806,7 @@
     let gameId = {{ $game->id }};
     let tournamentId = {{ $game->tournament_id ?? 'null' }};
     let knockOutLimit = {{ $knockOutLimit ?? 'null' }};
+    let initialGameStatus = '{{ $game->status }}';
     let totalSeconds = {{ $game->seconds_remaining ?? ($gameDurationMinutes * 60) }};
     let timeRemaining = totalSeconds * 1000;
     let gameDurationConfig = {{ $gameDurationMinutes ?? 10 }} * 60;
@@ -1983,7 +1984,7 @@
                 }
 
                 // 4. Sincronizar Estado del Juego (Si alguien finalizó el juego)
-                if (data.status === 'finished') {
+                if (data.status === 'finished' && initialGameStatus !== 'finished') {
                     clearInterval(pollingInterval); // Detener polling
                     if (isExtensionActive) {
                         endExtensionTimer();
