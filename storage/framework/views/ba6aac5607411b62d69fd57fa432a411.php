@@ -1,4 +1,13 @@
-<x-app-layout>
+<?php if (isset($component)) { $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54 = $attributes; } ?>
+<?php $component = App\View\Components\AppLayout::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('app-layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\App\View\Components\AppLayout::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
     <!-- Carga de librería externa (Movida fuera del tbody para validación HTML correcta y carga temprana) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
@@ -14,14 +23,14 @@
                     <div class="mb-6 flex flex-col xl:flex-row items-center gap-3">
                         
                         <!-- 1. El Botón Crear -->
-                        @if(!auth()->user()->hasRole('Arbitro'))
+                        <?php if(!auth()->user()->hasRole('Arbitro')): ?>
                             <button onclick="openCreateModal()" class="w-full xl:w-auto shrink-0 bg-orange-600 text-white font-bold py-2 px-4 rounded hover:bg-orange-700 transition duration-150 ease-in-out">
                                 Crear Nuevo Torneo
                             </button>
-                        @endif
+                        <?php endif; ?>
 
                         <!-- 2. FORMULARIO UNIFICADO DE BÚSQUEDA Y FILTROS -->
-                        <form action="{{ route('tournaments.index') }}" method="GET" class="w-full xl:flex-1 flex flex-col md:flex-row flex-wrap xl:flex-nowrap gap-2.5 items-center">
+                        <form action="<?php echo e(route('tournaments.index')); ?>" method="GET" class="w-full xl:flex-1 flex flex-col md:flex-row flex-wrap xl:flex-nowrap gap-2.5 items-center">
                             
                             <!-- Buscador de Texto -->
                             <div class="relative w-full md:flex-1 min-w-[200px]">
@@ -30,7 +39,7 @@
                                         <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
                                     </svg>
                                 </div>
-                                <input type="text" name="search" value="{{ request('search') }}" 
+                                <input type="text" name="search" value="<?php echo e(request('search')); ?>" 
                                     class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 sm:text-sm transition duration-150 ease-in-out" 
                                     placeholder="Buscar por nombre, ubicación...">
                             </div>
@@ -39,9 +48,9 @@
                             <div class="w-full md:w-auto">
                                 <select name="tournament_type" onchange="this.form.submit()" class="block w-full rounded-md border-gray-300 border py-2 px-3 bg-white shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm">
                                     <option value="">Todos los Tipos</option>
-                                    <option value="round_robin" {{ request('tournament_type') == 'round_robin' ? 'selected' : '' }}>Liga</option>
-                                    <option value="elimination" {{ request('tournament_type') == 'elimination' ? 'selected' : '' }}>Eliminatoria Directa</option>
-                                    <option value="double_elimination" {{ request('tournament_type') == 'double_elimination' ? 'selected' : '' }}>Doble Eliminatoria</option>
+                                    <option value="round_robin" <?php echo e(request('tournament_type') == 'round_robin' ? 'selected' : ''); ?>>Liga</option>
+                                    <option value="elimination" <?php echo e(request('tournament_type') == 'elimination' ? 'selected' : ''); ?>>Eliminatoria Directa</option>
+                                    <option value="double_elimination" <?php echo e(request('tournament_type') == 'double_elimination' ? 'selected' : ''); ?>>Doble Eliminatoria</option>
                                 </select>
                             </div>
 
@@ -49,11 +58,11 @@
                             <div class="w-full md:w-auto">
                                 <select name="category" onchange="this.form.submit()" class="block w-full rounded-md border-gray-300 border py-2 px-3 bg-white shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm">
                                     <option value="">Todas las Categorías</option>
-                                    <option value="Varonil" {{ request('category') == 'Varonil' ? 'selected' : '' }}>Varonil</option>
-                                    <option value="Femenil" {{ request('category') == 'Femenil' ? 'selected' : '' }}>Femenil</option>
-                                    <option value="Mixto" {{ request('category') == 'Mixto' ? 'selected' : '' }}>Mixto</option>
-                                    <option value="Infantil" {{ request('category') == 'Infantil' ? 'selected' : '' }}>Infantil</option>
-                                    <option value="Varios" {{ request('category') == 'Varios' ? 'selected' : '' }}>Varios</option>
+                                    <option value="Varonil" <?php echo e(request('category') == 'Varonil' ? 'selected' : ''); ?>>Varonil</option>
+                                    <option value="Femenil" <?php echo e(request('category') == 'Femenil' ? 'selected' : ''); ?>>Femenil</option>
+                                    <option value="Mixto" <?php echo e(request('category') == 'Mixto' ? 'selected' : ''); ?>>Mixto</option>
+                                    <option value="Infantil" <?php echo e(request('category') == 'Infantil' ? 'selected' : ''); ?>>Infantil</option>
+                                    <option value="Varios" <?php echo e(request('category') == 'Varios' ? 'selected' : ''); ?>>Varios</option>
                                 </select>
                             </div>
 
@@ -61,11 +70,12 @@
                             <div class="w-full md:w-auto">
                                 <select name="fuerza" onchange="this.form.submit()" class="block w-full rounded-md border-gray-300 border py-2 px-3 bg-white shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm">
                                     <option value="">Todas las Fuerzas</option>
-                                    @foreach ($strengths as $str)
-                                        <option value="{{ $str->name }}" {{ request('fuerza') == $str->name ? 'selected' : '' }}>
-                                            {{ $str->name }}
+                                    <?php $__currentLoopData = $strengths; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $str): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <option value="<?php echo e($str->name); ?>" <?php echo e(request('fuerza') == $str->name ? 'selected' : ''); ?>>
+                                            <?php echo e($str->name); ?>
+
                                         </option>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select>
                             </div>
 
@@ -73,22 +83,22 @@
                             <div class="w-full md:w-auto">
                                 <select name="status" onchange="this.form.submit()" class="block w-full rounded-md border-gray-300 border py-2 px-3 bg-white shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm">
                                     <option value="">Todos los Estados</option>
-                                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pendiente</option>
-                                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Activo</option>
-                                    <option value="finished" {{ request('status') == 'finished' ? 'selected' : '' }}>Finalizado</option>
+                                    <option value="pending" <?php echo e(request('status') == 'pending' ? 'selected' : ''); ?>>Pendiente</option>
+                                    <option value="active" <?php echo e(request('status') == 'active' ? 'selected' : ''); ?>>Activo</option>
+                                    <option value="finished" <?php echo e(request('status') == 'finished' ? 'selected' : ''); ?>>Finalizado</option>
                                 </select>
                             </div>
 
                             <!-- Filtro: Fecha Inicio -->
                             <div class="w-full md:w-auto flex items-center gap-1">
                                 <span class="text-xs text-gray-500 font-medium whitespace-nowrap">Desde:</span>
-                                <input type="date" name="start_date" value="{{ request('start_date') }}" onchange="this.form.submit()" class="block rounded-md border-gray-300 border py-1.5 px-2 bg-white shadow-sm focus:border-orange-500 focus:ring-orange-500 text-xs">
+                                <input type="date" name="start_date" value="<?php echo e(request('start_date')); ?>" onchange="this.form.submit()" class="block rounded-md border-gray-300 border py-1.5 px-2 bg-white shadow-sm focus:border-orange-500 focus:ring-orange-500 text-xs">
                             </div>
 
                             <!-- Filtro: Fecha Fin -->
                             <div class="w-full md:w-auto flex items-center gap-1">
                                 <span class="text-xs text-gray-500 font-medium whitespace-nowrap">Hasta:</span>
-                                <input type="date" name="end_date" value="{{ request('end_date') }}" onchange="this.form.submit()" class="block rounded-md border-gray-300 border py-1.5 px-2 bg-white shadow-sm focus:border-orange-500 focus:ring-orange-500 text-xs">
+                                <input type="date" name="end_date" value="<?php echo e(request('end_date')); ?>" onchange="this.form.submit()" class="block rounded-md border-gray-300 border py-1.5 px-2 bg-white shadow-sm focus:border-orange-500 focus:ring-orange-500 text-xs">
                             </div>
 
                         </form>
@@ -96,18 +106,18 @@
                     </div>
 
                     <!-- Mensaje de Éxito -->
-                    @if (session('message'))
+                    <?php if(session('message')): ?>
                         <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-                            <span class="block sm:inline">{{ session('message') }}</span>
+                            <span class="block sm:inline"><?php echo e(session('message')); ?></span>
                         </div>
-                    @endif
+                    <?php endif; ?>
 
                     <!-- Mensaje de Error (NUEVO) -->
-                    @if (session('error'))
+                    <?php if(session('error')): ?>
                         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                            <span class="block sm:inline">{{ session('error') }}</span>
+                            <span class="block sm:inline"><?php echo e(session('error')); ?></span>
                         </div>
-                    @endif
+                    <?php endif; ?>
 
                     <!-- INICIO CAMBIO: Envolver tabla para Responsive -->
                     <div class="overflow-x-auto rounded-lg">
@@ -127,7 +137,7 @@
                             </thead>
 
                             <tbody class="bg-white divide-y divide-gray-200">
-                                @forelse ($tournaments as $tournament)
+                                <?php $__empty_1 = true; $__currentLoopData = $tournaments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tournament): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                     <tr>
                                         <!-- CAMBIO: Columna Acciones movida al inicio -->
                                         <!-- Para la celda de acciones, centramos el contenedor flex -->
@@ -135,14 +145,14 @@
                                             <div class="flex items-center justify-center space-x-3">
 
                                                 <!-- NUEVO BOTÓN VER EQUIPOS REGISTRADOS -->
-                                                <button onclick="showTeamsListModal({{ $tournament->id }}, '{{ addslashes($tournament->name) }}', '{{ $tournament->status }}')" class="text-orange-600 hover:text-orange-900" title="Ver Equipos Registrados">
+                                                <button onclick="showTeamsListModal(<?php echo e($tournament->id); ?>, '<?php echo e(addslashes($tournament->name)); ?>', '<?php echo e($tournament->status); ?>')" class="text-orange-600 hover:text-orange-900" title="Ver Equipos Registrados">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
                                                     </svg>
                                                 </button>
 
                                                 <!-- NUEVO BOTÓN REGLAMENTO -->
-                                                <button onclick="openRulesModal({{ $tournament->id }}, '{{ addslashes($tournament->name) }}')" class="text-gray-600 hover:text-gray-900" title="Ver Reglamento">
+                                                <button onclick="openRulesModal(<?php echo e($tournament->id); ?>, '<?php echo e(addslashes($tournament->name)); ?>')" class="text-gray-600 hover:text-gray-900" title="Ver Reglamento">
                                                     <!-- Icono de Documento/Libro -->
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
@@ -150,62 +160,62 @@
                                                 </button>
                                                 
                                                 <!-- 1. Botón de Editar (Solo Admin y SOLO si está Pendiente) -->
-                                                @if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach') && $tournament->status === 'pending')
-                                                    <button onclick="openEditModal({{ $tournament->toJson() }})" class="text-indigo-600 hover:text-indigo-900" title="Editar">
+                                                <?php if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach') && $tournament->status === 'pending'): ?>
+                                                    <button onclick="openEditModal(<?php echo e($tournament->toJson()); ?>)" class="text-indigo-600 hover:text-indigo-900" title="Editar">
                                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                                         </svg>
                                                     </button>
-                                                @endif
+                                                <?php endif; ?>
 
                                                 <!-- 2. Botón de Calendario (Solo Admin) -->
-                                                @if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach'))
-                                                    @if($tournament->games()->exists())
-                                                        <button onclick="openViewCalendarModal({{ $tournament->id }}, '{{ $tournament->status }}')" class="text-blue-600 hover:text-blue-900" title="Ver Configuración del Calendario">
+                                                <?php if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach')): ?>
+                                                    <?php if($tournament->games()->exists()): ?>
+                                                        <button onclick="openViewCalendarModal(<?php echo e($tournament->id); ?>, '<?php echo e($tournament->status); ?>')" class="text-blue-600 hover:text-blue-900" title="Ver Configuración del Calendario">
                                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                                             </svg>
                                                         </button>
-                                                    @else
-                                                        <button onclick="openCreateCalendarModal({{ $tournament->toJson() }})" class="text-green-600 hover:text-green-900" title="Generar Calendario">
+                                                    <?php else: ?>
+                                                        <button onclick="openCreateCalendarModal(<?php echo e($tournament->toJson()); ?>)" class="text-green-600 hover:text-green-900" title="Generar Calendario">
                                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
                                                             </svg>
                                                         </button>
-                                                    @endif
-                                                @endif
+                                                    <?php endif; ?>
+                                                <?php endif; ?>
 
                                                 <!-- 3. Botón Tabla de Posiciones (Solo si hay calendario) -->
-                                                @if($tournament->games()->exists())
-                                                    <a href="{{ route('tournaments.standings', $tournament) }}" class="text-emerald-600 hover:text-emerald-900" title="Tabla de Posiciones">
+                                                <?php if($tournament->games()->exists()): ?>
+                                                    <a href="<?php echo e(route('tournaments.standings', $tournament)); ?>" class="text-emerald-600 hover:text-emerald-900" title="Tabla de Posiciones">
                                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125z" />
                                                         </svg>
                                                     </a>
-                                                @endif
+                                                <?php endif; ?>
 
                                                 <!-- 4. Botón Ver Partidos (Visible para todos, si hay calendario) -->
-                                                @if($tournament->games()->exists())
-                                                    <a href="{{ route('tournaments.schedule', $tournament->id) }}" class="text-purple-600 hover:text-purple-900" title="Ver Partidos">
+                                                <?php if($tournament->games()->exists()): ?>
+                                                    <a href="<?php echo e(route('tournaments.schedule', $tournament->id)); ?>" class="text-purple-600 hover:text-purple-900" title="Ver Partidos">
                                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                                                         </svg>
                                                     </a>
-                                                @endif
+                                                <?php endif; ?>
 
                                                 <!-- 5. Botón Eliminar Torneo (Solo Admin) -->
-                                                @if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach'))
-                                                    <form action="{{ route('tournaments.destroy', $tournament) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este torneo?');" class="inline">
-                                                        @csrf
-                                                        @method('DELETE')
+                                                <?php if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach')): ?>
+                                                    <form action="<?php echo e(route('tournaments.destroy', $tournament)); ?>" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este torneo?');" class="inline">
+                                                        <?php echo csrf_field(); ?>
+                                                        <?php echo method_field('DELETE'); ?>
                                                         <button type="submit" class="text-red-600 hover:text-red-900" title="Eliminar Torneo">
                                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                                             </svg>
                                                         </button>
                                                     </form>
-                                                @endif
+                                                <?php endif; ?>
 
                                             </div>
                                         </td>
@@ -213,20 +223,21 @@
                                         <!-- CELDA NOMBRE -->
                                         <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-900">
                                             <div class="flex items-center justify-center gap-3">
-                                                @if($tournament->logo_path)
-                                                    <img src="{{ asset('storage/' . $tournament->logo_path) }}" alt="{{ $tournament->name }}" class="w-8 h-8 rounded-full object-cover border border-gray-200 shrink-0">
-                                                @else
+                                                <?php if($tournament->logo_path): ?>
+                                                    <img src="<?php echo e(asset('storage/' . $tournament->logo_path)); ?>" alt="<?php echo e($tournament->name); ?>" class="w-8 h-8 rounded-full object-cover border border-gray-200 shrink-0">
+                                                <?php else: ?>
                                                     <div class="w-8 h-8 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center text-orange-700 font-bold text-xs shrink-0">
-                                                        {{ strtoupper(substr($tournament->name, 0, 1)) }}
+                                                        <?php echo e(strtoupper(substr($tournament->name, 0, 1))); ?>
+
                                                     </div>
-                                                @endif
-                                                <span>{{ $tournament->name }}</span>
+                                                <?php endif; ?>
+                                                <span><?php echo e($tournament->name); ?></span>
                                             </div>
                                         </td>
                                         
                                         <!-- CELDA TIPO DE TORNEO (Estilo Pastilla idéntico a Configuración de Calendario) -->
                                         <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
-                                            @php
+                                            <?php
                                                 $tSettings = $tournament->settings ? $tournament->settings->settings : [];
                                                 $tType = $tSettings['tournament_type'] ?? 'round_robin';
                                                 $typeLabels = [
@@ -238,9 +249,10 @@
                                                     'groups_and_playoffs' => 'Grupos y Liguilla',
                                                 ];
                                                 $labelText = $typeLabels[$tType] ?? ucfirst(str_replace('_', ' ', $tType));
-                                            @endphp
+                                            ?>
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-800 border border-orange-200">
-                                                {{ $labelText }}
+                                                <?php echo e($labelText); ?>
+
                                             </span>
                                         </td>
                                         
@@ -248,61 +260,63 @@
 
                                         <!-- CELDA CATEGORÍA (Corrección de Mayúsculas/Minúsculas) -->
                                         <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
-                                            @if(is_null($tournament->category))
+                                            <?php if(is_null($tournament->category)): ?>
                                                 <!-- Si está vacío (sin equipos), muestra guion -->
                                                 <span class="text-gray-400 font-medium">-</span>
-                                            @elseif($tournament->category == 'Varonil') <!-- CAMBIO AQUÍ: 'Varonil' -->
+                                            <?php elseif($tournament->category == 'Varonil'): ?> <!-- CAMBIO AQUÍ: 'Varonil' -->
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Varonil</span>
-                                            @elseif($tournament->category == 'Femenil') <!-- CAMBIO AQUÍ: 'Femenil' -->
+                                            <?php elseif($tournament->category == 'Femenil'): ?> <!-- CAMBIO AQUÍ: 'Femenil' -->
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800">Femenil</span>
-                                            @elseif($tournament->category == 'Mixto') <!-- CAMBIO AQUÍ: 'Mixto' -->
+                                            <?php elseif($tournament->category == 'Mixto'): ?> <!-- CAMBIO AQUÍ: 'Mixto' -->
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">Mixto</span>
-                                            @elseif($tournament->category == 'Varios')
+                                            <?php elseif($tournament->category == 'Varios'): ?>
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-800">Varios</span>
-                                            @else
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{{ $tournament->category }}</span>
-                                            @endif
+                                            <?php else: ?>
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"><?php echo e($tournament->category); ?></span>
+                                            <?php endif; ?>
                                         </td>
 
                                         <!-- CELDA FUERZA (MODIFICADA: Estilo de pastilla gris SOLO si hay dato) -->
                                         <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
-                                            @if(!empty($tournament->fuerza))
+                                            <?php if(!empty($tournament->fuerza)): ?>
                                                 <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800 border border-gray-200">
-                                                    {{ $tournament->fuerza }}
+                                                    <?php echo e($tournament->fuerza); ?>
+
                                                 </span>
-                                            @else
+                                            <?php else: ?>
                                                 <span>-</span>
-                                            @endif
+                                            <?php endif; ?>
                                         </td>
 
-                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{{ $tournament->start_date->format('d-m-Y') }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500"><?php echo e($tournament->start_date->format('d-m-Y')); ?></td>
                                         
                                         <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
-                                            @if($tournament->end_date)
-                                                {{ $tournament->end_date->format('d-m-Y') }}
-                                            @else
+                                            <?php if($tournament->end_date): ?>
+                                                <?php echo e($tournament->end_date->format('d-m-Y')); ?>
+
+                                            <?php else: ?>
                                                 <span class="text-gray-400">No definida</span>
-                                            @endif
+                                            <?php endif; ?>
                                         </td>
 
                                         <td class="px-6 py-4 whitespace-nowrap text-center">
-                                            @if($tournament->status == 'pending')
+                                            <?php if($tournament->status == 'pending'): ?>
                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pendiente</span>
-                                            @elseif($tournament->status == 'active')
+                                            <?php elseif($tournament->status == 'active'): ?>
                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Activo</span>
-                                            @elseif($tournament->status == 'finished')
+                                            <?php elseif($tournament->status == 'finished'): ?>
                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-200 text-gray-800">Terminado</span>
-                                            @else
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">{{ $tournament->status }}</span>
-                                            @endif
+                                            <?php else: ?>
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800"><?php echo e($tournament->status); ?></span>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
-                                @empty
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                     <tr>
                                         <!-- Colspan corregido a 8 -->
                                         <td colspan="8" class="px-6 py-4 text-center text-gray-500">No hay torneos registrados.</td>
                                     </tr>
-                                @endforelse
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
@@ -310,7 +324,8 @@
                     
                     <!-- CONTROLES DE PAGINACIÓN -->
                     <div class="mt-4">
-                        {{ $tournaments->links() }}
+                        <?php echo e($tournaments->links()); ?>
+
                     </div>
                     <!-- FIN CONTROLES DE PAGINACIÓN -->
 
@@ -319,7 +334,16 @@
         </div>
     </div>
 
-</x-app-layout>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $attributes = $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $component = $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
 
     <!-- Modal para Crear/Editar Torneo -->
     <div id="tournamentModal" class="fixed inset-0 z-50 hidden">
@@ -328,25 +352,120 @@
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative w-full max-w-2xl transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all">
                     <form id="tournamentForm" onsubmit="submitForm(event)" enctype="multipart/form-data">
-                        @csrf
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" name="_method" id="form_method" value="POST">
                         <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                             <div class="sm:flex sm:items-start">
                                 <div class="w-full">
                                     <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-4" id="modalTitle">Crear Nuevo Torneo</h3>
                                     <div class="mb-4">
-                                        <x-input-label for="modal_name" :value="__('Nombre del Torneo')" />
-                                        <x-text-input id="modal_name" class="block mt-1 w-full focus:border-orange-500 focus:ring-orange-500" type="text" name="name" required />
-                                        <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                                        <?php if (isset($component)) { $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.input-label','data' => ['for' => 'modal_name','value' => __('Nombre del Torneo')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('input-label'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['for' => 'modal_name','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('Nombre del Torneo'))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $attributes = $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $component = $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+                                        <?php if (isset($component)) { $__componentOriginal18c21970322f9e5c938bc954620c12bb = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal18c21970322f9e5c938bc954620c12bb = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.text-input','data' => ['id' => 'modal_name','class' => 'block mt-1 w-full focus:border-orange-500 focus:ring-orange-500','type' => 'text','name' => 'name','required' => true]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('text-input'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['id' => 'modal_name','class' => 'block mt-1 w-full focus:border-orange-500 focus:ring-orange-500','type' => 'text','name' => 'name','required' => true]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $attributes = $__attributesOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__attributesOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $component = $__componentOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__componentOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?>
+                                        <?php if (isset($component)) { $__componentOriginalf94ed9c5393ef72725d159fe01139746 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalf94ed9c5393ef72725d159fe01139746 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.input-error','data' => ['messages' => $errors->get('name'),'class' => 'mt-2']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('input-error'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['messages' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($errors->get('name')),'class' => 'mt-2']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalf94ed9c5393ef72725d159fe01139746)): ?>
+<?php $attributes = $__attributesOriginalf94ed9c5393ef72725d159fe01139746; ?>
+<?php unset($__attributesOriginalf94ed9c5393ef72725d159fe01139746); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalf94ed9c5393ef72725d159fe01139746)): ?>
+<?php $component = $__componentOriginalf94ed9c5393ef72725d159fe01139746; ?>
+<?php unset($__componentOriginalf94ed9c5393ef72725d159fe01139746); ?>
+<?php endif; ?>
                                     </div>
                                     <div class="mb-4">
-                                        <x-input-label for="modal_description" :value="__('Descripción')" />
+                                        <?php if (isset($component)) { $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.input-label','data' => ['for' => 'modal_description','value' => __('Descripción')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('input-label'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['for' => 'modal_description','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('Descripción'))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $attributes = $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $component = $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
                                         <textarea id="modal_description" name="description" class="border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md shadow-sm mt-1 block w-full" rows="3"></textarea>
                                     </div>
                                     
                                     <!-- LOGO DEL TORNEO -->
                                     <div class="mb-4">
-                                        <x-input-label for="modal_logo" :value="__('Logo del Torneo')" />
+                                        <?php if (isset($component)) { $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.input-label','data' => ['for' => 'modal_logo','value' => __('Logo del Torneo')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('input-label'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['for' => 'modal_logo','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('Logo del Torneo'))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $attributes = $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $component = $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
                                         <div class="flex items-center gap-4 mt-2 bg-slate-50 p-3 rounded-xl border border-gray-200">
                                             <div class="shrink-0 relative">
                                                 <img id="logo_preview" src="" alt="Vista previa" class="w-16 h-16 rounded-2xl object-cover border border-gray-200 hidden bg-white">
@@ -363,15 +482,147 @@
 
 
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                        <div><x-input-label for="modal_start_date" :value="__('Fecha de Inicio')" /><x-text-input id="modal_start_date" class="block mt-1 w-full focus:border-orange-500 focus:ring-orange-500" type="date" name="start_date" required /></div>
-                                        <div><x-input-label for="modal_end_date" :value="__('Fecha de Fin')" /><x-text-input id="modal_end_date" class="block mt-1 w-full focus:border-orange-500 focus:ring-orange-500" type="date" name="end_date" /></div>
-                                        <div><x-input-label for="modal_location" :value="__('Ubicación')" /><x-text-input id="modal_location" class="block mt-1 w-full focus:border-orange-500 focus:ring-orange-500" type="text" name="location" /></div>
+                                        <div><?php if (isset($component)) { $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.input-label','data' => ['for' => 'modal_start_date','value' => __('Fecha de Inicio')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('input-label'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['for' => 'modal_start_date','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('Fecha de Inicio'))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $attributes = $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $component = $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?><?php if (isset($component)) { $__componentOriginal18c21970322f9e5c938bc954620c12bb = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal18c21970322f9e5c938bc954620c12bb = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.text-input','data' => ['id' => 'modal_start_date','class' => 'block mt-1 w-full focus:border-orange-500 focus:ring-orange-500','type' => 'date','name' => 'start_date','required' => true]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('text-input'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['id' => 'modal_start_date','class' => 'block mt-1 w-full focus:border-orange-500 focus:ring-orange-500','type' => 'date','name' => 'start_date','required' => true]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $attributes = $__attributesOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__attributesOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $component = $__componentOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__componentOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?></div>
+                                        <div><?php if (isset($component)) { $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.input-label','data' => ['for' => 'modal_end_date','value' => __('Fecha de Fin')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('input-label'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['for' => 'modal_end_date','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('Fecha de Fin'))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $attributes = $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $component = $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?><?php if (isset($component)) { $__componentOriginal18c21970322f9e5c938bc954620c12bb = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal18c21970322f9e5c938bc954620c12bb = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.text-input','data' => ['id' => 'modal_end_date','class' => 'block mt-1 w-full focus:border-orange-500 focus:ring-orange-500','type' => 'date','name' => 'end_date']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('text-input'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['id' => 'modal_end_date','class' => 'block mt-1 w-full focus:border-orange-500 focus:ring-orange-500','type' => 'date','name' => 'end_date']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $attributes = $__attributesOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__attributesOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $component = $__componentOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__componentOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?></div>
+                                        <div><?php if (isset($component)) { $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.input-label','data' => ['for' => 'modal_location','value' => __('Ubicación')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('input-label'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['for' => 'modal_location','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('Ubicación'))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $attributes = $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $component = $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?><?php if (isset($component)) { $__componentOriginal18c21970322f9e5c938bc954620c12bb = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal18c21970322f9e5c938bc954620c12bb = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.text-input','data' => ['id' => 'modal_location','class' => 'block mt-1 w-full focus:border-orange-500 focus:ring-orange-500','type' => 'text','name' => 'location']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('text-input'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['id' => 'modal_location','class' => 'block mt-1 w-full focus:border-orange-500 focus:ring-orange-500','type' => 'text','name' => 'location']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $attributes = $__attributesOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__attributesOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $component = $__componentOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__componentOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                            <x-primary-button type="submit" id="saveButton" class="w-full sm:ml-3 sm:w-auto">Guardar</x-primary-button>
+                            <?php if (isset($component)) { $__componentOriginald411d1792bd6cc877d687758b753742c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginald411d1792bd6cc877d687758b753742c = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.primary-button','data' => ['type' => 'submit','id' => 'saveButton','class' => 'w-full sm:ml-3 sm:w-auto']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('primary-button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['type' => 'submit','id' => 'saveButton','class' => 'w-full sm:ml-3 sm:w-auto']); ?>Guardar <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginald411d1792bd6cc877d687758b753742c)): ?>
+<?php $attributes = $__attributesOriginald411d1792bd6cc877d687758b753742c; ?>
+<?php unset($__attributesOriginald411d1792bd6cc877d687758b753742c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginald411d1792bd6cc877d687758b753742c)): ?>
+<?php $component = $__componentOriginald411d1792bd6cc877d687758b753742c; ?>
+<?php unset($__componentOriginald411d1792bd6cc877d687758b753742c); ?>
+<?php endif; ?>
                             <button type="button" onclick="closeModal()" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Cancelar</button>
                         </div>
                     </form>
@@ -387,7 +638,7 @@
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative w-full max-w-2xl transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all">
                     <form id="calendarForm" onsubmit="handleCalendarSubmit(event)">
-                        @csrf
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" name="tournament_id" id="calendar_tournament_id">
                         <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                             <div class="sm:flex sm:items-start">
@@ -435,7 +686,7 @@
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative w-full max-w-4xl transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all">
                     <form id="rulesForm" onsubmit="saveRules(event)">
-                        @csrf
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" name="tournament_id" id="rules_tournament_id">
                         <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                             <div class="sm:flex sm:items-start">
@@ -507,11 +758,11 @@
                         </div>
                     </div>
                     <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                        @if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach'))
+                        <?php if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach')): ?>
                             <button type="button" id="btnCreateTeamFromList" onclick="openCreateTeamModalFromList()" class="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded text-sm transition duration-150 ease-in-out sm:ml-3">
                                 Crear Nuevo Equipo
                             </button>
-                        @endif
+                        <?php endif; ?>
                         <button type="button" onclick="closeTeamsListModal()" class="mt-3 sm:mt-0 w-full sm:w-auto inline-flex justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
                             Cerrar
                         </button>
@@ -572,7 +823,7 @@
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative w-full max-w-2xl transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all">
                     <form id="teamForm" onsubmit="submitTeamForm(event)" enctype="multipart/form-data">
-                        @csrf
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" name="_method" id="team_form_method" value="POST">
                         <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                             <div class="sm:flex sm:items-start">
@@ -581,19 +832,76 @@
                                         Editar Equipo
                                     </h3>
                                     <div class="mb-4">
-                                        <x-input-label for="team_modal_name" :value="__('Nombre del Equipo')" />
-                                        <x-text-input id="team_modal_name" class="block mt-1 w-full focus:border-orange-500 focus:ring-orange-500" type="text" name="name" required />
+                                        <?php if (isset($component)) { $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.input-label','data' => ['for' => 'team_modal_name','value' => __('Nombre del Equipo')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('input-label'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['for' => 'team_modal_name','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('Nombre del Equipo'))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $attributes = $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $component = $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+                                        <?php if (isset($component)) { $__componentOriginal18c21970322f9e5c938bc954620c12bb = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal18c21970322f9e5c938bc954620c12bb = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.text-input','data' => ['id' => 'team_modal_name','class' => 'block mt-1 w-full focus:border-orange-500 focus:ring-orange-500','type' => 'text','name' => 'name','required' => true]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('text-input'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['id' => 'team_modal_name','class' => 'block mt-1 w-full focus:border-orange-500 focus:ring-orange-500','type' => 'text','name' => 'name','required' => true]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $attributes = $__attributesOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__attributesOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $component = $__componentOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__componentOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?>
                                     </div>
                                     
                                     <div class="mb-4">
-                                        <x-input-label for="team_modal_coach_id" :value="__('Entrenador Asignado')" />
+                                        <?php if (isset($component)) { $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.input-label','data' => ['for' => 'team_modal_coach_id','value' => __('Entrenador Asignado')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('input-label'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['for' => 'team_modal_coach_id','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('Entrenador Asignado'))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $attributes = $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $component = $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
                                         <div class="flex mt-1">
                                             <select id="team_modal_coach_id" name="coach_id" 
                                                 class="flex-1 border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-l-md shadow-sm block w-full border py-2 px-3 bg-white">
                                                 <option value="">-- Sin Entrenador --</option>
-                                                @foreach ($coaches as $coach)
-                                                    <option value="{{ $coach->id }}">{{ $coach->name }}</option>
-                                                @endforeach
+                                                <?php $__currentLoopData = $coaches; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $coach): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                    <option value="<?php echo e($coach->id); ?>"><?php echo e($coach->name); ?></option>
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </select>
                                             <button type="button" onclick="openQuickCoachModal()" 
                                                 class="bg-orange-600 hover:bg-orange-700 text-white rounded-r-md border border-l-0 border-orange-600 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition duration-150 ease-in-out"
@@ -606,19 +914,57 @@
                                     </div>
 
                                     <div class="mb-4">
-                                        <x-input-label for="team_modal_tournament_id" :value="__('Torneo')" />
+                                        <?php if (isset($component)) { $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.input-label','data' => ['for' => 'team_modal_tournament_id','value' => __('Torneo')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('input-label'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['for' => 'team_modal_tournament_id','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('Torneo'))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $attributes = $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $component = $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
                                         <select id="team_modal_tournament_id" name="tournament_id" class="border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md shadow-sm mt-1 block w-full">
                                             <option value="">-- Sin torneo (Opcional) --</option>
-                                            @foreach ($tournaments as $t)
-                                                @if ($t->status === 'pending')
-                                                    <option value="{{ $t->id }}">{{ $t->name }}</option>
-                                                @endif
-                                            @endforeach
+                                            <?php $__currentLoopData = $tournaments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $t): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <?php if($t->status === 'pending'): ?>
+                                                    <option value="<?php echo e($t->id); ?>"><?php echo e($t->name); ?></option>
+                                                <?php endif; ?>
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                         </select>
                                     </div>
 
                                     <div class="mb-4">
-                                        <x-input-label for="team_modal_status" :value="__('Estatus del Equipo')" />
+                                        <?php if (isset($component)) { $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.input-label','data' => ['for' => 'team_modal_status','value' => __('Estatus del Equipo')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('input-label'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['for' => 'team_modal_status','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('Estatus del Equipo'))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $attributes = $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $component = $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
                                         <select id="team_modal_status" name="status" class="border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md shadow-sm mt-1 block w-full">
                                             <option value="pending">Pendiente (Necesita firma)</option>
                                             <option value="active">Activo</option>
@@ -627,7 +973,26 @@
                                     </div>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                         <div>
-                                            <x-input-label for="team_modal_category" :value="__('Categoría')" />
+                                            <?php if (isset($component)) { $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.input-label','data' => ['for' => 'team_modal_category','value' => __('Categoría')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('input-label'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['for' => 'team_modal_category','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('Categoría'))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $attributes = $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $component = $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
                                             <select id="team_modal_category" name="category" class="border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md shadow-sm mt-1 block w-full">
                                                 <option value="">-- Seleccionar --</option>
                                                 <option value="Varonil">Varonil</option>
@@ -637,13 +1002,32 @@
                                             </select>
                                         </div>
                                         <div>
-                                            <x-input-label for="team_modal_strength" :value="__('Fuerza / Nivel')" />
+                                            <?php if (isset($component)) { $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.input-label','data' => ['for' => 'team_modal_strength','value' => __('Fuerza / Nivel')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('input-label'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['for' => 'team_modal_strength','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('Fuerza / Nivel'))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $attributes = $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $component = $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
                                             <div class="flex mt-1">
                                                 <select id="team_modal_strength" name="strength" class="flex-1 border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-l-md shadow-sm block w-full border py-2 px-3 bg-white">
                                                     <option value="">-- Seleccionar --</option>
-                                                    @foreach ($strengths as $str)
-                                                        <option value="{{ $str->name }}">{{ $str->name }}</option>
-                                                    @endforeach
+                                                    <?php $__currentLoopData = $strengths; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $str): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <option value="<?php echo e($str->name); ?>"><?php echo e($str->name); ?></option>
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                 </select>
                                                 <button type="button" onclick="openAddStrengthModal()" 
                                                     class="bg-orange-600 hover:bg-orange-700 text-white rounded-r-md border border-l-0 border-orange-600 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition duration-150 ease-in-out"
@@ -656,16 +1040,72 @@
                                         </div>
                                     </div>
                                     <div class="mb-4">
-                                        <x-input-label for="team_modal_image" :value="__('Logo del Equipo')" />
-                                        <x-text-input id="team_modal_image" class="block mt-1 w-full focus:border-orange-500 focus:ring-orange-500" type="file" name="image" />
+                                        <?php if (isset($component)) { $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.input-label','data' => ['for' => 'team_modal_image','value' => __('Logo del Equipo')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('input-label'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['for' => 'team_modal_image','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('Logo del Equipo'))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $attributes = $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $component = $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+                                        <?php if (isset($component)) { $__componentOriginal18c21970322f9e5c938bc954620c12bb = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal18c21970322f9e5c938bc954620c12bb = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.text-input','data' => ['id' => 'team_modal_image','class' => 'block mt-1 w-full focus:border-orange-500 focus:ring-orange-500','type' => 'file','name' => 'image']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('text-input'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['id' => 'team_modal_image','class' => 'block mt-1 w-full focus:border-orange-500 focus:ring-orange-500','type' => 'file','name' => 'image']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $attributes = $__attributesOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__attributesOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $component = $__componentOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__componentOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                            <x-primary-button type="submit" id="teamSaveButton" class="w-full sm:ml-3 sm:w-auto">
+                            <?php if (isset($component)) { $__componentOriginald411d1792bd6cc877d687758b753742c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginald411d1792bd6cc877d687758b753742c = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.primary-button','data' => ['type' => 'submit','id' => 'teamSaveButton','class' => 'w-full sm:ml-3 sm:w-auto']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('primary-button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['type' => 'submit','id' => 'teamSaveButton','class' => 'w-full sm:ml-3 sm:w-auto']); ?>
                                 Guardar
-                            </x-primary-button>
+                             <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginald411d1792bd6cc877d687758b753742c)): ?>
+<?php $attributes = $__attributesOriginald411d1792bd6cc877d687758b753742c; ?>
+<?php unset($__attributesOriginald411d1792bd6cc877d687758b753742c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginald411d1792bd6cc877d687758b753742c)): ?>
+<?php $component = $__componentOriginald411d1792bd6cc877d687758b753742c; ?>
+<?php unset($__componentOriginald411d1792bd6cc877d687758b753742c); ?>
+<?php endif; ?>
                             <button type="button" onclick="closeTeamModal()" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">
                                 Cancelar
                             </button>
@@ -683,7 +1123,7 @@
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative w-full max-w-lg transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all">
                     <form id="quickCoachForm" onsubmit="submitQuickCoachForm(event)">
-                        @csrf
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" name="role" value="Coach">
                         <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                             <div class="sm:flex sm:items-start">
@@ -741,7 +1181,7 @@
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative w-full max-w-sm transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all">
                     <form id="addStrengthForm" onsubmit="submitStrengthForm(event)">
-                        @csrf
+                        <?php echo csrf_field(); ?>
                         <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                             <div class="sm:flex sm:items-start">
                                 <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-orange-100 sm:mx-0 sm:h-10 sm:w-10">
@@ -807,11 +1247,11 @@
                         </div>
                     </div>
                     <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                        @if(!auth()->user()->hasRole('Arbitro'))
+                        <?php if(!auth()->user()->hasRole('Arbitro')): ?>
                             <button type="button" id="btnCreatePlayerFromList" onclick="openCreatePlayerModalFromList()" class="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded text-sm transition duration-150 ease-in-out sm:ml-3">
                                 Nuevo Jugador
                             </button>
-                        @endif
+                        <?php endif; ?>
                         <button type="button" onclick="closePlayersListModal()" class="mt-3 sm:mt-0 w-full sm:w-auto inline-flex justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
                             Cerrar
                         </button>
@@ -828,7 +1268,7 @@
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative w-full max-w-md transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all">
                     <form id="playerQuickForm" onsubmit="submitPlayerQuickForm(event)">
-                        @csrf
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" name="team_id" id="player_quick_team_id">
                         <input type="hidden" name="status" value="active">
                         <input type="hidden" name="gender" id="player_quick_gender" value="">
@@ -842,16 +1282,130 @@
                                     
                                     <div class="space-y-4">
                                         <div>
-                                            <x-input-label for="player_quick_name" :value="__('Nombre Completo')" />
-                                            <x-text-input id="player_quick_name" name="name" class="block mt-1 w-full focus:border-orange-500 focus:ring-orange-500" type="text" required />
+                                            <?php if (isset($component)) { $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.input-label','data' => ['for' => 'player_quick_name','value' => __('Nombre Completo')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('input-label'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['for' => 'player_quick_name','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('Nombre Completo'))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $attributes = $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $component = $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+                                            <?php if (isset($component)) { $__componentOriginal18c21970322f9e5c938bc954620c12bb = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal18c21970322f9e5c938bc954620c12bb = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.text-input','data' => ['id' => 'player_quick_name','name' => 'name','class' => 'block mt-1 w-full focus:border-orange-500 focus:ring-orange-500','type' => 'text','required' => true]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('text-input'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['id' => 'player_quick_name','name' => 'name','class' => 'block mt-1 w-full focus:border-orange-500 focus:ring-orange-500','type' => 'text','required' => true]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $attributes = $__attributesOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__attributesOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $component = $__componentOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__componentOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?>
                                         </div>
                                         <div>
-                                            <x-input-label for="player_quick_number" :value="__('Número de Camiseta')" />
-                                            <x-text-input id="player_quick_number" name="number" class="block mt-1 w-full focus:border-orange-500 focus:ring-orange-500" type="number" required />
+                                            <?php if (isset($component)) { $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.input-label','data' => ['for' => 'player_quick_number','value' => __('Número de Camiseta')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('input-label'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['for' => 'player_quick_number','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('Número de Camiseta'))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $attributes = $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $component = $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+                                            <?php if (isset($component)) { $__componentOriginal18c21970322f9e5c938bc954620c12bb = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal18c21970322f9e5c938bc954620c12bb = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.text-input','data' => ['id' => 'player_quick_number','name' => 'number','class' => 'block mt-1 w-full focus:border-orange-500 focus:ring-orange-500','type' => 'number','required' => true]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('text-input'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['id' => 'player_quick_number','name' => 'number','class' => 'block mt-1 w-full focus:border-orange-500 focus:ring-orange-500','type' => 'number','required' => true]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $attributes = $__attributesOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__attributesOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $component = $__componentOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__componentOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?>
                                         </div>
                                         <div>
-                                            <x-input-label for="player_quick_image" :value="__('Fotografía (Opcional)')" />
-                                            <x-text-input id="player_quick_image" name="image" class="block mt-1 w-full focus:border-orange-500 focus:ring-orange-500 border border-gray-300 rounded-md p-1 bg-white text-sm" type="file" />
+                                            <?php if (isset($component)) { $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.input-label','data' => ['for' => 'player_quick_image','value' => __('Fotografía (Opcional)')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('input-label'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['for' => 'player_quick_image','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('Fotografía (Opcional)'))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $attributes = $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $component = $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+                                            <?php if (isset($component)) { $__componentOriginal18c21970322f9e5c938bc954620c12bb = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal18c21970322f9e5c938bc954620c12bb = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.text-input','data' => ['id' => 'player_quick_image','name' => 'image','class' => 'block mt-1 w-full focus:border-orange-500 focus:ring-orange-500 border border-gray-300 rounded-md p-1 bg-white text-sm','type' => 'file']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('text-input'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['id' => 'player_quick_image','name' => 'image','class' => 'block mt-1 w-full focus:border-orange-500 focus:ring-orange-500 border border-gray-300 rounded-md p-1 bg-white text-sm','type' => 'file']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $attributes = $__attributesOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__attributesOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $component = $__componentOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__componentOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?>
                                         </div>
                                     </div>
                                 </div>
@@ -859,9 +1413,27 @@
                         </div>
                         
                         <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                            <x-primary-button type="submit" id="playerQuickSaveButton" class="w-full sm:ml-3 sm:w-auto">
+                            <?php if (isset($component)) { $__componentOriginald411d1792bd6cc877d687758b753742c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginald411d1792bd6cc877d687758b753742c = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.primary-button','data' => ['type' => 'submit','id' => 'playerQuickSaveButton','class' => 'w-full sm:ml-3 sm:w-auto']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('primary-button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['type' => 'submit','id' => 'playerQuickSaveButton','class' => 'w-full sm:ml-3 sm:w-auto']); ?>
                                 Guardar
-                            </x-primary-button>
+                             <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginald411d1792bd6cc877d687758b753742c)): ?>
+<?php $attributes = $__attributesOriginald411d1792bd6cc877d687758b753742c; ?>
+<?php unset($__attributesOriginald411d1792bd6cc877d687758b753742c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginald411d1792bd6cc877d687758b753742c)): ?>
+<?php $component = $__componentOriginald411d1792bd6cc877d687758b753742c; ?>
+<?php unset($__componentOriginald411d1792bd6cc877d687758b753742c); ?>
+<?php endif; ?>
                             <button type="button" onclick="closePlayerQuickModal()" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">
                                 Cancelar
                             </button>
@@ -873,12 +1445,12 @@
     </div>
 
 <script>
-    const allCourts = @json($courts);
+    const allCourts = <?php echo json_encode($courts, 15, 512) ?>;
     function openCreateModal() {
         resetForm();
         document.getElementById('modalTitle').innerText = 'Crear Nuevo Torneo';
         document.getElementById('form_method').value = 'POST';
-        document.getElementById('tournamentForm').action = '{{ route("tournaments.store") }}';
+        document.getElementById('tournamentForm').action = '<?php echo e(route("tournaments.store")); ?>';
         
         const preview = document.getElementById('logo_preview');
         const placeholder = document.getElementById('logo_preview_placeholder');
@@ -894,7 +1466,7 @@
         resetForm();
         document.getElementById('modalTitle').innerText = 'Editar Torneo: ' + tournament.name;
         document.getElementById('form_method').value = 'PUT';
-        document.getElementById('tournamentForm').action = '{{ route("tournaments.update", ":id") }}'.replace(':id', tournament.id);
+        document.getElementById('tournamentForm').action = '<?php echo e(route("tournaments.update", ":id")); ?>'.replace(':id', tournament.id);
         const saveButton = document.getElementById('saveButton');
         saveButton.className = 'inline-flex items-center px-4 py-2 bg-orange-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-orange-700 focus:bg-orange-700 active:bg-orange-800 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition ease-in-out duration-150 w-full sm:ml-3 sm:w-auto';
         document.getElementById('modal_name').value = tournament.name;
@@ -1528,7 +2100,7 @@
 
     // Variable global para saber si el usuario actual es Admin
     // Se basa en la lógica de tu código: Si no es árbitro ni entrenador, asumimos Admin
-    const isAdmin = !('{{ auth()->user()->hasRole('Arbitro') }}' === '1' || '{{ auth()->user()->hasRole('Coach') }}' === '1');
+    const isAdmin = !('<?php echo e(auth()->user()->hasRole('Arbitro')); ?>' === '1' || '<?php echo e(auth()->user()->hasRole('Coach')); ?>' === '1');
 
     let quillInstance = null;
     let currentRulesTournamentName = '';
@@ -1622,7 +2194,7 @@
         document.getElementById('rulesModal').classList.add('hidden');
     }
 
-    const storageUrl = "{{ asset('storage') }}/";
+    const storageUrl = "<?php echo e(asset('storage')); ?>/";
     let currentTournamentTeams = [];
     let currentActiveTournamentId = null;
     let currentActiveTournamentName = '';
@@ -1823,7 +2395,7 @@
     function openCreateTeamModalFromList() {
         document.getElementById('teamModalTitle').innerText = 'Crear Nuevo Equipo';
         document.getElementById('team_form_method').value = 'POST';
-        document.getElementById('teamForm').action = '{{ route("teams.store") }}';
+        document.getElementById('teamForm').action = '<?php echo e(route("teams.store")); ?>';
 
         document.getElementById('team_modal_name').value = '';
         document.getElementById('team_modal_coach_id').value = '';
@@ -1843,7 +2415,7 @@
 
         document.getElementById('teamModalTitle').innerText = 'Editar Equipo: ' + team.name;
         document.getElementById('team_form_method').value = 'PUT';
-        document.getElementById('teamForm').action = '{{ route("teams.update", "TEAM_ID") }}'.replace('TEAM_ID', team.id);
+        document.getElementById('teamForm').action = '<?php echo e(route("teams.update", "TEAM_ID")); ?>'.replace('TEAM_ID', team.id);
 
         document.getElementById('team_modal_name').value = team.name;
         document.getElementById('team_modal_coach_id').value = team.coach_id || '';
@@ -1981,13 +2553,13 @@
         btn.innerText = 'Guardando...';
 
         try {
-            const response = await fetch('{{ route("players.store") }}', {
+            const response = await fetch('<?php echo e(route("players.store")); ?>', {
                 method: 'POST',
                 body: formData,
                 headers: {
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>'
                 }
             });
 
@@ -2027,7 +2599,7 @@
             }
         };
 
-        formData.append('_token', '{{ csrf_token() }}');
+        formData.append('_token', '<?php echo e(csrf_token()); ?>');
         formData.append('_method', document.getElementById('team_form_method').value);
 
         addField('name', 'team_modal_name');
@@ -2055,7 +2627,7 @@
                 headers: {
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>'
                 }
             });
 
@@ -2201,7 +2773,7 @@
         submitBtn.classList.add('opacity-75');
 
         try {
-            const response = await fetch('{{ route("users.store") }}', {
+            const response = await fetch('<?php echo e(route("users.store")); ?>', {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -2275,7 +2847,7 @@
         submitBtn.disabled = true;
 
         try {
-            const response = await fetch('{{ route("teams.strengths.store") }}', {
+            const response = await fetch('<?php echo e(route("teams.strengths.store")); ?>', {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -2320,4 +2892,4 @@
             inputs.classList.add('hidden');
         }
     }
-</script>
+</script><?php /**PATH C:\Users\luism\gemini-work\sistemaTorneos\resources\views/tournaments/index.blade.php ENDPATH**/ ?>

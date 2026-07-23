@@ -162,7 +162,7 @@ public function store(Request $request)
         'start_date' => 'required|date',
         'end_date' => 'nullable|date|after_or_equal:start_date',
         'location' => 'nullable|string|max:255',
-        // Nota: Quitamos category y fuerza de la validación aquí porque son automáticos
+        'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
     ]);
 
     // 2. Preparar datos
@@ -179,7 +179,13 @@ public function store(Request $request)
     $data['client_id'] = auth()->user()->client_id;
     // -------------------------------------------
 
-    // 3. Crear
+    // 3. Procesar Logo
+    if ($request->hasFile('logo')) {
+        $logoPath = $request->file('logo')->store('tournaments', 'public');
+        $data['logo_path'] = $logoPath;
+    }
+
+    // 4. Crear
     Tournament::create($data);
 
     return redirect()->back()->with('message', 'Torneo creado exitosamente.');
@@ -203,28 +209,37 @@ public function store(Request $request)
         }
 
     public function update(Request $request, Tournament $tournament)
-        {
-            $this->authorize('update', $tournament);    
-            // 1. Validar (Eliminamos is_active)
-            $request->validate([
-                'name' => 'required|string|max:255',
-                'description' => 'nullable|string',
-                'start_date' => 'required|date',
-                'end_date' => 'nullable|date|after_or_equal:start_date',
-                'location' => 'nullable|string|max:255',
-                'category' => 'nullable|string|in:varonil,femenil,mixto,infantil',
-                'fuerza' => 'nullable|string|max:255',
-            ]);
+    {
+        $this->authorize('update', $tournament);    
+        // 1. Validar (Eliminamos is_active)
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'start_date' => 'required|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'location' => 'nullable|string|max:255',
+            'category' => 'nullable|string|in:varonil,femenil,mixto,infantil',
+            'fuerza' => 'nullable|string|max:255',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
 
-            // 2. Preparar datos (No tocamos status aquí para mantener la automatización, 
-            // a menos que quieras permitir edición manual, pero lo ideal es no tocarlo)
-            $data = $request->all();
-            
-            // 3. Actualizar
-            $tournament->update($data);
+        // 2. Preparar datos
+        $data = $request->all();
 
-            return redirect()->back()->with('message', 'Torneo actualizado exitosamente.');
+        // 3. Procesar Logo
+        if ($request->hasFile('logo')) {
+            if ($tournament->logo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($tournament->logo_path)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($tournament->logo_path);
+            }
+            $logoPath = $request->file('logo')->store('tournaments', 'public');
+            $data['logo_path'] = $logoPath;
         }
+
+        // 4. Actualizar
+        $tournament->update($data);
+
+        return redirect()->back()->with('message', 'Torneo actualizado exitosamente.');
+    }
 
     public function destroy(Tournament $tournament)
         {
@@ -1211,7 +1226,23 @@ public function store(Request $request)
     public function getRules(Tournament $tournament)
     {
         return response()->json([
-            'reglamento' => $tournament->reglamento
+            'reglamento' => $tournament->reglamento,
+            'logo_url' => $tournament->logo_path ? asset('storage/' . $tournament->logo_path) : null
+        ]);
+    }
+
+    public function updateRules(Request $request, Tournament $tournament)
+    {
+        $request->validate([
+            'reglamento' => 'nullable|string'
+        ]);
+
+        $tournament->reglamento = $request->reglamento;
+        $tournament->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Reglamento actualizado exitosamente.'
         ]);
     }
 

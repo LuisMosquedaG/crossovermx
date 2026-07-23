@@ -1086,9 +1086,9 @@
                                 <!-- ÁREA DE REGLAMENTO -->
                                 <div class="bg-gray-50 border border-gray-200 rounded-md p-3 mb-4 max-h-40 overflow-y-auto">
                                     <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">Reglamento</h4>
-                                    <p id="contractRulesText" class="text-sm text-gray-700 whitespace-pre-wrap italic">
+                                    <div id="contractRulesText" class="text-sm text-gray-700 ql-editor">
                                         Cargando reglamento...
-                                    </p>
+                                    </div>
                                 </div>
 
                                 <!-- BOTÓN DESCARGAR PDF REGLAMENTO -->
@@ -1929,6 +1929,8 @@
     }
 
     // --- LÓGICA DEL CONTRATO ---
+    let currentContractRules = '';
+    let currentRulesTournamentLogoUrl = null;
 
     async function openContractModal(team) {
         document.getElementById('contractTournamentName').innerText = team.tournament ? team.tournament.name : 'Torneo';
@@ -1937,7 +1939,7 @@
         const btn = document.getElementById('confirmContractBtn');
         
         // Mostrar estado de carga
-        rulesText.innerText = "Cargando reglamento...";
+        rulesText.innerHTML = "Cargando reglamento...";
         pdfBtnContainer.style.display = 'none'; // Ocultar botón descarga mientras carga
         
         // Asignar función de envío
@@ -1955,17 +1957,26 @@
 
             if (data && data.reglamento) {
                 currentContractRules = data.reglamento;
-                rulesText.innerText = data.reglamento;
+                currentRulesTournamentLogoUrl = data.logo_url;
+                
+                // Si ya contiene HTML, lo inyectamos directamente. Si es texto plano, lo envolvemos en párrafos
+                if (data.reglamento.trim().startsWith('<') && data.reglamento.trim().endsWith('>')) {
+                    rulesText.innerHTML = data.reglamento;
+                } else {
+                    rulesText.innerHTML = data.reglamento.split('\n').map(line => line.trim() ? `<p>${line}</p>` : '<p><br></p>').join('');
+                }
                 pdfBtnContainer.style.display = 'block'; // Mostrar botón de descarga
             } else {
                 currentContractRules = "Sin reglamento definido para este torneo.";
-                rulesText.innerText = "Sin reglamento definido.";
+                currentRulesTournamentLogoUrl = null;
+                rulesText.innerHTML = "Sin reglamento definido.";
                 pdfBtnContainer.style.display = 'none';
             }
         } catch (error) {
             console.error("Error cargando reglamento:", error);
             currentContractRules = "";
-            rulesText.innerText = "Error al cargar el reglamento.";
+            currentRulesTournamentLogoUrl = null;
+            rulesText.innerHTML = "Error al cargar el reglamento.";
             pdfBtnContainer.style.display = 'none';
         }
     }
@@ -2032,27 +2043,47 @@
         }
 
         const element = document.createElement('div');
-        element.style.padding = '20px';
+        element.style.padding = '30px';
         element.style.fontFamily = 'Arial, sans-serif';
-        
-        // Usamos la misma lógica de párrafos que usamos antes para evitar cortes
-        const paragraphs = textContent.split('\n');
-        let contentHTML = '';
-        paragraphs.forEach(line => {
-            if (line.trim() !== '') {
-                contentHTML += `<p style="margin-bottom: 8px; font-size: 14px; line-height: 1.5; color: #333; page-break-inside: avoid;">${line}</p>`;
-            } else {
-                contentHTML += `<br>`;
-            }
-        });
+        element.style.backgroundColor = '#ffffff';
+
+        let htmlContent = '';
+        if (textContent.trim().startsWith('<') && textContent.trim().endsWith('>')) {
+            htmlContent = textContent;
+        } else {
+            htmlContent = textContent.split('\n').map(line => line.trim() ? `<p>${line}</p>` : '<p><br></p>').join('');
+        }
+
+        let headerHTML = '';
+        if (currentRulesTournamentLogoUrl) {
+            headerHTML = `
+                <div style="position: relative; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 24px; min-height: 70px; display: flex; align-items: center; justify-content: center; page-break-after: avoid;">
+                    <h1 style="text-align: center; color: #1e293b; margin: 0; font-size: 24px; width: 100%; padding-right: 75px; padding-left: 75px;">Reglamento: ${tournamentName}</h1>
+                    <img src="${currentRulesTournamentLogoUrl}" alt="Logo" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 60px; height: 60px; border-radius: 12px; object-fit: cover; border: 1px solid #e2e8f0;">
+                </div>
+            `;
+        } else {
+            headerHTML = `
+                <h1 style="text-align: center; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 24px; page-break-after: avoid;">Reglamento: ${tournamentName}</h1>
+            `;
+        }
 
         element.innerHTML = `
-            <h1 style="text-align: center; color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; page-break-after: avoid;">Reglamento: ${tournamentName}</h1>
-            <div>${contentHTML}</div>
+            <style>
+                p { margin-bottom: 12px; font-size: 14px; line-height: 1.6; color: #334155; }
+                ul { list-style-type: disc !important; padding-left: 24px !important; margin-bottom: 12px !important; display: block !important; }
+                ol { list-style-type: decimal !important; padding-left: 24px !important; margin-bottom: 12px !important; display: block !important; }
+                li { font-size: 14px; line-height: 1.6; color: #334155; margin-bottom: 4px; display: list-item !important; }
+                strong { font-weight: bold; }
+                u { text-decoration: underline; }
+                s, strike { text-decoration: line-through; }
+            </style>
+            ${headerHTML}
+            <div class="ql-editor">${htmlContent}</div>
         `;
 
         const opt = {
-            margin:       1.0, 
+            margin:       0.75, 
             filename:     `Reglamento_${tournamentName.replace(/\s+/g, '_')}.pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true, logging: false },
