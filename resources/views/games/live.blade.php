@@ -1937,12 +1937,52 @@
                     }
                 }
 
-                // 3. Sincronizar Estado del Juego (Si alguien finalizó el juego)
+                // 3. Sincronizar Reloj de Juego
+                if (data.status !== 'finished' && !isExtensionActive) {
+                    const localSecs = Math.ceil(timeRemaining / 1000);
+                    const serverSecs = data.secondsRemaining;
+                    
+                    // Si hay diferencia significativa de más de 2 segundos, ajustar localmente
+                    if (Math.abs(localSecs - serverSecs) > 2) {
+                        timeRemaining = serverSecs * 1000;
+                        updateDisplay();
+                    }
+                    
+                    // Sincronizar el estado del temporizador (corriendo/detenido)
+                    if (data.timerStatus === 'running') {
+                        if (!timerInterval) {
+                            document.getElementById('startBtn').disabled = true;
+                            document.getElementById('pauseBtn').disabled = false;
+                            document.getElementById('endBtn').disabled = false;
+                            timerInterval = setInterval(tick, 10);
+                            setMatchStatus('jugando');
+                        }
+                    } else if (data.timerStatus === 'stopped' || data.timerStatus === 'finished') {
+                        if (timerInterval) {
+                            clearInterval(timerInterval);
+                            timerInterval = null;
+                            document.getElementById('startBtn').disabled = false;
+                            document.getElementById('pauseBtn').disabled = true;
+                            setMatchStatus('pausado');
+                        }
+                    }
+                }
+
+                // 4. Sincronizar Estado del Juego (Si alguien finalizó el juego)
                 if (data.status === 'finished') {
                     clearInterval(pollingInterval); // Detener polling
-                    // Opcional: Redirigir al usuario
-                    // alert('El partido ha finalizado por otro usuario.');
-                    // window.location.href = '/tournaments/' + {{ $game->tournament_id }} + '/schedule';
+                    if (isExtensionActive) {
+                        endExtensionTimer();
+                    }
+                    if (timerInterval) {
+                        clearInterval(timerInterval);
+                    }
+                    alert('El partido ha finalizado.');
+                    if (tournamentId) {
+                        window.location.href = '/tournaments/' + tournamentId + '/schedule';
+                    } else {
+                        window.location.href = '/games';
+                    }
                 }
             })
             .catch(error => console.log('Error al sincronizar:', error));

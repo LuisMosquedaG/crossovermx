@@ -68,6 +68,13 @@ public function showLiveGame(Game $game)
         // 1. Obtenemos el juego primero para poder autorizar
         $game = Game::findOrFail($request->game_id);
 
+        if ($game->status === 'finished') {
+            return response()->json([
+                'success' => false,
+                'message' => 'El partido ya ha finalizado. No se pueden registrar más acciones.'
+            ], 400);
+        }
+
         // 2. Autorizamos la acción (ahora $game existe)
         $this->authorize('view', $game);
 
@@ -168,6 +175,10 @@ public function showLiveGame(Game $game)
         // 1. Obtenemos el juego primero
         $game = Game::findOrFail($request->game_id);
 
+        if ($game->status === 'finished') {
+            return response()->json(['success' => false, 'message' => 'El partido ya ha finalizado.'], 400);
+        }
+
         // 2. Autorizamos (ahora $game existe)
         $this->authorize('view', $game);
 
@@ -195,6 +206,10 @@ public function showLiveGame(Game $game)
     {
         // 1. Obtenemos el juego primero
         $game = Game::findOrFail($request->game_id);
+
+        if ($game->status === 'finished') {
+            return response()->json(['success' => false, 'message' => 'El partido ya ha finalizado.'], 400);
+        }
 
         // 2. Autorizamos
         $this->authorize('view', $game);
@@ -589,7 +604,11 @@ public function showLiveGame(Game $game)
         ]);
 
         try {
-            $game = Game::find($request->game_id);
+            $game = Game::findOrFail($request->game_id);
+
+            if ($game->status === 'finished') {
+                return response()->json(['success' => false, 'message' => 'El partido ya ha finalizado.'], 400);
+            }
 
             if ($request->player_out_id) {
                 $game->players()->updateExistingPivot($request->player_out_id, ['is_active' => false]);
@@ -1030,6 +1049,11 @@ public function showLiveGame(Game $game)
     public function undoLastAction(Request $request)
     {
         $game = Game::findOrFail($request->game_id);
+        
+        if ($game->status === 'finished') {
+            return response()->json(['success' => false, 'message' => 'El partido ya ha finalizado. No se pueden deshacer acciones.'], 400);
+        }
+
         $this->authorize('view', $game);
 
         // 1. Buscar la última acción
