@@ -36,7 +36,25 @@
         -ms-overflow-style: none;
         scrollbar-width: none;
     }
-        /* --- EFECTO BOTONES (CLICK) --- */
+
+    /* --- DESTELLO NARANJA ALERTA 10s --- */
+    @keyframes orangeFlash {
+        0% { opacity: 0.6; }
+        100% { opacity: 0; }
+    }
+    .orange-flash-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: #ea580c; /* Orange-600 */
+        z-index: 9999;
+        pointer-events: none;
+        animation: orangeFlash 0.5s ease-out forwards;
+    }
+
+    /* --- EFECTO BOTONES (CLICK) --- */
     
     /* Clase para animar puntos (Azul) */
     .animate-click-blue {
@@ -984,6 +1002,7 @@
             if (timeRemaining <= 10000 && !hasPlayed10sWarning) {
                 hasPlayed10sWarning = true;
                 playBeepSound();
+                triggerOrangeFlash();
             }
             if (timeRemaining > 10000) {
                 hasPlayed10sWarning = false;
@@ -1004,6 +1023,15 @@
             // Iniciar prórroga de 10 segundos
             startExtensionTimer();
         }
+    }
+
+    function triggerOrangeFlash() {
+        const flash = document.createElement('div');
+        flash.className = 'orange-flash-overlay';
+        document.body.appendChild(flash);
+        setTimeout(() => {
+            flash.remove();
+        }, 600);
     }
 
     function startExtensionTimer() {
@@ -1926,10 +1954,7 @@
                 // 2. Sincronizar Periodo
                 const currentPeriod = document.getElementById('currentPeriod').textContent;
                 if (data.period != currentPeriod) {
-                    document.getElementById('currentPeriod').textContent = data.period;
-                    currentPeriodDisplay = data.period; // Actualizar variable global JS
-                    
-                    // Si cambió el periodo, resetear visuales de botones de fin
+                                     // Si cambió el periodo, resetear visuales de botones de fin
                     const endBtn = document.getElementById('endBtn');
                     if (data.period < totalPeriodsConfig) {
                         endBtn.textContent = 'Finalizar Periodo';
@@ -1943,43 +1968,45 @@
                     const localSecs = Math.ceil(timeRemaining / 1000);
                     const serverSecs = data.secondsRemaining;
                     
-                    // LÓGICA DE CORRECCIÓN DE DESFASE:
-                    // - Si el cronómetro está corriendo, solo corregimos si el desfase es mayor a 7 segundos 
-                    //   (esto evita que el polling regrese el reloj a un valor desactualizado entre los ciclos de guardado de 5s del servidor).
-                    // - Si el cronómetro está pausado, corregimos ante cualquier diferencia para alinearlo.
-                    let shouldAdjust = false;
-                    if (data.timerStatus === 'running') {
-                        if (Math.abs(localSecs - serverSecs) > 7) {
-                            shouldAdjust = true;
+                    if (serverSecs !== null && serverSecs !== undefined) {
+                        // LÓGICA DE CORRECCIÓN DE DESFASE:
+                        // - Si el cronómetro está corriendo, solo corregimos si el desfase es mayor a 7 segundos 
+                        //   (esto evita que el polling regrese el reloj a un valor desactualizado entre los ciclos de guardado de 5s del servidor).
+                        // - Si el cronómetro está pausado, corregimos ante cualquier diferencia para alinearlo.
+                        let shouldAdjust = false;
+                        if (data.timerStatus === 'running') {
+                            if (Math.abs(localSecs - serverSecs) > 7) {
+                                shouldAdjust = true;
+                            }
+                        } else {
+                            if (localSecs !== serverSecs) {
+                                shouldAdjust = true;
+                            }
                         }
-                    } else {
-                        if (localSecs !== serverSecs) {
-                            shouldAdjust = true;
-                        }
-                    }
 
-                    if (shouldAdjust) {
-                        timeRemaining = serverSecs * 1000;
-                        updateDisplay();
+                        if (shouldAdjust) {
+                            timeRemaining = serverSecs * 1000;
+                            updateDisplay();
+                        }
                     }
-                    
-                    // Sincronizar el estado del temporizador (corriendo/detenido)
-                    if (data.timerStatus === 'running') {
-                        if (!timerInterval) {
-                            document.getElementById('startBtn').disabled = true;
-                            document.getElementById('pauseBtn').disabled = false;
-                            document.getElementById('endBtn').disabled = false;
-                            timerInterval = setInterval(tick, 10);
-                            setMatchStatus('jugando');
-                        }
-                    } else if (data.timerStatus === 'stopped' || data.timerStatus === 'finished') {
-                        if (timerInterval) {
-                            clearInterval(timerInterval);
-                            timerInterval = null;
-                            document.getElementById('startBtn').disabled = false;
-                            document.getElementById('pauseBtn').disabled = true;
-                            setMatchStatus('pausado');
-                        }
+                }
+
+                // Sincronizar el estado del temporizador (corriendo/detenido)
+                if (data.timerStatus === 'running') {
+                    if (!timerInterval) {
+                        document.getElementById('startBtn').disabled = true;
+                        document.getElementById('pauseBtn').disabled = false;
+                        document.getElementById('endBtn').disabled = false;
+                        timerInterval = setInterval(tick, 10);
+                        setMatchStatus('jugando');
+                    }
+                } else if (data.timerStatus === 'stopped' || data.timerStatus === 'finished') {
+                    if (timerInterval) {
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                        document.getElementById('startBtn').disabled = false;
+                        document.getElementById('pauseBtn').disabled = true;
+                        setMatchStatus('pausado');
                     }
                 }
 

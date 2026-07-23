@@ -880,17 +880,17 @@ public function showLiveGame(Game $game)
 
         return response()->json(['success' => true, 'message' => 'Partido finalizado automáticamente por suspensión.']);
     }
-        /**
-     * Devuelve el estado actual del juego para sincronización (Polling)
-     */
     public function getGameStatus(Game $game)
     {
+        $settings = $game->settings ?? ($game->tournament->settings->settings ?? []);
+        $configuredMinutes = $settings['game_duration'] ?? 10;
+
         return response()->json([
             'localScore' => $game->local_team_score ?? 0,
             'awayScore' => $game->away_team_score ?? 0,
             'period' => $game->period ?? 1,
             'timerStatus' => $game->timer_status, // 'running', 'stopped', 'finished'
-            'secondsRemaining' => $game->seconds_remaining,
+            'secondsRemaining' => $game->seconds_remaining ?? ($configuredMinutes * 60),
             'status' => $game->status // 'live', 'finished', etc.
         ]);
     }
