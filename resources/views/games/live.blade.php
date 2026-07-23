@@ -697,6 +697,65 @@
     let isExtensionActive = false;
     let extensionSecondsRemaining = 10;
     let extensionTimerInterval = null;
+    let hasPlayed10sWarning = false;
+
+    // Funciones de audio (Web Audio API)
+    function playBeepSound() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, ctx.currentTime); // La5
+            
+            gain.gain.setValueAtTime(0.2, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.start();
+            osc.stop(ctx.currentTime + 0.2);
+        } catch (e) {
+            console.error('Error playing sound:', e);
+        }
+    }
+
+    function playBuzzerSound() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+            
+            const osc1 = ctx.createOscillator();
+            const osc2 = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc1.type = 'sawtooth';
+            osc1.frequency.setValueAtTime(120, ctx.currentTime);
+            
+            osc2.type = 'sawtooth';
+            osc2.frequency.setValueAtTime(125, ctx.currentTime);
+            
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.5);
+            
+            osc1.connect(gain);
+            osc2.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc1.start();
+            osc2.start();
+            
+            osc1.stop(ctx.currentTime + 1.5);
+            osc2.stop(ctx.currentTime + 1.5);
+        } catch (e) {
+            console.error('Error playing buzzer:', e);
+        }
+    }
 
     // ==========================================
     // CONTROL DE ESTADO VISUAL DEL PARTIDO (PILL)
@@ -920,6 +979,15 @@
             timeRemaining -= 10;
             updateDisplay();
             
+            // Sonar beep de advertencia cuando falten exactamente 10s o menos (10000ms)
+            if (timeRemaining <= 10000 && !hasPlayed10sWarning) {
+                hasPlayed10sWarning = true;
+                playBeepSound();
+            }
+            if (timeRemaining > 10000) {
+                hasPlayed10sWarning = false;
+            }
+            
             // Sincronizar cada 5 segundos (5000ms)
             if (timeRemaining % 5000 === 0) {
                 syncTimer('running');
@@ -928,6 +996,9 @@
             timeRemaining = 0;
             clearInterval(timerInterval);
             updateDisplay();
+            
+            // Sonar chicharra de fin de periodo
+            playBuzzerSound();
             
             // Iniciar prórroga de 10 segundos
             startExtensionTimer();
@@ -1040,6 +1111,9 @@
         this.disabled = true;
         document.getElementById('pauseBtn').disabled = false;
         document.getElementById('endBtn').disabled = false;
+        if (timeRemaining > 10000) {
+            hasPlayed10sWarning = false;
+        }
         syncTimer('running');
         timerInterval = setInterval(tick, 10);
         setMatchStatus('jugando');
