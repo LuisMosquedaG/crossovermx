@@ -385,7 +385,7 @@
         <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"></div>
         <div class="fixed inset-0 overflow-y-auto">
             <div class="flex min-h-full items-center justify-center p-4">
-                <div class="relative w-full max-w-2xl transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all">
+                <div class="relative w-full max-w-4xl transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all">
                     <form id="calendarForm" onsubmit="handleCalendarSubmit(event)">
                         @csrf
                         <input type="hidden" name="tournament_id" id="calendar_tournament_id">
@@ -1240,147 +1240,130 @@
         const content = `
             <div class="space-y-6">
                 
-                <!-- SECCIÓN 1: LOGÍSTICA -->
+                <!-- SECCIÓN 1: FORMATO DE COMPETENCIA -->
                 <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 hover:border-orange-500 transition-colors duration-300">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 pb-3 border-b border-slate-200">
                         <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center">
                             <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
                             Formato de Competencia
                         </h4>
-                        <!-- AQUÍ EL CAMBIO A COLOR DURAZNO -->
                         <span class="mt-2 md:mt-0 px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-800 border border-orange-200 shadow-sm">
                             ${typeMap[settings.tournament_type] || 'Desconocido'}
                         </span>
                     </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-8 text-sm">
-                        <div>
-                            <span class="block text-xs text-slate-500 font-medium mb-1">Días de Juego</span>
-                            <div class="text-slate-800 font-medium">${selectedDays}</div>
-                        </div>
-                        <div>
-                            <span class="block text-xs text-slate-500 font-medium mb-1">Reglas de Descanso</span>
-                            <div>${selectedRestRules}</div>
-                        </div>
-                        <div>
-                            <span class="block text-xs text-slate-500 font-medium mb-1">Ubicación</span>
-                            <div class="text-slate-800 font-medium flex items-center gap-1">
-                                <svg class="w-4 h-4 text-orange-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                <span>${settings.location || 'No definida'}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- GRILLA DE DOS COLUMNAS -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                    <!-- SECCIÓN 2: FECHAS Y HORARIOS -->
-                    <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col h-full hover:border-orange-500 transition-colors duration-300">
-                        <div class="bg-gray-50 px-5 py-3 border-b border-gray-200">
-                            <h4 class="text-sm font-bold text-gray-800 uppercase flex items-center">
-                                <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                Fechas y Horarios
-                            </h4>
-                        </div>
-                        <div class="p-5 flex-1">
-                            <div class="grid grid-cols-2 gap-4 mb-5">
-                                <div class="bg-gray-50 p-3 rounded-lg text-center border border-gray-100">
-                                    <div class="text-[10px] text-gray-400 uppercase font-bold mb-1">Inicio</div>
-                                    <div class="text-gray-800 font-mono font-bold text-sm">${settings.start_date ? settings.start_date.substring(0, 10) : '--/--/--'}</div>
-                                </div>
-                                <div class="bg-gray-50 p-3 rounded-lg text-center border border-gray-100">
-                                    <div class="text-[10px] text-gray-400 uppercase font-bold mb-1">Fin</div>
-                                    <div class="text-gray-800 font-mono font-bold text-sm">${settings.end_date ? settings.end_date.substring(0, 10) : '--/--/--'}</div>
+                    <div class="space-y-5 text-sm">
+                        <!-- Linea 1: Ubicación, Fechas y Horario -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <span class="block text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Ubicación</span>
+                                <div class="text-slate-800 font-medium flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 text-orange-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <span>${settings.location || 'No definida'}</span>
                                 </div>
                             </div>
-
-                            <div class="space-y-3">
-                                <div class="flex items-center justify-between border-b border-dashed border-gray-100 pb-2">
-                                    <span class="text-xs text-gray-500">Hora Inicio</span>
-                                    <span class="text-sm font-semibold text-gray-800">${settings.start_time || '--:--'}</span>
-                                </div>
-                                <div class="flex items-center justify-between border-b border-dashed border-gray-100 pb-2">
-                                    <span class="text-xs text-gray-500">Hora Fin</span>
-                                    <span class="text-sm font-semibold text-gray-800">${settings.end_time || '--:--'}</span>
+                            <div>
+                                <span class="block text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Fechas del Torneo</span>
+                                <div class="text-slate-800 font-medium font-mono">
+                                    ${settings.start_date ? settings.start_date.substring(0, 10) : '--/--/--'} al ${settings.end_date ? settings.end_date.substring(0, 10) : '--/--/--'}
                                 </div>
                             </div>
+                            <div>
+                                <span class="block text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Horario Diario</span>
+                                <div class="text-slate-800 font-medium">
+                                    ${settings.start_time || '--:--'} a ${settings.end_time || '--:--'}
+                                </div>
+                            </div>
+                        </div>
 
-                            <div class="mt-4">
-                                <span class="block text-xs text-gray-500 font-medium mb-2">Canchas Habilitadas</span>
+                        <!-- Linea 2: Días de Juego, Canchas Habilitadas y Reglas de Descanso -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-3 border-t border-slate-100">
+                            <div>
+                                <span class="block text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Días de Juego</span>
+                                <div class="text-slate-800 font-medium">${selectedDays}</div>
+                            </div>
+                            <div>
+                                <span class="block text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">Canchas Habilitadas</span>
                                 <div class="flex flex-wrap gap-1">${selectedCourts}</div>
                             </div>
+                            <div>
+                                <span class="block text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Reglas de Descanso</span>
+                                <div>${selectedRestRules}</div>
+                            </div>
                         </div>
                     </div>
-
-                    <!-- SECCIÓN 3: REGLAMENTO -->
-                    <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col h-full hover:border-orange-500 transition-colors duration-300">
-                        <div class="bg-gray-50 px-5 py-3 border-b border-gray-200">
-                            <h4 class="text-sm font-bold text-gray-800 uppercase flex items-center">
-                                <svg class="w-4 h-4 mr-2 text-orange-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg>
-                                Reglamento
-                            </h4>
-                        </div>
-                        
-                        <div class="p-5 flex-1 space-y-6">
-                            
-                            <!-- Bloque 1: Tiempos -->
-                            <div>
-                                <h5 class="text-xs font-bold text-gray-400 uppercase mb-2 tracking-wider">Tiempos de Partido</h5>
-                                <div class="grid grid-cols-2 gap-2 text-xs font-medium">
-                                    <div class="bg-gray-50 p-2 rounded border border-gray-100 flex justify-between items-center">
-                                        <span class="text-gray-600">Periodos</span>
-                                        <span class="bg-white px-1.5 py-0.5 rounded text-gray-900 shadow-sm font-bold">${settings.periods_per_game}</span>
-                                    </div>
-                                    <div class="bg-gray-50 p-2 rounded border border-gray-100 flex justify-between items-center">
-                                        <span class="text-gray-600">Min/Periodo</span>
-                                        <span class="bg-white px-1.5 py-0.5 rounded text-gray-900 shadow-sm font-bold">${settings.game_duration}</span>
-                                    </div>
-                                    <div class="bg-gray-50 p-2 rounded border border-gray-100 flex justify-between items-center">
-                                        <span class="text-gray-600">Desc/Pertido</span>
-                                        <span class="bg-white px-1.5 py-0.5 rounded text-gray-900 shadow-sm font-bold">${settings.timeouts_per_game}</span>
-                                    </div>
-                                    <div class="bg-gray-50 p-2 rounded border border-gray-100 flex justify-between items-center">
-                                        <span class="text-gray-600">Desc/Pariodo</span>
-                                        <span class="bg-white px-1.5 py-0.5 rounded text-gray-900 shadow-sm font-bold">${settings.rest_between_periods || 0}</span>
-                                    </div>
-                                    <div class="bg-gray-50 p-2 rounded border border-gray-100 flex justify-between items-center col-span-2">
-                                        <span class="text-gray-600">Puntos Knock-out</span>
-                                        <span class="bg-white px-1.5 py-0.5 rounded text-gray-900 shadow-sm font-bold text-orange-600">${settings.knock_out || 'Desactivado'}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Bloque 2: Faltas -->
-                            <div>
-                                <h5 class="text-xs font-bold text-gray-400 uppercase mb-2 tracking-wider">Expulsión (Límites)</h5>
-                                <div class="grid grid-cols-2 gap-2 text-xs font-medium">
-                                    <div class="bg-gray-50 p-2 rounded border border-gray-100 flex justify-between items-center">
-                                        <span class="text-gray-600">Técnicas</span>
-                                        <span class="bg-white px-1.5 py-0.5 rounded text-gray-900 shadow-sm font-bold">${settings.limit_foul_technical}</span>
-                                    </div>
-                                    <div class="bg-gray-50 p-2 rounded border border-gray-100 flex justify-between items-center">
-                                        <span class="text-gray-600">Antidep.</span>
-                                        <span class="bg-white px-1.5 py-0.5 rounded text-gray-900 shadow-sm font-bold">${settings.limit_foul_unsportsmanlike}</span>
-                                    </div>
-                                    <div class="bg-gray-50 p-2 rounded border border-gray-100 flex justify-between items-center">
-                                        <span class="text-gray-600">Personales</span>
-                                        <span class="bg-white px-1.5 py-0.5 rounded text-gray-900 shadow-sm font-bold">${settings.limit_foul_personal}</span>
-                                    </div>
-                                    <div class="bg-gray-50 p-2 rounded border border-gray-100 flex justify-between items-center">
-                                        <span class="text-gray-600">Descalif.</span>
-                                        <span class="bg-white px-1.5 py-0.5 rounded text-gray-900 shadow-sm font-bold">${settings.limit_foul_disqualifying}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-
                 </div>
+
+                <!-- SECCIÓN 2: REGLAMENTO DEL TORNEO -->
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden hover:border-orange-500 transition-colors duration-300">
+                    <div class="bg-gray-50 px-5 py-4 border-b border-gray-200">
+                        <h4 class="text-sm font-bold text-gray-800 uppercase flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-orange-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg>
+                            Reglamento del Torneo
+                        </h4>
+                    </div>
+                    
+                    <div class="p-6 space-y-6">
+                        <!-- Línea 1: Tiempos y Límites de Partido -->
+                        <div class="space-y-2">
+                            <h5 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Línea 1: Tiempos y Límites de Partido</h5>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-medium">
+                                <div class="bg-gray-50 p-2.5 rounded border border-gray-100 flex flex-col justify-between">
+                                    <span class="text-gray-500 mb-1">Periodos</span>
+                                    <span class="text-gray-900 font-extrabold text-sm">${settings.periods_per_game}</span>
+                                </div>
+                                <div class="bg-gray-50 p-2.5 rounded border border-gray-100 flex flex-col justify-between">
+                                    <span class="text-gray-500 mb-1">Minutos/Periodo</span>
+                                    <span class="text-gray-900 font-extrabold text-sm">${settings.game_duration} min</span>
+                                </div>
+                                <div class="bg-gray-50 p-2.5 rounded border border-gray-100 flex flex-col justify-between">
+                                    <span class="text-gray-500 mb-1">Tiempos Fuera</span>
+                                    <span class="text-gray-900 font-extrabold text-sm">${settings.timeouts_per_game}</span>
+                                </div>
+                                <div class="bg-gray-50 p-2.5 rounded border border-gray-100 flex flex-col justify-between">
+                                    <span class="text-gray-500 mb-1">Descanso</span>
+                                    <span class="text-gray-900 font-extrabold text-sm">${settings.rest_between_periods || 0} min</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Línea 2: Límite de Faltas -->
+                        <div class="space-y-2 pt-4 border-t border-gray-100">
+                            <h5 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Línea 2: Límite de Faltas (Expulsión)</h5>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-medium">
+                                <div class="bg-gray-50 p-2.5 rounded border border-gray-100 flex flex-col justify-between">
+                                    <span class="text-gray-500 mb-1">Personales</span>
+                                    <span class="text-gray-900 font-extrabold text-sm">${settings.limit_foul_personal}</span>
+                                </div>
+                                <div class="bg-gray-50 p-2.5 rounded border border-gray-100 flex flex-col justify-between">
+                                    <span class="text-gray-500 mb-1">Técnicas</span>
+                                    <span class="text-gray-900 font-extrabold text-sm">${settings.limit_foul_technical}</span>
+                                </div>
+                                <div class="bg-gray-50 p-2.5 rounded border border-gray-100 flex flex-col justify-between">
+                                    <span class="text-gray-500 mb-1">Antideportivas</span>
+                                    <span class="text-gray-900 font-extrabold text-sm">${settings.limit_foul_unsportsmanlike}</span>
+                                </div>
+                                <div class="bg-gray-50 p-2.5 rounded border border-gray-100 flex flex-col justify-between">
+                                    <span class="text-gray-500 mb-1">Descalificantes</span>
+                                    <span class="text-gray-900 font-extrabold text-sm">${settings.limit_foul_disqualifying}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Línea 3: Knock-out -->
+                        <div class="space-y-2 pt-4 border-t border-gray-100">
+                            <h5 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Línea 3: Límite de Puntos Knock-out</h5>
+                            <div class="bg-orange-50 border border-orange-200 p-3 rounded-lg flex justify-between items-center text-xs font-semibold text-orange-800">
+                                <span>Puntos para fin automático del partido:</span>
+                                <span class="bg-white px-3 py-1 rounded-md text-orange-700 shadow-sm font-black text-sm border border-orange-200">${settings.knock_out || 'Sin Límite'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         `;
         
@@ -1543,6 +1526,8 @@
     let quillInstance = null;
     let currentRulesTournamentName = '';
     let currentRulesTournamentLogoUrl = null;
+    let currentRulesTournamentSettings = null;
+    let currentRulesTournamentCourtNames = [];
 
     function initQuillEditor() {
         if (quillInstance) return quillInstance;
@@ -1593,6 +1578,8 @@
             const data = await response.json();
             
             currentRulesTournamentLogoUrl = data.logo_url;
+            currentRulesTournamentSettings = data.settings;
+            currentRulesTournamentCourtNames = data.court_names || [];
             
             const content = data.reglamento || '';
             // Si el contenido ya es HTML, lo cargamos directo; si es texto plano, lo convertimos
@@ -2142,6 +2129,48 @@
             return;
         }
 
+        const wrapHtmlInTableRows = (html) => {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            let rowsHtml = '';
+            const children = Array.from(tempDiv.children);
+            
+            if (children.length === 0) {
+                return `
+                    <tr>
+                        <td style="padding: 10px 20px; border: 1px solid #cbd5e1; border-top: none; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; background-color: #ffffff;" class="ql-editor">
+                            ${html}
+                        </td>
+                    </tr>
+                `;
+            }
+
+            children.forEach((child, index) => {
+                const isLast = index === children.length - 1;
+                child.style.marginTop = '0';
+                child.style.marginBottom = '8px';
+                
+                let borderStyle = 'border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; border-top: none; border-bottom: none;';
+                let borderRadiusStyle = '';
+                
+                if (isLast) {
+                    borderStyle = 'border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; border-top: none;';
+                    borderRadiusStyle = 'border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;';
+                }
+                
+                rowsHtml += `
+                    <tr>
+                        <td style="padding: 10px 20px; background-color: #ffffff; ${borderStyle} ${borderRadiusStyle}" class="ql-editor">
+                            ${child.outerHTML}
+                        </td>
+                    </tr>
+                `;
+            });
+            return rowsHtml;
+        };
+
+        const rowsHTML = wrapHtmlInTableRows(htmlContent);
+
         const element = document.createElement('div');
         element.style.padding = '30px';
         element.style.fontFamily = 'Arial, sans-serif';
@@ -2161,27 +2190,123 @@
             `;
         }
 
+        // Construir ficha técnica con la configuración del torneo
+        let settingsHTML = '';
+        const settings = currentRulesTournamentSettings;
+        if (settings) {
+            const typeMap = {
+                'round_robin': 'Liga (Todos contra todos + Playoffs)',
+                'elimination': 'Eliminatoria Directa',
+                'double_elimination': 'Doble Eliminatoria',
+                'groups': 'Fase de Grupos'
+            };
+            const typeVal = typeMap[settings.tournament_type] || settings.tournament_type || 'Desconocido';
+
+            const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            const selectedDays = settings.days && Array.isArray(settings.days) 
+                ? settings.days.map(d => dayNames[d]).join(', ') 
+                : 'No definidos';
+
+            const restRulesMap = {
+                'no_same_day': 'No jugar 2 veces al día',
+                'no_same_week': 'No jugar 2 veces a la semana'
+            };
+            const selectedRestRulesText = settings.rest_rules && Array.isArray(settings.rest_rules) 
+                ? settings.rest_rules.map(rule => restRulesMap[rule] || rule).join(', ') 
+                : 'Sin restricciones';
+
+            const selectedCourtsNames = currentRulesTournamentCourtNames && currentRulesTournamentCourtNames.length > 0
+                ? currentRulesTournamentCourtNames.join(', ')
+                : 'Sin asignar';
+
+            settingsHTML = `
+                <div style="font-family: Arial, sans-serif; margin-bottom: 25px; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; page-break-inside: avoid;">
+                    <div style="background-color: #f1f5f9; padding: 10px 15px; border-bottom: 1px solid #cbd5e1; text-align: center;">
+                        <h3 style="margin: 0; font-size: 13px; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold;">Ficha Técnica y Formato de Competencia</h3>
+                    </div>
+                    <div style="padding: 12px; background-color: #ffffff;">
+                        <!-- Bloque 1: Formato de Competencia -->
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px; color: #334155;">
+                            <tr>
+                                <td colspan="3" style="background-color: #f8fafc; padding: 5px 8px; font-weight: bold; color: #0f172a; border-bottom: 1px solid #e2e8f0; text-transform: uppercase;">Detalles del Formato</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 6px 8px; width: 33.33%;"><strong>Formato:</strong> ${typeVal}</td>
+                                <td style="padding: 6px 8px; width: 33.33%;"><strong>Ubicación:</strong> ${settings.location || 'No definida'}</td>
+                                <td style="padding: 6px 8px; width: 33.33%;"><strong>Horario Diario:</strong> ${settings.start_time || '--:--'} a ${settings.end_time || '--:--'}</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 6px 8px;"><strong>Fechas:</strong> ${settings.start_date ? settings.start_date.substring(0,10) : '--/--/--'} al ${settings.end_date ? settings.end_date.substring(0,10) : '--/--/--'}</td>
+                                <td style="padding: 6px 8px;"><strong>Días de Juego:</strong> ${selectedDays}</td>
+                                <td style="padding: 6px 8px;"><strong>Reglas de Descanso:</strong> ${selectedRestRulesText}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" style="padding: 6px 8px;"><strong>Canchas Habilitadas:</strong> ${selectedCourtsNames}</td>
+                            </tr>
+                        </table>
+
+                        <!-- Bloque 2: Reglamento Deportivo -->
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11px; color: #334155;">
+                            <tr>
+                                <td colspan="4" style="background-color: #f8fafc; padding: 5px 8px; font-weight: bold; color: #0f172a; border-bottom: 1px solid #e2e8f0; text-transform: uppercase;">Reglas y Límites de Juego</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 6px 8px; width: 25%;"><strong>Periodos:</strong> ${settings.periods_per_game}</td>
+                                <td style="padding: 6px 8px; width: 25%;"><strong>Minutos/Periodo:</strong> ${settings.game_duration} min</td>
+                                <td style="padding: 6px 8px; width: 25%;"><strong>Tiempos Fuera:</strong> ${settings.timeouts_per_game}</td>
+                                <td style="padding: 6px 8px; width: 25%;"><strong>Descanso Periodos:</strong> ${settings.rest_between_periods || 0} min</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 6px 8px;"><strong>Faltas Personales:</strong> ${settings.limit_foul_personal}</td>
+                                <td style="padding: 6px 8px;"><strong>Faltas Técnicas:</strong> ${settings.limit_foul_technical}</td>
+                                <td style="padding: 6px 8px;"><strong>Faltas Antideportivas:</strong> ${settings.limit_foul_unsportsmanlike}</td>
+                                <td style="padding: 6px 8px;"><strong>Faltas Descalificantes:</strong> ${settings.limit_foul_disqualifying}</td>
+                            </tr>
+                            <tr style="border-top: 1px solid #cbd5e1;">
+                                <td colspan="4" style="padding: 8px 8px; font-weight: bold; color: #334155;">
+                                    Límite de Puntos Knock-out: <span>${settings.knock_out ? settings.knock_out + ' puntos (Fin automático de partido)' : 'Sin límite (No hay knock-out)'}</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
         // Estilos para listas y elementos en PDF
         element.innerHTML = `
             <style>
-                p { margin-bottom: 12px; font-size: 14px; line-height: 1.6; color: #334155; }
+                p { margin-bottom: 12px; font-size: 14px; line-height: 1.6; color: #334155; page-break-inside: auto; }
                 ul { list-style-type: disc !important; padding-left: 24px !important; margin-bottom: 12px !important; display: block !important; }
                 ol { list-style-type: decimal !important; padding-left: 24px !important; margin-bottom: 12px !important; display: block !important; }
-                li { font-size: 14px; line-height: 1.6; color: #334155; margin-bottom: 4px; display: list-item !important; }
+                li { font-size: 14px; line-height: 1.6; color: #334155; margin-bottom: 4px; display: list-item !important; page-break-inside: avoid; }
                 strong { font-weight: bold; }
                 u { text-decoration: underline; }
                 s, strike { text-decoration: line-through; }
             </style>
             ${headerHTML}
-            <div class="ql-editor">${htmlContent}</div>
+            ${settingsHTML}
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-family: Arial, sans-serif; page-break-inside: auto;">
+                <thead>
+                    <tr>
+                        <th style="background-color: #f1f5f9; padding: 10px 15px; border: 1px solid #cbd5e1; text-align: center; font-size: 13px; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; border-top-left-radius: 8px; border-top-right-radius: 8px; page-break-inside: avoid; page-break-after: avoid;">
+                            Reglamento Oficial
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rowsHTML}
+                </tbody>
+            </table>
         `;
 
         const opt = {
-            margin:       0.75, 
+            margin:       0.3, 
             filename:     `Reglamento_${tournamentName.replace(/\s+/g, '_')}.pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true, logging: false },
-            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
+            pagebreak:    { mode: ['css', 'legacy'] }
         };
 
         html2pdf().set(opt).from(element).save();

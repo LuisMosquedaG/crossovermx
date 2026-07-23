@@ -1226,9 +1226,23 @@ public function store(Request $request)
      */
     public function getRules(Tournament $tournament)
     {
+        $settings = $tournament->settings->settings ?? [];
+        if (is_array($settings)) {
+            $settings['location'] = $tournament->location;
+        } else {
+            $settings = ['location' => $tournament->location];
+        }
+
+        $courtNames = [];
+        if (!empty($settings['courts'])) {
+            $courtNames = \App\Models\Court::whereIn('id', $settings['courts'])->pluck('name')->toArray();
+        }
+
         return response()->json([
             'reglamento' => $tournament->reglamento,
-            'logo_url' => $tournament->logo_path ? asset('storage/' . $tournament->logo_path) : null
+            'logo_url' => $tournament->logo_path ? asset('storage/' . $tournament->logo_path) : null,
+            'settings' => $settings,
+            'court_names' => $courtNames
         ]);
     }
 

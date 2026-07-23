@@ -1931,6 +1931,8 @@
     // --- LÓGICA DEL CONTRATO ---
     let currentContractRules = '';
     let currentRulesTournamentLogoUrl = null;
+    let currentContractSettings = null;
+    let currentContractCourtNames = [];
 
     async function openContractModal(team) {
         document.getElementById('contractTournamentName').innerText = team.tournament ? team.tournament.name : 'Torneo';
@@ -1958,6 +1960,8 @@
             if (data && data.reglamento) {
                 currentContractRules = data.reglamento;
                 currentRulesTournamentLogoUrl = data.logo_url;
+                currentContractSettings = data.settings;
+                currentContractCourtNames = data.court_names || [];
                 
                 // Si ya contiene HTML, lo inyectamos directamente. Si es texto plano, lo envolvemos en párrafos
                 if (data.reglamento.trim().startsWith('<') && data.reglamento.trim().endsWith('>')) {
@@ -2042,10 +2046,45 @@
             return;
         }
 
-        const element = document.createElement('div');
-        element.style.padding = '30px';
-        element.style.fontFamily = 'Arial, sans-serif';
-        element.style.backgroundColor = '#ffffff';
+        const wrapHtmlInTableRows = (html) => {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            let rowsHtml = '';
+            const children = Array.from(tempDiv.children);
+            
+            if (children.length === 0) {
+                return `
+                    <tr>
+                        <td style="padding: 10px 20px; border: 1px solid #cbd5e1; border-top: none; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; background-color: #ffffff;" class="ql-editor">
+                            ${html}
+                        </td>
+                    </tr>
+                `;
+            }
+
+            children.forEach((child, index) => {
+                const isLast = index === children.length - 1;
+                child.style.marginTop = '0';
+                child.style.marginBottom = '8px';
+                
+                let borderStyle = 'border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; border-top: none; border-bottom: none;';
+                let borderRadiusStyle = '';
+                
+                if (isLast) {
+                    borderStyle = 'border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; border-top: none;';
+                    borderRadiusStyle = 'border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;';
+                }
+                
+                rowsHtml += `
+                    <tr>
+                        <td style="padding: 10px 20px; background-color: #ffffff; ${borderStyle} ${borderRadiusStyle}" class="ql-editor">
+                            ${child.outerHTML}
+                        </td>
+                    </tr>
+                `;
+            });
+            return rowsHtml;
+        };
 
         let htmlContent = '';
         if (textContent.trim().startsWith('<') && textContent.trim().endsWith('>')) {
@@ -2053,6 +2092,13 @@
         } else {
             htmlContent = textContent.split('\n').map(line => line.trim() ? `<p>${line}</p>` : '<p><br></p>').join('');
         }
+
+        const rowsHTML = wrapHtmlInTableRows(htmlContent);
+
+        const element = document.createElement('div');
+        element.style.padding = '30px';
+        element.style.fontFamily = 'Arial, sans-serif';
+        element.style.backgroundColor = '#ffffff';
 
         let headerHTML = '';
         if (currentRulesTournamentLogoUrl) {
@@ -2068,26 +2114,122 @@
             `;
         }
 
+        // Construir ficha técnica con la configuración del torneo
+        let settingsHTML = '';
+        const settings = currentContractSettings;
+        if (settings) {
+            const typeMap = {
+                'round_robin': 'Liga (Todos contra todos + Playoffs)',
+                'elimination': 'Eliminatoria Directa',
+                'double_elimination': 'Doble Eliminatoria',
+                'groups': 'Fase de Grupos'
+            };
+            const typeVal = typeMap[settings.tournament_type] || settings.tournament_type || 'Desconocido';
+
+            const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            const selectedDays = settings.days && Array.isArray(settings.days) 
+                ? settings.days.map(d => dayNames[d]).join(', ') 
+                : 'No definidos';
+
+            const restRulesMap = {
+                'no_same_day': 'No jugar 2 veces al día',
+                'no_same_week': 'No jugar 2 veces a la semana'
+            };
+            const selectedRestRulesText = settings.rest_rules && Array.isArray(settings.rest_rules) 
+                ? settings.rest_rules.map(rule => restRulesMap[rule] || rule).join(', ') 
+                : 'Sin restricciones';
+
+            const selectedCourtsNames = currentContractCourtNames && currentContractCourtNames.length > 0
+                ? currentContractCourtNames.join(', ')
+                : 'Sin asignar';
+
+            settingsHTML = `
+                <div style="font-family: Arial, sans-serif; margin-bottom: 25px; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; page-break-inside: avoid;">
+                    <div style="background-color: #f1f5f9; padding: 10px 15px; border-bottom: 1px solid #cbd5e1; text-align: center;">
+                        <h3 style="margin: 0; font-size: 13px; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold;">Ficha Técnica y Formato de Competencia</h3>
+                    </div>
+                    <div style="padding: 12px; background-color: #ffffff;">
+                        <!-- Bloque 1: Formato de Competencia -->
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px; color: #334155;">
+                            <tr>
+                                <td colspan="3" style="background-color: #f8fafc; padding: 5px 8px; font-weight: bold; color: #0f172a; border-bottom: 1px solid #e2e8f0; text-transform: uppercase;">Detalles del Formato</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 6px 8px; width: 33.33%;"><strong>Formato:</strong> ${typeVal}</td>
+                                <td style="padding: 6px 8px; width: 33.33%;"><strong>Ubicación:</strong> ${settings.location || 'No definida'}</td>
+                                <td style="padding: 6px 8px; width: 33.33%;"><strong>Horario Diario:</strong> ${settings.start_time || '--:--'} a ${settings.end_time || '--:--'}</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 6px 8px;"><strong>Fechas:</strong> ${settings.start_date ? settings.start_date.substring(0,10) : '--/--/--'} al ${settings.end_date ? settings.end_date.substring(0,10) : '--/--/--'}</td>
+                                <td style="padding: 6px 8px;"><strong>Días de Juego:</strong> ${selectedDays}</td>
+                                <td style="padding: 6px 8px;"><strong>Reglas de Descanso:</strong> ${selectedRestRulesText}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" style="padding: 6px 8px;"><strong>Canchas Habilitadas:</strong> ${selectedCourtsNames}</td>
+                            </tr>
+                        </table>
+
+                        <!-- Bloque 2: Reglamento Deportivo -->
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11px; color: #334155;">
+                            <tr>
+                                <td colspan="4" style="background-color: #f8fafc; padding: 5px 8px; font-weight: bold; color: #0f172a; border-bottom: 1px solid #e2e8f0; text-transform: uppercase;">Reglas y Límites de Juego</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 6px 8px; width: 25%;"><strong>Periodos:</strong> ${settings.periods_per_game}</td>
+                                <td style="padding: 6px 8px; width: 25%;"><strong>Minutos/Periodo:</strong> ${settings.game_duration} min</td>
+                                <td style="padding: 6px 8px; width: 25%;"><strong>Tiempos Fuera:</strong> ${settings.timeouts_per_game}</td>
+                                <td style="padding: 6px 8px; width: 25%;"><strong>Descanso Periodos:</strong> ${settings.rest_between_periods || 0} min</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 6px 8px;"><strong>Faltas Personales:</strong> ${settings.limit_foul_personal}</td>
+                                <td style="padding: 6px 8px;"><strong>Faltas Técnicas:</strong> ${settings.limit_foul_technical}</td>
+                                <td style="padding: 6px 8px;"><strong>Faltas Antideportivas:</strong> ${settings.limit_foul_unsportsmanlike}</td>
+                                <td style="padding: 6px 8px;"><strong>Faltas Descalificantes:</strong> ${settings.limit_foul_disqualifying}</td>
+                            </tr>
+                            <tr style="border-top: 1px solid #cbd5e1;">
+                                <td colspan="4" style="padding: 8px 8px; font-weight: bold; color: #334155;">
+                                    Límite de Puntos Knock-out: <span>${settings.knock_out ? settings.knock_out + ' puntos (Fin automático de partido)' : 'Sin límite (No hay knock-out)'}</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
         element.innerHTML = `
             <style>
-                p { margin-bottom: 12px; font-size: 14px; line-height: 1.6; color: #334155; }
+                p { margin-bottom: 12px; font-size: 14px; line-height: 1.6; color: #334155; page-break-inside: auto; }
                 ul { list-style-type: disc !important; padding-left: 24px !important; margin-bottom: 12px !important; display: block !important; }
                 ol { list-style-type: decimal !important; padding-left: 24px !important; margin-bottom: 12px !important; display: block !important; }
-                li { font-size: 14px; line-height: 1.6; color: #334155; margin-bottom: 4px; display: list-item !important; }
+                li { font-size: 14px; line-height: 1.6; color: #334155; margin-bottom: 4px; display: list-item !important; page-break-inside: avoid; }
                 strong { font-weight: bold; }
                 u { text-decoration: underline; }
                 s, strike { text-decoration: line-through; }
             </style>
             ${headerHTML}
-            <div class="ql-editor">${htmlContent}</div>
+            ${settingsHTML}
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-family: Arial, sans-serif; page-break-inside: auto;">
+                <thead>
+                    <tr>
+                        <th style="background-color: #f1f5f9; padding: 10px 15px; border: 1px solid #cbd5e1; text-align: center; font-size: 13px; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; border-top-left-radius: 8px; border-top-right-radius: 8px; page-break-inside: avoid; page-break-after: avoid;">
+                            Reglamento Oficial
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rowsHTML}
+                </tbody>
+            </table>
         `;
 
         const opt = {
-            margin:       0.75, 
+            margin:       0.3, 
             filename:     `Reglamento_${tournamentName.replace(/\s+/g, '_')}.pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true, logging: false },
-            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
+            pagebreak:    { mode: ['css', 'legacy'] }
         };
 
         html2pdf().set(opt).from(element).save();
