@@ -1942,8 +1942,22 @@
                     const localSecs = Math.ceil(timeRemaining / 1000);
                     const serverSecs = data.secondsRemaining;
                     
-                    // Si hay diferencia significativa de más de 2 segundos, ajustar localmente
-                    if (Math.abs(localSecs - serverSecs) > 2) {
+                    // LÓGICA DE CORRECCIÓN DE DESFASE:
+                    // - Si el cronómetro está corriendo, solo corregimos si el desfase es mayor a 7 segundos 
+                    //   (esto evita que el polling regrese el reloj a un valor desactualizado entre los ciclos de guardado de 5s del servidor).
+                    // - Si el cronómetro está pausado, corregimos ante cualquier diferencia para alinearlo.
+                    let shouldAdjust = false;
+                    if (data.timerStatus === 'running') {
+                        if (Math.abs(localSecs - serverSecs) > 7) {
+                            shouldAdjust = true;
+                        }
+                    } else {
+                        if (localSecs !== serverSecs) {
+                            shouldAdjust = true;
+                        }
+                    }
+
+                    if (shouldAdjust) {
                         timeRemaining = serverSecs * 1000;
                         updateDisplay();
                     }
