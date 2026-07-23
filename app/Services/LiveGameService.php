@@ -59,7 +59,8 @@ class LiveGameService
             'timeouts_per_game' => $settings['timeouts_per_game'] ?? 5,
             'foul_limits' => $settings['fouls_per_game'] ?? [
                 'personal' => 5, 'technical' => 2, 'unsportsmanlike' => 2, 'disqualifying' => 1
-            ]
+            ],
+            'knock_out' => $settings['knock_out'] ?? null,
         ];
 
         // 4. Calcular Tiempos Muertos Restantes
@@ -79,6 +80,7 @@ class LiveGameService
             'totalPeriods' => $config['total_periods'],
             'timeoutsPerGame' => $config['timeouts_per_game'],
             'foulLimits' => $config['foul_limits'],
+            'knockOutLimit' => $config['knock_out'],
             // --- RETORNAMOS LAS VARIABLES QUE ACABAMOS DE CALCULAR ---
             'localTeamFouls' => $localTeamFouls,
             'awayTeamFouls' => $awayTeamFouls

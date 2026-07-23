@@ -305,6 +305,7 @@ public function store(Request $request)
             'limit_foul_unsportsmanlike' => 'required|integer|min:1',
             'limit_foul_disqualifying' => 'required|integer|min:1',
             'interleave_categories' => 'nullable|boolean',
+            'knock_out' => 'nullable|integer|min:1',
         ]);
 
         // Seguridad de Canchas

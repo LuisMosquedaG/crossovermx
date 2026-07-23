@@ -89,12 +89,13 @@ public function showLiveGame(Game $game)
         $value = (int) $request->value; // Nos aseguramos que sea entero
 
         $responseScore = ['localScore' => 0, 'awayScore' => 0];
+        $knockOutOccurred = false;
 
         // --- CORRECCIÓN: Usar Lock For Update ---
         // Esto bloquea la fila del juego para que nadie la toque mientras nosotros sumamos
         if ($request->action_type === 'point_scored') {
             
-            DB::transaction(function () use ($gameId, $teamSide, $value, &$responseScore) {
+            DB::transaction(function () use ($gameId, $teamSide, $value, &$responseScore, &$knockOutOccurred) {
                 $game = Game::where('id', $gameId)->lockForUpdate()->first();
 
                 if ($game) {
@@ -109,6 +110,37 @@ public function showLiveGame(Game $game)
                         $responseScore['awayScore'] = $game->away_team_score;
                     }
                     $game->save();
+
+                    // --- NUEVO: DETECTAR KNOCK-OUT ---
+                    $gameSettings = $game->settings ?? [];
+                    $knockOutLimit = $gameSettings['knock_out'] ?? ($game->tournament->settings->settings['knock_out'] ?? null);
+                    
+                    if ($knockOutLimit && $knockOutLimit > 0) {
+                        if ($game->local_team_score >= $knockOutLimit || $game->away_team_score >= $knockOutLimit) {
+                            $knockOutOccurred = true;
+                            
+                            $game->status = 'finished';
+                            $game->timer_status = 'finished';
+                            $game->save();
+
+                            // Lógica de torneo (Protegida para partidos manuales)
+                            if ($game->tournament) {
+                                try {
+                                    $game->tournament->checkCompletionStatus();
+                                } catch (\Exception $e) {
+                                    \Log::error('Error al actualizar torneo en knock-out: ' . $e->getMessage());
+                                }
+                            }
+
+                            // Descuento de suspensiones
+                            try {
+                                $this->decrementSuspensions($game->localTeam, $game);
+                                $this->decrementSuspensions($game->awayTeam, $game);
+                            } catch (\Exception $e) {
+                                \Log::error('Error al decrementar suspensiones en knock-out: ' . $e->getMessage());
+                            }
+                        }
+                    }
                 }
             });
         } else {
@@ -123,6 +155,7 @@ public function showLiveGame(Game $game)
             'action' => $action->load('player'),
             'localScore' => $responseScore['localScore'],
             'awayScore' => $responseScore['awayScore'],
+            'knockOut' => $knockOutOccurred,
         ]);
     }
 

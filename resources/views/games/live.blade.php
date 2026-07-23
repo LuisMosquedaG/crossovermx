@@ -694,6 +694,9 @@
 <script>
     // Variables globales del cronómetro
     let timerInterval;
+    let isExtensionActive = false;
+    let extensionSecondsRemaining = 10;
+    let extensionTimerInterval = null;
 
     // ==========================================
     // CONTROL DE ESTADO VISUAL DEL PARTIDO (PILL)
@@ -703,7 +706,7 @@
     function updateActionButtonsState() {
         const actionButtons = document.querySelectorAll('button[onclick^="recordPoint"], button[onclick^="recordFoul"]');
         actionButtons.forEach(btn => {
-            if (currentMatchStatus === 'jugando') {
+            if (currentMatchStatus === 'jugando' || currentMatchStatus === 'prorroga') {
                 btn.disabled = false;
                 btn.classList.remove('opacity-50', 'cursor-not-allowed');
             } else {
@@ -725,6 +728,10 @@
             pill.className = "inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] md:text-xs font-black bg-green-50 text-green-700 border border-green-200 uppercase tracking-wider shadow-sm shrink-0";
             dot.className = "h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse";
             text.textContent = "Jugando";
+        } else if (status === 'prorroga') {
+            pill.className = "inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] md:text-xs font-black bg-red-50 text-red-700 border border-red-200 uppercase tracking-wider shadow-sm shrink-0";
+            dot.className = "h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse";
+            text.textContent = "Prórroga";
         } else if (status === 'tiempo_fuera') {
             pill.className = "inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] md:text-xs font-black bg-orange-50 text-orange-700 border border-orange-200 uppercase tracking-wider shadow-sm shrink-0";
             dot.className = "h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse";
@@ -738,6 +745,8 @@
         updateActionButtonsState();
     }
     let gameId = {{ $game->id }};
+    let tournamentId = {{ $game->tournament_id ?? 'null' }};
+    let knockOutLimit = {{ $knockOutLimit ?? 'null' }};
     let totalSeconds = {{ $game->seconds_remaining ?? ($gameDurationMinutes * 60) }};
     let timeRemaining = totalSeconds * 1000;
     let gameDurationConfig = {{ $gameDurationMinutes ?? 10 }} * 60;
@@ -918,10 +927,86 @@
         } else {
             timeRemaining = 0;
             clearInterval(timerInterval);
-            syncTimer('stopped');
-            setMatchStatus('pausado');
-            handlePeriodEnd();
+            updateDisplay();
+            
+            // Iniciar prórroga de 10 segundos
+            startExtensionTimer();
         }
+    }
+
+    function startExtensionTimer() {
+        if (isExtensionActive) return;
+        
+        isExtensionActive = true;
+        extensionSecondsRemaining = 10;
+        setMatchStatus('prorroga');
+        syncTimer('stopped');
+        
+        document.getElementById('startBtn').disabled = true;
+        document.getElementById('pauseBtn').disabled = true;
+        const endBtn = document.getElementById('endBtn');
+        endBtn.disabled = false;
+        endBtn.textContent = 'Saltar Prórroga';
+        
+        updateExtensionDisplay();
+        
+        extensionTimerInterval = setInterval(() => {
+            extensionSecondsRemaining--;
+            if (extensionSecondsRemaining > 0) {
+                updateExtensionDisplay();
+            } else {
+                endExtensionTimer();
+            }
+        }, 1000);
+    }
+    
+    function updateExtensionDisplay() {
+        const timer = document.getElementById('gameTimer');
+        if (timer) {
+            timer.classList.add('text-red-500');
+            timer.classList.remove('text-yellow-400');
+            timer.textContent = `00:${extensionSecondsRemaining.toString().padStart(2, '0')}.EXT`;
+        }
+        
+        let banner = document.getElementById('extensionBanner');
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'extensionBanner';
+            banner.className = 'bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse absolute top-4 left-1/2 transform -translate-x-1/2 z-50 shadow-lg';
+            banner.textContent = 'Prórroga de tiro/faltas: 10s';
+            
+            const timerContainer = document.getElementById('gameTimer').parentNode;
+            timerContainer.style.position = 'relative';
+            timerContainer.appendChild(banner);
+        }
+        banner.textContent = `Prórroga de tiro/faltas: ${extensionSecondsRemaining}s`;
+    }
+    
+    function endExtensionTimer() {
+        clearInterval(extensionTimerInterval);
+        isExtensionActive = false;
+        
+        const banner = document.getElementById('extensionBanner');
+        if (banner) banner.remove();
+        
+        const timer = document.getElementById('gameTimer');
+        if (timer) {
+            timer.classList.remove('text-red-500');
+            timer.classList.add('text-yellow-400');
+        }
+        
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('pauseBtn').disabled = true;
+        
+        const endBtn = document.getElementById('endBtn');
+        if (currentPeriodDisplay < totalPeriodsConfig) {
+            endBtn.textContent = 'Finalizar Periodo';
+        } else {
+            endBtn.textContent = 'Finalizar Partido';
+        }
+        
+        setMatchStatus('pausado');
+        handlePeriodEnd();
     }
 
     // --- ACTUALIZACIÓN DE handlePeriodEnd ---
@@ -1147,6 +1232,10 @@
     });
 
     document.getElementById('endBtn').addEventListener('click', function() {
+        if (isExtensionActive) {
+            endExtensionTimer();
+            return;
+        }
         // Si NO es el último periodo, preguntamos normalmente
         if (currentPeriodDisplay < totalPeriodsConfig) { 
             if(confirm(`¿Terminar el Periodo ${currentPeriodDisplay} e ir al Periodo ${currentPeriodDisplay + 1}?`)) {
@@ -1230,7 +1319,7 @@
     
     // Función para registrar puntos (modificada para recibir slotIndex)
     function recordPoint(playerId, teamSide, points, slotIndex) {
-        if (currentMatchStatus !== 'jugando') {
+        if (currentMatchStatus !== 'jugando' && currentMatchStatus !== 'prorroga') {
             return;
         }
         triggerButtonEffect();
@@ -1259,7 +1348,7 @@
     }
 
     function recordFoul(playerId, teamSide, foulType, slotIndex) {
-        if (currentMatchStatus !== 'jugando') {
+        if (currentMatchStatus !== 'jugando' && currentMatchStatus !== 'prorroga') {
             return;
         }
         triggerButtonEffect();
@@ -1308,6 +1397,9 @@
     }
 
     function recordTimeout(teamSide) {
+        if (currentMatchStatus === 'prorroga') {
+            return;
+        }
         if (teamSide === 'local' && localTimeouts <= 0) {
             alert('No quedan tiempos fuera para el equipo local');
             return;
@@ -1356,6 +1448,16 @@
         .then(data => {
             if (data.success) {
                 callback(data);
+                if (data.knockOut) {
+                    clearInterval(timerInterval);
+                    syncTimer('stopped');
+                    alert('¡KNOCK-OUT! El partido ha finalizado automáticamente porque un equipo alcanzó la puntuación límite.');
+                    if (tournamentId) {
+                        window.location.href = `/tournaments/${tournamentId}/schedule`;
+                    } else {
+                        window.location.href = `/games`;
+                    }
+                }
             } else {
                 alert('Error al registrar la acción');
             }

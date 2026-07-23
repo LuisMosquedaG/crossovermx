@@ -1137,9 +1137,15 @@
                         </div>
                     </div>
 
-                    <div>
-                        <label class="${labelClass}">Tiempos Fuera por Equipo</label>
-                        <input type="number" name="timeouts_per_game" value="5" class="${inputClass}">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="${labelClass}">Tiempos Fuera</label>
+                            <input type="number" name="timeouts_per_game" value="5" class="${inputClass}">
+                        </div>
+                        <div>
+                            <label class="${labelClass}">Knock-out (Puntos)</label>
+                            <input type="number" name="knock_out" placeholder="Desactivado" class="${inputClass}">
+                        </div>
                     </div>
 
                     <div>
@@ -1340,6 +1346,10 @@
                                     <div class="bg-gray-50 p-2 rounded border border-gray-100 flex justify-between items-center">
                                         <span class="text-gray-600">Desc/Pariodo</span>
                                         <span class="bg-white px-1.5 py-0.5 rounded text-gray-900 shadow-sm font-bold">${settings.rest_between_periods || 0}</span>
+                                    </div>
+                                    <div class="bg-gray-50 p-2 rounded border border-gray-100 flex justify-between items-center col-span-2">
+                                        <span class="text-gray-600">Puntos Knock-out</span>
+                                        <span class="bg-white px-1.5 py-0.5 rounded text-gray-900 shadow-sm font-bold text-orange-600">${settings.knock_out || 'Desactivado'}</span>
                                     </div>
                                 </div>
                             </div>
