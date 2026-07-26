@@ -42,7 +42,7 @@ class DoubleEliminationService
 
         $matchups = [];
         for ($i = 0; $i < count($teamIds); $i += 2) {
-            if (!isset($teamIds[$i + 1])) continue;
+            if ($i + 1 >= count($teamIds)) continue;
 
             $local = $teamIds[$i];
             $away = $teamIds[$i + 1];
@@ -603,7 +603,7 @@ class DoubleEliminationService
 
         // 2. Generar los enfrentamientos de la Ronda 1 del Winner Bracket
         for ($i = 0; $i < count($shuffledTeams); $i += 2) {
-            if (!isset($shuffledTeams[$i + 1])) continue;
+            if ($i + 1 >= count($shuffledTeams)) continue;
 
             $local = $shuffledTeams[$i];
             $away = $shuffledTeams[$i + 1];
@@ -690,6 +690,162 @@ class DoubleEliminationService
         $bracketConfig['lb_pending_pool'] = $this->rebuildLoserPool($tournament, $bracketConfig, $categoryGroup);
         $this->processLoserPool($tournament, $bracketConfig);
         $this->saveConfig($tournament, $config);
+    }
+
+    /**
+     * Inscribe 1 o 2 equipos de forma normal en el Winner Bracket Ronda 1.
+     * Si es 1 equipo: reemplaza un BYE existente.
+     * Si son 2 equipos: crea un nuevo partido directo entre ambos.
+     */
+    public function addNormalLateTeam(Tournament $tournament, array $teamIds, ?string $categoryGroup = null)
+    {
+        // 1. Asociar cada equipo al torneo
+        foreach ($teamIds as $teamId) {
+            $team = \App\Models\Team::find($teamId);
+            if ($team) {
+                $team->tournament_id = $tournament->id;
+                if ($categoryGroup && str_contains($categoryGroup, ' - ')) {
+                    $parts = explode(' - ', $categoryGroup, 2);
+                    if (empty($team->category)) {
+                        $team->category = trim($parts[0]);
+                    }
+                    if (empty($team->strength)) {
+                        $team->strength = trim($parts[1]);
+                    }
+                }
+                $team->save();
+            }
+        }
+
+        // 2. Obtener la configuración actual del torneo
+        $settingsObj = \App\Models\TournamentSetting::where('tournament_id', $tournament->id)->first();
+        $baseSettings = [];
+        if ($settingsObj && $settingsObj->settings) {
+            $baseSettings = is_array($settingsObj->settings) ? $settingsObj->settings : (json_decode($settingsObj->settings, true) ?: []);
+        }
+        $config = array_merge($baseSettings, $tournament->tournament_settings ?? []);
+
+        if ($categoryGroup && isset($config['brackets_data'][$categoryGroup])) {
+            $bracketConfig = &$config['brackets_data'][$categoryGroup];
+        } else {
+            $bracketConfig = &$config;
+        }
+
+        $matchups = [];
+
+        // 3. Si se recibe 1 equipo (reemplaza un BYE)
+        if (count($teamIds) === 1) {
+            $teamId = $teamIds[0];
+            $wbByes = $bracketConfig['wb_byes'] ?? [];
+            if (empty($wbByes)) {
+                throw new \Exception("No hay pases directos (BYEs) disponibles en este grupo.");
+            }
+
+            // Extraemos el primer BYE
+            $byeTeamId = array_shift($wbByes);
+            $bracketConfig['wb_byes'] = $wbByes;
+
+            // Añadir al listado específico
+            if (isset($bracketConfig['specific_team_ids']) && !in_array($teamId, $bracketConfig['specific_team_ids'])) {
+                $bracketConfig['specific_team_ids'][] = $teamId;
+            }
+            $bracketConfig['team_count'] = ($bracketConfig['team_count'] ?? count($bracketConfig['specific_team_ids'])) + 1;
+
+            $matchups[] = [
+                'local' => $byeTeamId,
+                'away' => $teamId,
+                'group_name' => 'WB_R1',
+                'category_group' => $categoryGroup
+            ];
+        }
+        // 4. Si se reciben 2 equipos (juegan entre sí)
+        elseif (count($teamIds) === 2) {
+            $teamId1 = $teamIds[0];
+            $teamId2 = $teamIds[1];
+
+            if (isset($bracketConfig['specific_team_ids'])) {
+                if (!in_array($teamId1, $bracketConfig['specific_team_ids'])) {
+                    $bracketConfig['specific_team_ids'][] = $teamId1;
+                }
+                if (!in_array($teamId2, $bracketConfig['specific_team_ids'])) {
+                    $bracketConfig['specific_team_ids'][] = $teamId2;
+                }
+            }
+            $bracketConfig['team_count'] = ($bracketConfig['team_count'] ?? count($bracketConfig['specific_team_ids'])) + 2;
+
+            $matchups[] = [
+                'local' => $teamId1,
+                'away' => $teamId2,
+                'group_name' => 'WB_R1',
+                'category_group' => $categoryGroup
+            ];
+        }
+
+        // Recalcular el total de rondas de Winner Bracket según el nuevo número de equipos
+        $totalTeamsCount = $bracketConfig['team_count'] ?? count($bracketConfig['specific_team_ids'] ?? []);
+        if ($totalTeamsCount > 0) {
+            $targetSize = $this->getNextPowerOfTwo($totalTeamsCount);
+            $bracketConfig['wb_total_rounds'] = (int) log($targetSize, 2);
+        }
+
+        // 5. Guardar la configuración temporal
+        $this->saveConfig($tournament, $config);
+
+        // 6. Planificar partidos
+        if (!empty($matchups)) {
+            // Buscamos fecha y hora del último partido programado del grupo
+            $lastGameInGroup = \App\Models\Game::where('tournament_id', $tournament->id)
+                ->where('group_name', 'WB_R1')
+                ->where('category_group', $categoryGroup)
+                ->orderBy('date_time', 'desc')
+                ->first();
+
+            $startDate = $lastGameInGroup ? Carbon::parse($lastGameInGroup->date_time) : Carbon::parse($tournament->start_date);
+            
+            $endDate = $startDate->copy()->addWeek();
+            if ($tournament->end_date) {
+                $tEndDate = Carbon::parse($tournament->end_date)->endOfDay();
+                if ($startDate->lt($tEndDate)) {
+                    $endDate = $tEndDate;
+                }
+            }
+
+            $cumulativeGames = \App\Models\Game::where('tournament_id', $tournament->id)->get();
+
+            try {
+                $this->calendarService->schedulePlayoffRound(
+                    $tournament,
+                    $matchups,
+                    $startDate,
+                    $endDate,
+                    $config,
+                    $cumulativeGames,
+                    true // isPlayoff = true
+                );
+            } catch (\Exception $e) {
+                // FALLBACK SEGURO: Si falla por falta de horarios, extendemos el rango de búsqueda a 1 mes
+                $endDateFallback = $startDate->copy()->addMonth();
+                $this->calendarService->schedulePlayoffRound(
+                    $tournament,
+                    $matchups,
+                    $startDate,
+                    $endDateFallback,
+                    $config,
+                    $cumulativeGames,
+                    true // isPlayoff = true
+                );
+            }
+
+            // Forzamos el round_number a 1
+            foreach ($matchups as $m) {
+                \App\Models\Game::where('tournament_id', $tournament->id)
+                    ->where('group_name', 'WB_R1')
+                    ->where('category_group', $categoryGroup)
+                    ->where('local_team_id', $m['local'])
+                    ->where('away_team_id', $m['away'])
+                    ->update(['round_number' => 1]);
+            }
+        }
     }
 
 }

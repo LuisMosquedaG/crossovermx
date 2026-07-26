@@ -769,8 +769,20 @@ public function store(Request $request)
                 ];
             }
         }
+        // --- OBTENER ENTRENADORES Y FUERZAS PARA CREACIÓN DE EQUIPOS EN STANDINGS ---
+        $coachesQuery = \App\Models\User::whereHas('role', function($q){
+            $q->where('name', 'Coach');
+        });
+        if (auth()->check() && auth()->user()->client_id) {
+            $coachesQuery->where('client_id', auth()->user()->client_id);
+        }
+        $coaches = $coachesQuery->get();
 
-        return view('tournaments.standings', compact('tournament', 'standingsData'));
+        $strengths = \App\Models\Strength::where('client_id', auth()->user()->client_id ?? null)
+            ->orderBy('name')
+            ->get();
+
+        return view('tournaments.standings', compact('tournament', 'standingsData', 'coaches', 'strengths'));
     }
 
     public function publicStandings(\Illuminate\Http\Request $request)
@@ -1973,6 +1985,72 @@ public function store(Request $request)
             return back()->with('error', 'Error al inscribir equipo tardío: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Inscribe 1 o 2 equipos de forma normal en el Winner Bracket Ronda 1 de un torneo en curso (activo).
+     */
+    public function addNormalLateTeam(Request $request, Tournament $tournament)
+    {
+        $request->validate([
+            'team_id' => 'nullable|exists:teams,id',
+            'team_id_1' => 'nullable|exists:teams,id',
+            'team_id_2' => 'nullable|exists:teams,id',
+            'category_group' => 'nullable|string'
+        ]);
+
+        $settings = $tournament->settings ? $tournament->settings->settings : [];
+        $tournamentType = $settings['tournament_type'] ?? ($tournament->tournament_settings['tournament_type'] ?? null);
+
+        if ($tournamentType !== 'double_elimination') {
+            return back()->with('error', 'La inscripción normal en torneo iniciado solo está disponible para Doble Eliminatoria.');
+        }
+
+        $groupName = $request->category_group;
+        $groupData = $settings['brackets_data'][$groupName] ?? null;
+
+        if (!$groupData) {
+            return back()->with('error', 'No se encontró la configuración del grupo.');
+        }
+
+        $wbCurrentRound = $groupData['wb_current_round'] ?? 1;
+        if ($wbCurrentRound != 1) {
+            return back()->with('error', 'La inscripción normal solo está permitida durante la Ronda 1 del Winner Bracket.');
+        }
+
+        $wbByes = $groupData['wb_byes'] ?? [];
+        $hasByes = !empty($wbByes);
+
+        $teamIds = [];
+        if ($hasByes) {
+            if (empty($request->team_id)) {
+                return back()->with('error', 'Debes seleccionar un equipo para reemplazar el BYE.');
+            }
+            $teamIds[] = (int) $request->team_id;
+        } else {
+            if (empty($request->team_id_1) || empty($request->team_id_2)) {
+                return back()->with('error', 'Debes seleccionar ambos equipos para el enfrentamiento.');
+            }
+            if ($request->team_id_1 == $request->team_id_2) {
+                return back()->with('error', 'Los dos equipos seleccionados deben ser diferentes.');
+            }
+            $teamIds[] = (int) $request->team_id_1;
+            $teamIds[] = (int) $request->team_id_2;
+        }
+
+        try {
+            $doubleElimService = app(\App\Services\DoubleEliminationService::class);
+            $doubleElimService->addNormalLateTeam($tournament, $teamIds, $groupName);
+
+            $msg = $hasByes 
+                ? 'Equipo inscrito con éxito. Se ha emparejado en el Winner Bracket sustituyendo un pase directo (BYE).' 
+                : 'Equipos inscritos con éxito. Se ha creado un nuevo partido directo entre ambos en la Ronda 1.';
+
+            return back()->with('success', $msg);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al inscribir equipo: ' . $e->getMessage());
+        }
+    }
+
 
     /**
      * Calcula la siguiente potencia de 2 mayor o igual al número dado.

@@ -295,12 +295,169 @@ TARJETA CAMPEÓN
                                         </h4>
 
                                         @if($tournament->status === 'active' || $tournament->status === 'in_progress')
-                                            <button type="button" onclick="document.getElementById('modalAddLateTeam-{{ Str::slug($groupName) }}').showModal()" class="px-3.5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-bold text-xs uppercase tracking-wider shadow transition flex items-center gap-2">
-                                                <i class="fa-solid fa-user-plus"></i> Inscribir Equipo Tardío
-                                            </button>
+                                            @php
+                                                $groupData = $tournament->settings->settings['brackets_data'][$groupName] ?? [];
+                                                $wbRound = $groupData['wb_current_round'] ?? 1;
+                                                $wbByes = $groupData['wb_byes'] ?? [];
+                                                $hasByes = !empty($wbByes);
+                                            @endphp
+
+                                            <div class="flex flex-wrap gap-2">
+                                                @if($wbRound == 1)
+                                                    <button type="button" onclick="document.getElementById('modalAddNormalLateTeam-{{ Str::slug($groupName) }}').showModal()" class="px-3.5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold text-xs uppercase tracking-wider shadow transition flex items-center gap-2">
+                                                        <i class="fa-solid fa-user-plus"></i> Inscribir Equipo Normal
+                                                    </button>
+                                                @endif
+
+                                                <button type="button" onclick="document.getElementById('modalAddLateTeam-{{ Str::slug($groupName) }}').showModal()" class="px-3.5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-bold text-xs uppercase tracking-wider shadow transition flex items-center gap-2">
+                                                    <i class="fa-solid fa-user-plus"></i> Inscribir Equipo Tardío
+                                                </button>
+                                            </div>
+
+                                            @if($wbRound == 1)
+                                                @php
+                                                    $parts = explode(' - ', $groupName, 2);
+                                                    $groupCategory = trim($parts[0] ?? 'Varonil');
+                                                    $groupStrength = trim($parts[1] ?? 'Libre');
+                                                @endphp
+
+                                                <!-- Modal de Inscripción Normal (Winner Bracket R1) -->
+                                                <dialog id="modalAddNormalLateTeam-{{ Str::slug($groupName) }}" class="p-6 rounded-2xl shadow-2xl backdrop:bg-gray-900/50 max-w-md w-full border border-gray-200 text-left">
+                                                    <form method="POST" action="{{ route('tournaments.add-normal-late-team', $tournament) }}" class="space-y-4">
+                                                        @csrf
+                                                        <input type="hidden" name="category_group" value="{{ $groupName }}">
+
+                                                        <div class="flex items-center justify-between border-b pb-2">
+                                                            <h3 class="text-lg font-black text-gray-900 flex items-center gap-2">
+                                                                <i class="fa-solid fa-user-plus text-green-500"></i> Inscribir Equipo Normal (Winner Bracket)
+                                                            </h3>
+                                                            <button type="button" onclick="document.getElementById('modalAddNormalLateTeam-{{ Str::slug($groupName) }}').close()" class="text-gray-400 hover:text-gray-600 font-bold">&times;</button>
+                                                        </div>
+
+                                                        @if($hasByes)
+                                                            <p class="text-xs text-gray-600 leading-relaxed">
+                                                                Hay <strong>{{ count($wbByes) }}</strong> pases directos (BYEs) disponibles en la Ronda 1.
+                                                                Al inscribir este equipo, se eliminará uno de los BYEs y el equipo jugará un partido normal de la Ronda 1 del Winner Bracket contra el equipo que iba a descansar.
+                                                            </p>
+
+                                                            <div>
+                                                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Seleccionar Equipo</label>
+                                                                <div class="flex">
+                                                                    <select name="team_id" required class="flex-1 border-gray-300 rounded-l-lg text-sm focus:ring-orange-500 focus:border-orange-500 shadow-sm team-select-{{ Str::slug($groupName) }} border-r-0">
+                                                                        <option value="">-- Selecciona un equipo --</option>
+                                                                        @foreach(\App\Models\Team::where('client_id', auth()->user()->client_id ?? 1)->orderBy('name')->get() as $t)
+                                                                            @if(!$tournament->teams->contains($t->id))
+                                                                                <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                                                            @endif
+                                                                        @endforeach
+                                                                    </select>
+                                                                    <button type="button" onclick="openCreateTeamModalFromStandings('{{ Str::slug($groupName) }}', 'team_id')" class="bg-orange-600 hover:bg-orange-700 text-white rounded-r-lg border border-l-0 border-orange-600 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition duration-150 ease-in-out flex items-center justify-center" title="Crear nuevo equipo">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                                                        </svg>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        @else
+                                                            <p class="text-xs text-gray-600 leading-relaxed text-red-600 font-medium">
+                                                                No hay pases directos (BYEs) disponibles en la Ronda 1.
+                                                                Para no alterar los partidos ya agendados, debes inscribir exactamente <strong>2 equipos</strong> que jugarán directamente entre sí en la Ronda 1.
+                                                            </p>
+
+                                                            <div class="space-y-3">
+                                                                <div>
+                                                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Seleccionar Equipo 1</label>
+                                                                    <div class="flex">
+                                                                        <select name="team_id_1" required class="flex-1 border-gray-300 rounded-l-lg text-sm focus:ring-orange-500 focus:border-orange-500 shadow-sm team-select-{{ Str::slug($groupName) }} border-r-0">
+                                                                            <option value="">-- Selecciona equipo 1 --</option>
+                                                                            @foreach(\App\Models\Team::where('client_id', auth()->user()->client_id ?? 1)->orderBy('name')->get() as $t)
+                                                                                @if(!$tournament->teams->contains($t->id))
+                                                                                    <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                                                                @endif
+                                                                            @endforeach
+                                                                        </select>
+                                                                        <button type="button" onclick="openCreateTeamModalFromStandings('{{ Str::slug($groupName) }}', 'team_id_1')" class="bg-orange-600 hover:bg-orange-700 text-white rounded-r-lg border border-l-0 border-orange-600 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition duration-150 ease-in-out flex items-center justify-center" title="Crear nuevo equipo">
+                                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                                                            </svg>
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div>
+                                                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Seleccionar Equipo 2</label>
+                                                                    <div class="flex">
+                                                                        <select name="team_id_2" required class="flex-1 border-gray-300 rounded-l-lg text-sm focus:ring-orange-500 focus:border-orange-500 shadow-sm team-select-{{ Str::slug($groupName) }} border-r-0">
+                                                                            <option value="">-- Selecciona equipo 2 --</option>
+                                                                            @foreach(\App\Models\Team::where('client_id', auth()->user()->client_id ?? 1)->orderBy('name')->get() as $t)
+                                                                                @if(!$tournament->teams->contains($t->id))
+                                                                                    <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                                                                @endif
+                                                                            @endforeach
+                                                                        </select>
+                                                                        <button type="button" onclick="openCreateTeamModalFromStandings('{{ Str::slug($groupName) }}', 'team_id_2')" class="bg-orange-600 hover:bg-orange-700 text-white rounded-r-lg border border-l-0 border-orange-600 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition duration-150 ease-in-out flex items-center justify-center" title="Crear nuevo equipo">
+                                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                                                            </svg>
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        @endif
+
+                                                        <div class="flex justify-end gap-2 pt-3 border-t">
+                                                            <button type="button" onclick="document.getElementById('modalAddNormalLateTeam-{{ Str::slug($groupName) }}').close()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-300">Cancelar</button>
+                                                            <button type="submit" class="px-4 py-2 bg-orange-600 text-white rounded-lg text-xs font-bold hover:bg-orange-700 shadow-md">Inscribir</button>
+                                                        </div>
+                                                    </form>
+                                                </dialog>
+
+                                                <!-- Modal para Crear Nuevo Equipo vía AJAX -->
+                                                <dialog id="modalCreateTeamFromStandings-{{ Str::slug($groupName) }}" class="p-6 rounded-2xl shadow-2xl backdrop:bg-gray-900/50 max-w-md w-full border border-gray-200 text-left">
+                                                    <form onsubmit="submitCreateTeamFromStandings(event, '{{ Str::slug($groupName) }}')" class="space-y-4">
+                                                        @csrf
+                                                        <input type="hidden" name="tournament_id" value="{{ $tournament->id }}">
+                                                        <input type="hidden" name="category" value="{{ $groupCategory }}">
+                                                        <input type="hidden" name="strength" value="{{ $groupStrength }}">
+                                                        <input type="hidden" name="status" value="active">
+                                                        <input type="hidden" name="skip_double_elim_late" value="1">
+
+                                                        <div class="flex items-center justify-between border-b pb-2">
+                                                            <h3 class="text-lg font-black text-gray-900 flex items-center gap-2">
+                                                                <i class="fa-solid fa-user-plus text-orange-500"></i> Crear Nuevo Equipo
+                                                            </h3>
+                                                            <button type="button" onclick="document.getElementById('modalCreateTeamFromStandings-{{ Str::slug($groupName) }}').close()" class="text-gray-400 hover:text-gray-600 font-bold">&times;</button>
+                                                        </div>
+
+                                                        <p class="text-xs text-gray-600 leading-relaxed">
+                                                            Se creará un nuevo equipo directamente para el torneo <strong>{{ $tournament->name }}</strong>, categoría <strong>{{ $groupCategory }}</strong> y nivel <strong>{{ $groupStrength }}</strong>.
+                                                        </p>
+
+                                                        <div>
+                                                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nombre del Equipo</label>
+                                                            <input type="text" name="name" required class="w-full border-gray-300 rounded-lg text-sm focus:ring-orange-500 focus:border-orange-500 shadow-sm animate-pulse-once" placeholder="Ej. Lakers">
+                                                        </div>
+
+                                                        <div>
+                                                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Entrenador (Coach)</label>
+                                                            <select name="coach_id" class="w-full border-gray-300 rounded-lg text-sm focus:ring-orange-500 focus:border-orange-500 shadow-sm bg-white">
+                                                                <option value="">-- Sin Entrenador --</option>
+                                                                @foreach ($coaches as $coach)
+                                                                    <option value="{{ $coach->id }}">{{ $coach->name }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="flex justify-end gap-2 pt-3 border-t">
+                                                            <button type="button" onclick="document.getElementById('modalCreateTeamFromStandings-{{ Str::slug($groupName) }}').close()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-300">Cancelar</button>
+                                                            <button type="submit" class="px-4 py-2 bg-orange-600 text-white rounded-lg text-xs font-bold hover:bg-orange-700 shadow-md">Crear Equipo</button>
+                                                        </div>
+                                                    </form>
+                                                </dialog>
+                                            @endif
 
                                             <!-- Modal de Equipo Tardío -->
-                                            <dialog id="modalAddLateTeam-{{ Str::slug($groupName) }}" class="p-6 rounded-2xl shadow-2xl backdrop:bg-gray-900/50 max-w-md w-full border border-gray-200">
+                                            <dialog id="modalAddLateTeam-{{ Str::slug($groupName) }}" class="p-6 rounded-2xl shadow-2xl backdrop:bg-gray-900/50 max-w-md w-full border border-gray-200 text-left">
                                                 <form method="POST" action="{{ route('tournaments.add-late-team', $tournament) }}" class="space-y-4">
                                                     @csrf
                                                     <input type="hidden" name="category_group" value="{{ $groupName }}">
@@ -1056,5 +1213,67 @@ TARJETA CAMPEÓN
                 console.error('Error:', error);
                 alert('Ocurrió un error inesperado.');
             }
+        }
+
+        function openCreateTeamModalFromStandings(groupSlug, targetSelectName) {
+            window.lastTargetSelectClass = 'team-select-' + groupSlug;
+            window.lastTargetSelectName = targetSelectName;
+            document.getElementById('modalCreateTeamFromStandings-' + groupSlug).showModal();
+        }
+
+        function submitCreateTeamFromStandings(event, groupSlug) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
+
+            fetch('{{ route("teams.store") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw err; });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success && data.team) {
+                    const selectClass = window.lastTargetSelectClass;
+                    const targetName = window.lastTargetSelectName;
+                    const selects = document.querySelectorAll('.' + selectClass);
+                    
+                    selects.forEach(select => {
+                        const option = document.createElement('option');
+                        option.value = data.team.id;
+                        option.textContent = data.team.name;
+                        select.appendChild(option);
+                        
+                        if (select.name === targetName) {
+                            select.value = data.team.id;
+                        }
+                    });
+
+                    document.getElementById('modalCreateTeamFromStandings-' + groupSlug).close();
+                    form.reset();
+                    alert('Equipo "' + data.team.name + '" creado con éxito.');
+                } else {
+                    alert('Error al crear el equipo: respuesta inesperada.');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                const errorMsg = err.message || (err.errors ? Object.values(err.errors).flat().join('\n') : 'Error desconocido.');
+                alert('Error al crear el equipo: ' + errorMsg);
+            })
+            .finally(() => {
+                if (submitBtn) submitBtn.disabled = false;
+            });
         }
     </script>

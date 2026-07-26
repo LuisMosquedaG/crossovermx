@@ -193,7 +193,7 @@ class TeamController extends Controller
         $this->actualizarFuerzaTorneo($nuevoEquipo);
 
         // --- INTEGRACIÓN AUTOMÁTICA DE EQUIPO TARDÍO EN DOBLE ELIMINATORIA ---
-        if ($nuevoEquipo->tournament_id) {
+        if ($nuevoEquipo->tournament_id && !$request->has('skip_double_elim_late')) {
             $tournament = Tournament::find($nuevoEquipo->tournament_id);
             if ($tournament && in_array($tournament->status, ['active', 'in_progress'])) {
                 $settings = $tournament->settings ? $tournament->settings->settings : [];

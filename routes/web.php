@@ -38,6 +38,7 @@ Route::post('/tournaments/{tournament}/swap-global', [TournamentController::clas
 Route::get('/tournaments/{tournament}/teams/json', [TournamentController::class, 'getTeamsByTournamentJson'])->name('tournaments.teamsJson')->middleware(['auth', 'verified']);
 Route::post('/tournaments/{tournament}/clone', [TournamentController::class, 'cloneTournament'])->name('tournaments.clone')->middleware(['auth', 'verified']);
 Route::post('/tournaments/{tournament}/add-late-team', [TournamentController::class, 'addLateTeam'])->name('tournaments.add-late-team')->middleware(['auth', 'verified']);
+Route::post('/tournaments/{tournament}/add-normal-late-team', [TournamentController::class, 'addNormalLateTeam'])->name('tournaments.add-normal-late-team')->middleware(['auth', 'verified']);
 
 // --- Rutas para la gestión de partidos ---
 // CORRECCIÓN: Rutas movidas y actualizadas para usar GameController

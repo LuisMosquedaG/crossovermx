@@ -946,6 +946,7 @@
             } else {
                 // Está corriendo, pausamos
                 clearInterval(timerInterval);
+                timerInterval = null;
                 syncTimer('stopped');
                 document.getElementById('startBtn').disabled = false;
                 document.getElementById('pauseBtn').disabled = true;
@@ -1015,6 +1016,7 @@
         } else {
             timeRemaining = 0;
             clearInterval(timerInterval);
+            timerInterval = null;
             updateDisplay();
             
             // Sonar chicharra de fin de periodo
@@ -1152,6 +1154,7 @@
         this.disabled = true;
         document.getElementById('startBtn').disabled = false;
         clearInterval(timerInterval);
+        timerInterval = null;
         syncTimer('stopped');
         setMatchStatus('pausado');
     });
@@ -1221,6 +1224,7 @@
                 totalSeconds = data.seconds;
                 timeRemaining = totalSeconds * 1000;
                 clearInterval(timerInterval);
+                timerInterval = null;
                 setMatchStatus('pausado');
                 
                 // Actualizar UI
@@ -1513,6 +1517,7 @@
         }
 
         clearInterval(timerInterval);
+        timerInterval = null;
         syncTimer('stopped');
         document.getElementById('startBtn').disabled = false;
         document.getElementById('pauseBtn').disabled = true;
@@ -1992,21 +1997,23 @@
                 }
 
                 // Sincronizar el estado del temporizador (corriendo/detenido)
-                if (data.timerStatus === 'running') {
-                    if (!timerInterval) {
-                        document.getElementById('startBtn').disabled = true;
-                        document.getElementById('pauseBtn').disabled = false;
-                        document.getElementById('endBtn').disabled = false;
-                        timerInterval = setInterval(tick, 10);
-                        setMatchStatus('jugando');
-                    }
-                } else if (data.timerStatus === 'stopped' || data.timerStatus === 'finished') {
-                    if (timerInterval) {
-                        clearInterval(timerInterval);
-                        timerInterval = null;
-                        document.getElementById('startBtn').disabled = false;
-                        document.getElementById('pauseBtn').disabled = true;
-                        setMatchStatus('pausado');
+                if (!isExtensionActive) {
+                    if (data.timerStatus === 'running') {
+                        if (!timerInterval) {
+                            document.getElementById('startBtn').disabled = true;
+                            document.getElementById('pauseBtn').disabled = false;
+                            document.getElementById('endBtn').disabled = false;
+                            timerInterval = setInterval(tick, 10);
+                            setMatchStatus('jugando');
+                        }
+                    } else if (data.timerStatus === 'stopped' || data.timerStatus === 'finished') {
+                        if (timerInterval) {
+                            clearInterval(timerInterval);
+                            timerInterval = null;
+                            document.getElementById('startBtn').disabled = false;
+                            document.getElementById('pauseBtn').disabled = true;
+                            setMatchStatus('pausado');
+                        }
                     }
                 }
 
