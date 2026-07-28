@@ -1775,6 +1775,25 @@ public function store(Request $request)
             }
         }
 
+        // --- AUTO-CIERRE O AUTO-ACTIVACIÓN DEL TORNEO ---
+        if ($gamesCreated > 0 || $groupsUpdated > 0) {
+            if ($tournament->status !== 'active') {
+                $tournament->status = 'active';
+                $tournament->save();
+            }
+        } else {
+            $totalGamesCount = $tournament->games()->count();
+            $finishedGamesCount = $tournament->games()->where('status', 'finished')->count();
+            
+            if ($totalGamesCount > 0 && $totalGamesCount === $finishedGamesCount) {
+                if ($tournament->status !== 'finished') {
+                    $tournament->status = 'finished';
+                    $tournament->save();
+                    $message = "El torneo ha finalizado y se ha cerrado automáticamente.";
+                }
+            }
+        }
+
             return response()->json([
                 'success' => true,
                 'message' => $message,
