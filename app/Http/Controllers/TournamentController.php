@@ -2033,53 +2033,170 @@ public function store(Request $request)
         $settings = $tournament->settings ? $tournament->settings->settings : [];
         $tournamentType = $settings['tournament_type'] ?? ($tournament->tournament_settings['tournament_type'] ?? null);
 
-        if ($tournamentType !== 'double_elimination') {
-            return back()->with('error', 'La inscripción normal en torneo iniciado solo está disponible para Doble Eliminatoria.');
+        if ($tournamentType !== 'double_elimination' && $tournamentType !== 'single_elimination' && $tournamentType !== 'elimination') {
+            return back()->with('error', 'La inscripción normal en torneo iniciado solo está disponible para Doble Eliminatoria o Eliminatoria Directa.');
         }
 
         $groupName = $request->category_group;
-        $groupData = $settings['brackets_data'][$groupName] ?? null;
 
-        if (!$groupData) {
-            return back()->with('error', 'No se encontró la configuración del grupo.');
-        }
+        if ($tournamentType === 'double_elimination') {
+            $groupData = $settings['brackets_data'][$groupName] ?? null;
 
-        $wbCurrentRound = $groupData['wb_current_round'] ?? 1;
-        if ($wbCurrentRound != 1) {
-            return back()->with('error', 'La inscripción normal solo está permitida durante la Ronda 1 del Winner Bracket.');
-        }
-
-        $wbByes = $groupData['wb_byes'] ?? [];
-        $hasByes = !empty($wbByes);
-
-        $teamIds = [];
-        if ($hasByes) {
-            if (empty($request->team_id)) {
-                return back()->with('error', 'Debes seleccionar un equipo para reemplazar el BYE.');
+            if (!$groupData) {
+                return back()->with('error', 'No se encontró la configuración del grupo.');
             }
-            $teamIds[] = (int) $request->team_id;
+
+            $wbCurrentRound = $groupData['wb_current_round'] ?? 1;
+            if ($wbCurrentRound != 1) {
+                return back()->with('error', 'La inscripción normal solo está permitida durante la Ronda 1 del Winner Bracket.');
+            }
+
+            $wbByes = $groupData['wb_byes'] ?? [];
+            $hasByes = !empty($wbByes);
+
+            $teamIds = [];
+            if ($hasByes) {
+                if (empty($request->team_id)) {
+                    return back()->with('error', 'Debes seleccionar un equipo para reemplazar el BYE.');
+                }
+                $teamIds[] = (int) $request->team_id;
+            } else {
+                if (empty($request->team_id_1) || empty($request->team_id_2)) {
+                    return back()->with('error', 'Debes seleccionar ambos equipos para el enfrentamiento.');
+                }
+                if ($request->team_id_1 == $request->team_id_2) {
+                    return back()->with('error', 'Los dos equipos seleccionados deben ser diferentes.');
+                }
+                $teamIds[] = (int) $request->team_id_1;
+                $teamIds[] = (int) $request->team_id_2;
+            }
+
+            try {
+                $doubleElimService = app(\App\Services\DoubleEliminationService::class);
+                $doubleElimService->addNormalLateTeam($tournament, $teamIds, $groupName);
+
+                $msg = $hasByes 
+                    ? 'Equipo inscrito con éxito. Se ha emparejado en el Winner Bracket sustituyendo un pase directo (BYE).' 
+                    : 'Equipos inscritos con éxito. Se ha creado un nuevo partido directo entre ambos en la Ronda 1.';
+
+                return back()->with('success', $msg);
+            } catch (\Exception $e) {
+                return back()->with('error', 'Error al inscribir equipo: ' . $e->getMessage());
+            }
         } else {
-            if (empty($request->team_id_1) || empty($request->team_id_2)) {
-                return back()->with('error', 'Debes seleccionar ambos equipos para el enfrentamiento.');
+            // Lógica para Eliminatoria Directa
+            $teamIdsInGroup = $tournament->teams()
+                ->where(function($q) use ($groupName) {
+                    if (str_contains($groupName, ' - ')) {
+                        $parts = explode(' - ', $groupName, 2);
+                        $q->where('category', trim($parts[0]))
+                          ->where('strength', trim($parts[1]));
+                    }
+                })
+                ->pluck('id')
+                ->toArray();
+
+            $hasFinishedGames = \App\Models\Game::where('tournament_id', $tournament->id)
+                ->where('is_playoff', true)
+                ->where('status', 'finished')
+                ->where(function($query) use ($teamIdsInGroup) {
+                    $query->whereIn('local_team_id', $teamIdsInGroup)
+                          ->orWhereIn('away_team_id', $teamIdsInGroup);
+                })
+                ->exists();
+
+            if ($hasFinishedGames) {
+                return back()->with('error', 'No se pueden inscribir equipos normales una vez que han iniciado partidos de la Ronda 1.');
             }
-            if ($request->team_id_1 == $request->team_id_2) {
-                return back()->with('error', 'Los dos equipos seleccionados deben ser diferentes.');
+
+            $byes = $settings['current_byes'][$groupName] ?? [];
+            $hasByes = !empty($byes);
+
+            $teamIds = [];
+            if ($hasByes) {
+                if (empty($request->team_id)) {
+                    return back()->with('error', 'Debes seleccionar un equipo para reemplazar el BYE.');
+                }
+                $teamIds[] = (int) $request->team_id;
+            } else {
+                if (empty($request->team_id_1) || empty($request->team_id_2)) {
+                    return back()->with('error', 'Debes seleccionar ambos equipos para el enfrentamiento.');
+                }
+                if ($request->team_id_1 == $request->team_id_2) {
+                    return back()->with('error', 'Los dos equipos seleccionados deben ser diferentes.');
+                }
+                $teamIds[] = (int) $request->team_id_1;
+                $teamIds[] = (int) $request->team_id_2;
             }
-            $teamIds[] = (int) $request->team_id_1;
-            $teamIds[] = (int) $request->team_id_2;
-        }
 
-        try {
-            $doubleElimService = app(\App\Services\DoubleEliminationService::class);
-            $doubleElimService->addNormalLateTeam($tournament, $teamIds, $groupName);
+            try {
+                \Illuminate\Support\Facades\DB::transaction(function() use ($tournament, $teamIds, $groupName, &$settings, $byes, $hasByes) {
+                    foreach ($teamIds as $teamId) {
+                        $team = \App\Models\Team::find($teamId);
+                        if ($team) {
+                            $team->tournament_id = $tournament->id;
+                            if (str_contains($groupName, ' - ')) {
+                                $parts = explode(' - ', $groupName, 2);
+                                if (empty($team->category)) {
+                                    $team->category = trim($parts[0]);
+                                }
+                                if (empty($team->strength)) {
+                                    $team->strength = trim($parts[1]);
+                                }
+                            }
+                            $team->save();
+                        }
+                    }
 
-            $msg = $hasByes 
-                ? 'Equipo inscrito con éxito. Se ha emparejado en el Winner Bracket sustituyendo un pase directo (BYE).' 
-                : 'Equipos inscritos con éxito. Se ha creado un nuevo partido directo entre ambos en la Ronda 1.';
+                    $matchups = [];
+                    if ($hasByes) {
+                        $teamId = $teamIds[0];
+                        $byeTeamId = array_shift($byes);
+                        $settings['current_byes'][$groupName] = $byes;
 
-            return back()->with('success', $msg);
-        } catch (\Exception $e) {
-            return back()->with('error', 'Error al inscribir equipo: ' . $e->getMessage());
+                        $matchups[] = [
+                            'local' => $byeTeamId,
+                            'away' => $teamId,
+                            'group_name' => $groupName,
+                            'category_group' => $groupName
+                        ];
+                    } else {
+                        $matchups[] = [
+                            'local' => $teamIds[0],
+                            'away' => $teamIds[1],
+                            'group_name' => $groupName,
+                            'category_group' => $groupName
+                        ];
+                    }
+
+                    $tournament->settings()->update(['settings' => $settings]);
+
+                    $lastGameInGroup = \App\Models\Game::where('tournament_id', $tournament->id)
+                        ->where('is_playoff', true)
+                        ->where('group_name', $groupName)
+                        ->orderBy('date_time', 'desc')
+                        ->first();
+
+                    $startDate = $lastGameInGroup ? \Carbon\Carbon::parse($lastGameInGroup->date_time) : \Carbon\Carbon::parse($tournament->start_date);
+                    $endDate = $tournament->end_date ? \Carbon\Carbon::parse($tournament->end_date) : $startDate->copy()->addWeek();
+
+                    $calendarService = app(\App\Services\CalendarGeneratorService::class);
+                    $newGames = $calendarService->schedulePlayoffRound($tournament, $matchups, $startDate, $endDate, $settings, null, true);
+
+                    foreach ($newGames as $game) {
+                        $game->round_number = 1;
+                        $game->save();
+                    }
+                });
+
+                $msg = $hasByes 
+                    ? 'Equipo inscrito con éxito. Se ha emparejado en la Ronda 1 sustituyendo un pase directo (BYE).' 
+                    : 'Equipos inscritos con éxito. Se ha creado un nuevo partido directo entre ambos en la Ronda 1.';
+
+                return back()->with('success', $msg);
+            } catch (\Exception $e) {
+                return back()->with('error', 'Error al inscribir equipo: ' . $e->getMessage());
+            }
         }
     }
 
