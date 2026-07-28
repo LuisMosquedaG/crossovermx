@@ -411,7 +411,8 @@ TARJETA CAMPEÓN
                                             $groupData = $tournament->settings->settings['brackets_data'][$groupName] ?? [];
                                             $wbRound = $groupData['wb_current_round'] ?? 1;
                                             $wbByes = $groupData['wb_byes'] ?? [];
-                                            $hasByes = !empty($wbByes);
+                                            $currentByes = $tournament->settings->settings['current_byes'][$groupName] ?? [];
+                                            $hasByes = !empty($wbByes) || !empty($currentByes);
                                         @endphp
 
                                         <div class="flex flex-wrap gap-2 items-center">
@@ -457,7 +458,20 @@ TARJETA CAMPEÓN
 
                                                         @if($hasByes)
                                                             <p class="text-xs text-gray-600 leading-relaxed">
-                                                                Hay <strong>{{ count($wbByes) }}</strong> pases directos (BYEs) disponibles en la Ronda 1.
+                                                                                        <p class="text-xs text-gray-600 leading-relaxed">
+                            Hay <strong>{{ count($wbByes) }}</strong> pases directos (BYEs) disponibles en la Ronda 1.
+                        </p>
+                        <div class="flex items-center justify-between border-b pb-2">
+                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Seleccionar Equipo</label>
+                            <select name="team_id" required class="flex-1 border-gray-300 rounded-l-lg text-sm focus:ring-orange-500 focus:border-orange-500 shadow-sm team-select-{{ Str::slug($groupName) }}">
+                                <option value="">-- Selecciona equipo --</option>
+                                @foreach(\App\Models\Team::where('client_id', auth()->user()->client_id ?? 1)->orderBy('name')->get() as $t)
+                                    @if(!$tournament->teams->contains($t->id))
+                                        <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                    @endif
+                                @endforeach
+                            </select>
+                        </div>
                                                                 Al inscribir este equipo, se eliminará uno de los BYEs y el equipo jugará un partido normal de la Ronda 1 del Winner Bracket contra el equipo que iba a descansar.
                                                             </p>
 
@@ -688,19 +702,25 @@ TARJETA CAMPEÓN
                                             @endphp
 
                                             <div class="flex flex-col gap-4 border-r border-dashed border-blue-200 pr-6 shrink-0">
-                                                <div class="nba-bracket-title nba-bracket-title-winners">
-                                                    BRACKET DE GANADORES
-                                                </div>
+                                                <div class="nba-header">BRACKET DE GANADORES</div>
 
                                                 <div class="flex flex-row items-center gap-2 md:gap-4 h-full">
                                                     @foreach($data['bracket']['winner_bracket'] as $roundIndex => $games)
                                                         <div class="flex flex-col justify-around gap-6 h-full min-w-[240px]">
                                                             <!-- Encabezado de Ronda -->
                                                             <div class="text-center">
-                                                                <span class="inline-block text-[11px] font-extrabold text-blue-900 bg-blue-100 uppercase tracking-widest px-3 py-1 rounded-full border border-blue-200 shadow-sm">
-                                                                    Ronda {{ $roundIndex + 1 }}
-                                                                </span>
-                                                            </div>
+                                                                @php
+                                                                    $totalWinnerRounds = count($data['bracket']['winner_bracket']);
+                                                                    $roundNum = $roundIndex + 1;
+                                                                    if ($roundNum == $totalWinnerRounds) {
+                                                                        $label = 'Final';
+                                                                    } elseif ($roundNum == $totalWinnerRounds - 1) {
+                                                                        $label = 'Semifinal';
+                                                                    } else {
+                                                                        $label = 'Ronda ' . $roundNum;
+                                                                    }
+                                                            @endphp
+                                                            <div class="nba-header">{{ $label }}</div>                             </div>
 
                                                             <!-- Partidos de la Ronda -->
                                                             <div class="flex flex-col justify-around gap-6 flex-1">
@@ -813,9 +833,7 @@ TARJETA CAMPEÓN
                                             <!-- 2. SECCIÓN CENTRAL: GRAN FINAL & DEFINICIÓN                        -->
                                             <!-- ================================================================= -->
                                             <div class="flex flex-col items-center gap-4 px-4 shrink-0 min-w-[300px]">
-                                                <div class="nba-bracket-title nba-bracket-title-final">
-                                                    GRAN FINAL
-                                                </div>
+                                                <div class="nba-header">GRAN FINAL</div>
 
                                                 <div class="flex-1 flex flex-col justify-center items-center gap-6 w-full">
                                                     <!-- 1. PARTIDO DE GRAN FINAL (GF) -->
@@ -923,9 +941,7 @@ TARJETA CAMPEÓN
                                             <!-- 3. BRACKET DE PERDEDORES (DERECHA A IZQUIERDA: flex-row-reverse)  -->
                                             <!-- ================================================================= -->
                                             <div class="flex flex-col gap-4 border-l border-dashed border-red-200 pl-6 shrink-0">
-                                                <div class="nba-bracket-title nba-bracket-title-losers">
-                                                    BRACKET DE PERDEDORES
-                                                </div>
+                                                <div class="nba-header">BRACKET DE PERDEDORES</div>
 
                                                 <!-- flex-row-reverse coloca la Ronda 1 en el extremo derecho y avanza hacia la izquierda -->
                                                 <div class="flex flex-row-reverse items-center gap-2 md:gap-4 h-full">
@@ -934,11 +950,18 @@ TARJETA CAMPEÓN
 
                                                         <div class="flex flex-col justify-around gap-6 h-full min-w-[240px]">
                                                             <!-- Encabezado de Ronda -->
-                                                            <div class="text-center">
-                                                                <span class="inline-block text-[11px] font-extrabold text-red-900 bg-red-100 uppercase tracking-widest px-3 py-1 rounded-full border border-red-200 shadow-sm">
-                                                                    Ronda {{ $roundIndex + 1 }}
-                                                                </span>
-                                                            </div>
+@php
+    $totalLoserRounds = count($data['bracket']['loser_bracket']);
+    $roundNum = $roundIndex + 1;
+    if ($roundNum == $totalLoserRounds) {
+        $label = 'Final';
+    } elseif ($roundNum == $totalLoserRounds - 1) {
+        $label = 'Semifinal';
+    } else {
+        $label = 'Ronda ' . $roundNum;
+    }
+@endphp
+<div class="nba-header">{{ $label }}</div>
 
                                                             <!-- Partidos de la Ronda -->
                                                             <div class="flex flex-col justify-around gap-6 flex-1">
@@ -1148,13 +1171,15 @@ TARJETA CAMPEÓN
                                         @endif
 
                                         <!-- ICONO CALENDARIO -->
-                                        <a href="{{ route('tournaments.schedule', ['tournament' => $tournament, 'group' => $groupName]) }}" 
-                                        class="text-orange-500 hover:text-orange-700 hover:bg-orange-50 rounded-full p-1.5 transition-all duration-200 shrink-0"
-                                        title="Ver calendario de este grupo">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                                            </svg>
-                                        </a>
+                                        @if($tType !== 'single_elimination' && $tType !== 'elimination')
+                                            <a href="{{ route('tournaments.schedule', ['tournament' => $tournament, 'group' => $groupName]) }}" 
+                                            class="text-orange-500 hover:text-orange-700 hover:bg-orange-50 rounded-full p-1.5 transition-all duration-200 shrink-0"
+                                            title="Ver calendario de este grupo">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                                                </svg>
+                                            </a>
+                                        @endif
 
                                     </div>
                                 </div>
@@ -1204,9 +1229,30 @@ TARJETA CAMPEÓN
                                                  })
                                                  ->exists();
                                              $isElimRound1 = !$hasFinishedPlayoffs;
+
+                                             // Detectar BYEs: equipos del grupo sin ningún partido playoff
+                                             // Primero verificar en current_byes (settings), luego buscar equipos sin partido
                                              $playoffByes = $tSettings['current_byes'][$groupName] ?? [];
+                                             if (empty($playoffByes) && !empty($teamIdsInGroup)) {
+                                                 // Buscar equipos del grupo que no tienen partido playoff asignado
+                                                 $teamsInPlayGames = \App\Models\Game::where('tournament_id', $tournament->id)
+                                                     ->where('is_playoff', true)
+                                                     ->where(function($q) use ($teamIdsInGroup) {
+                                                         $q->whereIn('local_team_id', $teamIdsInGroup)
+                                                           ->orWhereIn('away_team_id', $teamIdsInGroup);
+                                                     })
+                                                     ->get(['local_team_id', 'away_team_id']);
+                                                 $teamsWithGame = $teamsInPlayGames
+                                                     ->flatMap(fn($g) => [$g->local_team_id, $g->away_team_id])
+                                                     ->filter()
+                                                     ->unique()
+                                                     ->toArray();
+                                                 // Equipos sin partido = BYEs implícitos
+                                                 $playoffByes = array_values(array_diff($teamIdsInGroup, $teamsWithGame));
+                                             }
                                              $hasPlayoffByes = !empty($playoffByes);
                                          @endphp
+
 
                                          @if(($tType === 'single_elimination' || $tType === 'elimination') && ($tournament->status === 'active' || $tournament->status === 'in_progress'))
                                              <div class="flex flex-wrap gap-2 items-center">
@@ -1259,14 +1305,54 @@ TARJETA CAMPEÓN
                                                              </div>
                                                          </div>
                                                      @else
-                                                         <p class="text-xs text-gray-600 leading-relaxed text-red-600 font-medium">
-                                                             No hay descansos (BYEs) en la Ronda 1. Se deben seleccionar <strong>dos equipos nuevos</strong> que jugarán un enfrentamiento directo entre sí en esta ronda.
+                                                         {{-- Sin BYE: el usuario elige si agrega 1 equipo (nuevo BYE) o 2 (partido directo) --}}
+                                                         @php $noBye_slug = Str::slug($groupName); @endphp
+                                                         <p class="text-xs text-gray-500 leading-relaxed">
+                                                             No hay descansos (BYEs) disponibles. Elige cómo inscribir al equipo:
                                                          </p>
-                                                         <div class="space-y-3">
+
+                                                         {{-- Toggle de modo --}}
+                                                         <div class="flex rounded-lg overflow-hidden border border-gray-300 text-xs font-bold">
+                                                             <label class="flex-1 flex items-center gap-1.5 px-3 py-2 cursor-pointer has-[:checked]:bg-orange-600 has-[:checked]:text-white transition-colors">
+                                                                 <input type="radio" name="inscription_mode_{{ $noBye_slug }}" value="bye" checked
+                                                                     class="sr-only"
+                                                                     onchange="toggleNoBye_{{ $noBye_slug }}(this.value)">
+                                                                 <i class="fa-solid fa-moon text-[10px]"></i> 1 Equipo (BYE)
+                                                             </label>
+                                                             <label class="flex-1 flex items-center gap-1.5 px-3 py-2 cursor-pointer has-[:checked]:bg-orange-600 has-[:checked]:text-white transition-colors border-l border-gray-300">
+                                                                 <input type="radio" name="inscription_mode_{{ $noBye_slug }}" value="match"
+                                                                     class="sr-only"
+                                                                     onchange="toggleNoBye_{{ $noBye_slug }}(this.value)">
+                                                                 <i class="fa-solid fa-handshake text-[10px]"></i> 2 Equipos (Partido)
+                                                             </label>
+                                                         </div>
+
+                                                         {{-- Modo BYE: un solo equipo --}}
+                                                         <div id="noBye_bye_{{ $noBye_slug }}" class="space-y-2">
+                                                             <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Equipo a inscribir</label>
+                                                             <p class="text-xs text-gray-400">El equipo quedará en espera como pase directo (BYE) para la siguiente ronda.</p>
+                                                             <div class="flex">
+                                                                 <select name="team_id" class="flex-1 border-gray-300 rounded-l-lg text-sm focus:ring-orange-500 focus:border-orange-500 shadow-sm team-select-{{ $noBye_slug }} border-r-0 bg-white">
+                                                                     <option value="">-- Selecciona un equipo --</option>
+                                                                     @foreach(\App\Models\Team::where('client_id', auth()->user()->client_id ?? 1)->orderBy('name')->get() as $t)
+                                                                         @if(!$tournament->teams->contains($t->id))
+                                                                             <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                                                         @endif
+                                                                     @endforeach
+                                                                 </select>
+                                                                 <button type="button" onclick="openCreateTeamModalFromStandings('{{ $noBye_slug }}', 'team_id')" class="bg-orange-600 hover:bg-orange-700 text-white rounded-r-lg border border-l-0 border-orange-600 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition flex items-center justify-center" title="Crear nuevo equipo">
+                                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                                                                 </button>
+                                                             </div>
+                                                         </div>
+
+                                                         {{-- Modo PARTIDO: dos equipos --}}
+                                                         <div id="noBye_match_{{ $noBye_slug }}" class="space-y-3 hidden">
+                                                             <p class="text-xs text-gray-400">Los dos equipos jugarán un partido directo entre sí en la Ronda 1.</p>
                                                              <div>
                                                                  <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Equipo 1</label>
                                                                  <div class="flex">
-                                                                     <select name="team_id_1" required class="flex-1 border-gray-300 rounded-l-lg text-sm focus:ring-orange-500 focus:border-orange-500 shadow-sm team-select-{{ Str::slug($groupName) }} border-r-0 bg-white">
+                                                                     <select name="team_id_1" class="flex-1 border-gray-300 rounded-l-lg text-sm focus:ring-orange-500 focus:border-orange-500 shadow-sm team-select-{{ $noBye_slug }} border-r-0 bg-white">
                                                                          <option value="">-- Selecciona el primer equipo --</option>
                                                                          @foreach(\App\Models\Team::where('client_id', auth()->user()->client_id ?? 1)->orderBy('name')->get() as $t)
                                                                              @if(!$tournament->teams->contains($t->id))
@@ -1274,17 +1360,15 @@ TARJETA CAMPEÓN
                                                                              @endif
                                                                          @endforeach
                                                                      </select>
-                                                                     <button type="button" onclick="openCreateTeamModalFromStandings('{{ Str::slug($groupName) }}', 'team_id_1')" class="bg-orange-600 hover:bg-orange-700 text-white rounded-r-lg border border-l-0 border-orange-600 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition duration-150 ease-in-out flex items-center justify-center" title="Crear nuevo equipo">
-                                                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
-                                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                                                                         </svg>
+                                                                     <button type="button" onclick="openCreateTeamModalFromStandings('{{ $noBye_slug }}', 'team_id_1')" class="bg-orange-600 hover:bg-orange-700 text-white rounded-r-lg border border-l-0 border-orange-600 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition flex items-center justify-center" title="Crear nuevo equipo">
+                                                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                                                                      </button>
                                                                  </div>
                                                              </div>
                                                              <div>
                                                                  <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Equipo 2</label>
                                                                  <div class="flex">
-                                                                     <select name="team_id_2" required class="flex-1 border-gray-300 rounded-l-lg text-sm focus:ring-orange-500 focus:border-orange-500 shadow-sm team-select-{{ Str::slug($groupName) }} border-r-0 bg-white">
+                                                                     <select name="team_id_2" class="flex-1 border-gray-300 rounded-l-lg text-sm focus:ring-orange-500 focus:border-orange-500 shadow-sm team-select-{{ $noBye_slug }} border-r-0 bg-white">
                                                                          <option value="">-- Selecciona el segundo equipo --</option>
                                                                          @foreach(\App\Models\Team::where('client_id', auth()->user()->client_id ?? 1)->orderBy('name')->get() as $t)
                                                                              @if(!$tournament->teams->contains($t->id))
@@ -1292,15 +1376,34 @@ TARJETA CAMPEÓN
                                                                              @endif
                                                                          @endforeach
                                                                      </select>
-                                                                     <button type="button" onclick="openCreateTeamModalFromStandings('{{ Str::slug($groupName) }}', 'team_id_2')" class="bg-orange-600 hover:bg-orange-700 text-white rounded-r-lg border border-l-0 border-orange-600 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition duration-150 ease-in-out flex items-center justify-center" title="Crear nuevo equipo">
-                                                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
-                                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                                                                         </svg>
+                                                                     <button type="button" onclick="openCreateTeamModalFromStandings('{{ $noBye_slug }}', 'team_id_2')" class="bg-orange-600 hover:bg-orange-700 text-white rounded-r-lg border border-l-0 border-orange-600 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition flex items-center justify-center" title="Crear nuevo equipo">
+                                                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                                                                      </button>
                                                                  </div>
                                                              </div>
                                                          </div>
+
+                                                         <script>
+                                                         function toggleNoBye_{{ $noBye_slug }}(mode) {
+                                                             const byeDiv   = document.getElementById('noBye_bye_{{ $noBye_slug }}');
+                                                             const matchDiv = document.getElementById('noBye_match_{{ $noBye_slug }}');
+                                                             // Mostrar/ocultar paneles
+                                                             byeDiv.classList.toggle('hidden', mode !== 'bye');
+                                                             matchDiv.classList.toggle('hidden', mode !== 'match');
+                                                             // Gestionar required según modo activo
+                                                             byeDiv.querySelector('select[name="team_id"]').required = (mode === 'bye');
+                                                             const s1 = matchDiv.querySelector('select[name="team_id_1"]');
+                                                             const s2 = matchDiv.querySelector('select[name="team_id_2"]');
+                                                             s1.required = (mode === 'match');
+                                                             s2.required = (mode === 'match');
+                                                         }
+                                                         // Inicializar: modo BYE por defecto
+                                                         document.addEventListener('DOMContentLoaded', function() {
+                                                             toggleNoBye_{{ $noBye_slug }}('bye');
+                                                         });
+                                                         </script>
                                                      @endif
+
 
                                                      <div class="flex justify-end gap-2 pt-3 border-t">
                                                          <button type="button" onclick="document.getElementById('modalAddNormalLateTeamPlayoffs-{{ Str::slug($groupName) }}').close()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-300">Cancelar</button>

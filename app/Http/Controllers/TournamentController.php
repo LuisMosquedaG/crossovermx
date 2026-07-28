@@ -2109,28 +2109,130 @@ public function store(Request $request)
                 return back()->with('error', 'No se pueden inscribir equipos normales una vez que han iniciado partidos de la Ronda 1.');
             }
 
-            $byes = $settings['current_byes'][$groupName] ?? [];
+                        $wbByes = $settings['brackets_data'][$groupName]['wb_byes'] ?? [];
+            $currentByes = $settings['current_byes'][$groupName] ?? [];
+            $byes = array_merge($wbByes, $currentByes);
+
+            // Si current_byes está vacío, detectar BYEs implícitos:
+            // equipos del grupo que no tienen ningún partido playoff asignado
+            if (empty($byes) && !empty($teamIdsInGroup)) {
+                $teamsInPlayGames = \App\Models\Game::where('tournament_id', $tournament->id)
+                    ->where('is_playoff', true)
+                    ->where(function($q) use ($teamIdsInGroup) {
+                        $q->whereIn('local_team_id', $teamIdsInGroup)
+                          ->orWhereIn('away_team_id', $teamIdsInGroup);
+                    })
+                    ->get(['local_team_id', 'away_team_id']);
+
+                $teamsWithGame = $teamsInPlayGames
+                    ->flatMap(fn($g) => [$g->local_team_id, $g->away_team_id])
+                    ->filter()
+                    ->unique()
+                    ->toArray();
+
+                // Los equipos sin partido son BYEs implícitos
+                $implicitByes = array_values(array_diff($teamIdsInGroup, $teamsWithGame));
+                $byes = array_merge($byes, $implicitByes);
+
+                \Illuminate\Support\Facades\Log::info('[addNormalLateTeam] BYEs implícitos detectados', [
+                    'groupName'    => $groupName,
+                    'implicitByes' => $implicitByes,
+                ]);
+            }
+
             $hasByes = !empty($byes);
 
             $teamIds = [];
+            $replaceBye = false;
+            $createMatch = false;
+            $createBye = false;
+
             if ($hasByes) {
-                if (empty($request->team_id)) {
-                    return back()->with('error', 'Debes seleccionar un equipo para reemplazar el BYE.');
+                // Hay BYEs pendientes: permitir reemplazo de BYE o crear un partido directo
+                if (!empty($request->team_id_1) && !empty($request->team_id_2)) {
+                    if ($request->team_id_1 == $request->team_id_2) {
+                        return back()->with('error', 'Los dos equipos seleccionados deben ser diferentes.');
+                    }
+                    $teamIds[] = (int) $request->team_id_1;
+                    $teamIds[] = (int) $request->team_id_2;
+                    $createMatch = true;
+                } elseif (!empty($request->team_id)) {
+                    $teamIds[] = (int) $request->team_id;
+                    $replaceBye = true; // reemplazar BYE existente con este equipo
+                } else {
+                    return back()->with('error', 'Debes seleccionar un equipo o ambos equipos para el enfrentamiento.');
                 }
-                $teamIds[] = (int) $request->team_id;
             } else {
-                if (empty($request->team_id_1) || empty($request->team_id_2)) {
-                    return back()->with('error', 'Debes seleccionar ambos equipos para el enfrentamiento.');
+                // No hay BYEs pendientes
+                if (!empty($request->team_id)) {
+                    $teamIds[] = (int) $request->team_id;
+                    $createBye = true; // crear BYE para futura ronda
+                } elseif (!empty($request->team_id_1) && !empty($request->team_id_2)) {
+                    if ($request->team_id_1 == $request->team_id_2) {
+                        return back()->with('error', 'Los dos equipos seleccionados deben ser diferentes.');
+                    }
+                    $teamIds[] = (int) $request->team_id_1;
+                    $teamIds[] = (int) $request->team_id_2;
+                    $createMatch = true;
+                } else {
+                    return back()->with('error', 'Debes seleccionar un equipo o ambos equipos para el enfrentamiento.');
                 }
-                if ($request->team_id_1 == $request->team_id_2) {
-                    return back()->with('error', 'Los dos equipos seleccionados deben ser diferentes.');
-                }
-                $teamIds[] = (int) $request->team_id_1;
-                $teamIds[] = (int) $request->team_id_2;
             }
 
+            // Preparar emparejamientos según el modo de inserción
+            $matchups = [];
+
+            if ($replaceBye) {
+                // Excluir el equipo recién enviado de la lista de BYEs (puede haber sido creado via AJAX
+                // y ya tener tournament_id asignado, quedando como BYE implícito también)
+                $byes = array_values(array_filter($byes, fn($id) => !in_array($id, $teamIds)));
+
+                if (empty($byes)) {
+                    // No hay BYE real de otro equipo → registrar solo como BYE para siguiente ronda
+                    $settings['current_byes'][$groupName][] = $teamIds[0];
+                } else {
+                    $byeTeamId = array_shift($byes);
+                    $matchups[] = [
+                        'local' => $teamIds[0], 
+                        'away' => $byeTeamId,
+                        'group_name' => $groupName,
+                        'category_group' => $groupName
+                    ];
+                    // Remover el BYE usado de settings
+                    $settings['current_byes'][$groupName] = array_values($byes);
+                }
+            } elseif ($createMatch) {
+                // Dos equipos nuevos: partido directo entre ellos
+                $matchups[] = [
+                    'local' => $teamIds[0], 
+                    'away' => $teamIds[1],
+                    'group_name' => $groupName,
+                    'category_group' => $groupName
+                ];
+            } elseif ($createBye) {
+                // Un equipo nuevo sin BYE disponible: guardar como nuevo BYE
+                $settings['current_byes'][$groupName][] = $teamIds[0];
+            }
+
+
+            // === DIAGNÓSTICO TEMPORAL ===
+            \Illuminate\Support\Facades\Log::info('[addNormalLateTeam] Eliminación directa', [
+                'tournament_id'  => $tournament->id,
+                'groupName'      => $groupName,
+                'hasByes'        => $hasByes,
+                'replaceBye'     => $replaceBye,
+                'createMatch'    => $createMatch,
+                'createBye'      => $createBye,
+                'byes_raw'       => $byes,
+                'teamIds'        => $teamIds,
+                'matchups'       => $matchups,
+                'settings_current_byes' => $settings['current_byes'] ?? [],
+            ]);
+            // ============================
+
             try {
-                \Illuminate\Support\Facades\DB::transaction(function() use ($tournament, $teamIds, $groupName, &$settings, $byes, $hasByes) {
+                \Illuminate\Support\Facades\DB::transaction(function() use ($tournament, $teamIds, $groupName, &$settings, $matchups) {
+                    // 1. Asignar el/los equipos al torneo con la categoría correcta
                     foreach ($teamIds as $teamId) {
                         $team = \App\Models\Team::find($teamId);
                         if ($team) {
@@ -2148,57 +2250,71 @@ public function store(Request $request)
                         }
                     }
 
-                    $matchups = [];
-                    if ($hasByes) {
-                        $teamId = $teamIds[0];
-                        $byeTeamId = array_shift($byes);
-                        $settings['current_byes'][$groupName] = $byes;
-
-                        $matchups[] = [
-                            'local' => $byeTeamId,
-                            'away' => $teamId,
-                            'group_name' => $groupName,
-                            'category_group' => $groupName
-                        ];
-                    } else {
-                        $matchups[] = [
-                            'local' => $teamIds[0],
-                            'away' => $teamIds[1],
-                            'group_name' => $groupName,
-                            'category_group' => $groupName
-                        ];
-                    }
-
+                    // 2. Persistir settings actualizados (BYEs actualizados)
                     $tournament->settings()->update(['settings' => $settings]);
 
-                    $lastGameInGroup = \App\Models\Game::where('tournament_id', $tournament->id)
-                        ->where('is_playoff', true)
-                        ->where('group_name', $groupName)
-                        ->orderBy('date_time', 'desc')
-                        ->first();
+                    // 3. Si hay emparejamientos, crear el partido
+                    if (!empty($matchups)) {
+                        // Buscar la última fecha de un partido del grupo para calcular la fecha de inicio
+                        $allGroupTeamIds = \App\Models\Team::where('tournament_id', $tournament->id)
+                            ->when(str_contains($groupName, ' - '), function($q) use ($groupName) {
+                                $parts = explode(' - ', $groupName, 2);
+                                $q->where('category', trim($parts[0]))->where('strength', trim($parts[1]));
+                            })
+                            ->pluck('id')->toArray();
 
-                    $startDate = $lastGameInGroup ? \Carbon\Carbon::parse($lastGameInGroup->date_time) : \Carbon\Carbon::parse($tournament->start_date);
-                    $endDate = $tournament->end_date ? \Carbon\Carbon::parse($tournament->end_date) : $startDate->copy()->addWeek();
+                        $lastGameInGroup = \App\Models\Game::where('tournament_id', $tournament->id)
+                            ->where('is_playoff', true)
+                            ->where(function($q) use ($allGroupTeamIds) {
+                                $q->whereIn('local_team_id', $allGroupTeamIds)
+                                  ->orWhereIn('away_team_id', $allGroupTeamIds);
+                            })
+                            ->orderBy('date_time', 'desc')
+                            ->first();
 
-                    $calendarService = app(\App\Services\CalendarGeneratorService::class);
-                    $newGames = $calendarService->schedulePlayoffRound($tournament, $matchups, $startDate, $endDate, $settings, null, true);
+                        $startDate = $lastGameInGroup
+                            ? \Carbon\Carbon::parse($lastGameInGroup->date_time)
+                            : \Carbon\Carbon::parse($tournament->start_date);
+                        $endDate = $tournament->end_date
+                            ? \Carbon\Carbon::parse($tournament->end_date)
+                            : $startDate->copy()->addWeek();
 
-                    foreach ($newGames as $game) {
-                        $game->round_number = 1;
-                        $game->save();
+                        \Illuminate\Support\Facades\Log::info('[addNormalLateTeam] Llamando schedulePlayoffRound', [
+                            'matchups'  => $matchups,
+                            'startDate' => $startDate->toDateTimeString(),
+                            'endDate'   => $endDate->toDateTimeString(),
+                        ]);
+
+                        $calendarService = app(\App\Services\CalendarGeneratorService::class);
+                        $newGames = $calendarService->schedulePlayoffRound(
+                            $tournament, $matchups, $startDate, $endDate, $settings, null, true
+                        );
+
+                        \Illuminate\Support\Facades\Log::info('[addNormalLateTeam] schedulePlayoffRound retornó', [
+                            'count' => $newGames->count(),
+                        ]);
+
+                        foreach ($newGames as $game) {
+                            $game->round_number = 1;
+                            $game->save();
+                        }
+                    } else {
+                        \Illuminate\Support\Facades\Log::warning('[addNormalLateTeam] matchups vacío — solo se guardó el BYE');
                     }
                 });
 
-                $msg = $hasByes 
-                    ? 'Equipo inscrito con éxito. Se ha emparejado en la Ronda 1 sustituyendo un pase directo (BYE).' 
-                    : 'Equipos inscritos con éxito. Se ha creado un nuevo partido directo entre ambos en la Ronda 1.';
+                $msg = $replaceBye || $createMatch
+                    ? 'Equipo(s) inscrito(s) con éxito. Se ha creado el partido en la Ronda 1.'
+                    : 'Equipo inscrito con éxito. Quedará en espera como pase directo (BYE) para la siguiente ronda.';
 
                 return back()->with('success', $msg);
             } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('[addNormalLateTeam] Exception', ['msg' => $e->getMessage()]);
                 return back()->with('error', 'Error al inscribir equipo: ' . $e->getMessage());
             }
         }
     }
+
 
 
     /**
