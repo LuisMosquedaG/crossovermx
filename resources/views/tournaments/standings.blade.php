@@ -3,6 +3,37 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Graduate&display=swap');
 
+.nba-bracket-title {
+    font-family: 'Graduate', 'Courier New', monospace, serif;
+    font-size: 2.2rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    text-align: center;
+    padding: 0.6rem 1.5rem;
+    line-height: 1.2;
+    border-radius: 9999px;
+    width: 100%;
+}
+
+.nba-bracket-title-winners {
+    color: #2563eb;
+    background-color: rgba(37, 99, 235, 0.06);
+    border: 1px solid rgba(37, 99, 235, 0.15);
+}
+
+.nba-bracket-title-losers {
+    color: #dc2626;
+    background-color: rgba(220, 38, 38, 0.06);
+    border: 1px solid rgba(220, 38, 38, 0.15);
+}
+
+.nba-bracket-title-final {
+    color: #eab308;
+    background-color: rgba(234, 179, 8, 0.06);
+    border: 1px solid rgba(234, 179, 8, 0.15);
+}
+
 /* --- MODO CLARO FINAL --- */
 
 .nba-bg {
@@ -89,6 +120,7 @@
     font-family: 'Graduate', 'Courier New', monospace, serif;
     transform: translateY(-50%) scaleY(1.4) scaleX(0.95); /* Stretches vertically and keeps them thicker */
     transform-origin: right center;
+    color: rgba(148, 163, 184, 0.12); /* Default light grey for pending/playing games */
 }
 
 /* Marcador vacío (guión) */
@@ -139,8 +171,48 @@ ESTILO PERDEDOR
     filter: grayscale(100%);
 }
 
-/* ESTADOS (Ocultos) */
-.nba-status-badge { display: none; }
+/* ESTADOS DE PARTIDOS (Píldoras flotantes en el centro del encuentro) */
+.nba-status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.62rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    pointer-events: none;
+    user-select: none;
+    line-height: 1.2;
+    transition: all 0.3s ease;
+}
+
+.nba-status-pending {
+    background-color: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+
+.nba-status-playing {
+    background-color: #fff7ed;
+    color: #ea580c;
+    border: 1px solid #fed7aa;
+    animation: status-pulse 2s infinite ease-in-out;
+}
+
+.nba-status-finished {
+    background-color: #f8fafc;
+    color: #94a3b8;
+    border: 1px solid #e2e8f0;
+}
+
+@keyframes status-pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.3); }
+    70% { transform: scale(1.04); box-shadow: 0 0 0 5px rgba(234, 88, 12, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 88, 12, 0); }
+}
 
 /* =========================================
 TARJETA CAMPEÓN
@@ -324,16 +396,6 @@ TARJETA CAMPEÓN
                                         </span>
                                     </div>
 
-                                    <!-- DERECHA: Icono de Calendario -->
-                                    <div class="flex items-center gap-2 w-full md:w-auto justify-end">
-                                        <a href="{{ route('tournaments.schedule', ['tournament' => $tournament, 'group' => $groupName]) }}" 
-                                        class="text-orange-500 hover:text-orange-700 hover:bg-orange-50 rounded-full p-1.5 transition-all duration-200 shrink-0"
-                                        title="Ver calendario de este grupo">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                                            </svg>
-                                        </a>
-                                    </div>
                                 </div>
 
                                 <!-- 2. CONTENEDOR ENCAPSULADO CON SCROLL HORIZONTAL (TREE BRACKET) -->
@@ -345,26 +407,34 @@ TARJETA CAMPEÓN
                                             <i class="fa-solid fa-trophy text-yellow-500"></i> FASE DOBLE ELIMINATORIA - ÁRBOL DE TORNEO
                                         </h4>
 
-                                        @if($tournament->status === 'active' || $tournament->status === 'in_progress')
-                                            @php
-                                                $groupData = $tournament->settings->settings['brackets_data'][$groupName] ?? [];
-                                                $wbRound = $groupData['wb_current_round'] ?? 1;
-                                                $wbByes = $groupData['wb_byes'] ?? [];
-                                                $hasByes = !empty($wbByes);
-                                            @endphp
+                                        @php
+                                            $groupData = $tournament->settings->settings['brackets_data'][$groupName] ?? [];
+                                            $wbRound = $groupData['wb_current_round'] ?? 1;
+                                            $wbByes = $groupData['wb_byes'] ?? [];
+                                            $hasByes = !empty($wbByes);
+                                        @endphp
 
-                                            <div class="flex flex-wrap gap-2">
+                                        <div class="flex flex-wrap gap-2 items-center">
+                                            @if($tournament->status === 'active' || $tournament->status === 'in_progress')
                                                 @if($wbRound == 1)
-                                                    <button type="button" onclick="document.getElementById('modalAddNormalLateTeam-{{ Str::slug($groupName) }}').showModal()" class="px-3.5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold text-xs uppercase tracking-wider shadow transition flex items-center gap-2">
-                                                        <i class="fa-solid fa-user-plus"></i> Inscribir Equipo Normal
+                                                    <button type="button" onclick="document.getElementById('modalAddNormalLateTeam-{{ Str::slug($groupName) }}').showModal()" class="px-3.5 py-2 bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-lg font-bold text-xs uppercase tracking-wider shadow-sm transition flex items-center gap-2">
+                                                        <i class="fa-solid fa-user-plus text-gray-500"></i> Inscribir Equipo Normal
                                                     </button>
                                                 @endif
 
-                                                <button type="button" onclick="document.getElementById('modalAddLateTeam-{{ Str::slug($groupName) }}').showModal()" class="px-3.5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-bold text-xs uppercase tracking-wider shadow transition flex items-center gap-2">
-                                                    <i class="fa-solid fa-user-plus"></i> Inscribir Equipo Tardío
+                                                <button type="button" onclick="document.getElementById('modalAddLateTeam-{{ Str::slug($groupName) }}').showModal()" class="px-3.5 py-2 bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-lg font-bold text-xs uppercase tracking-wider shadow-sm transition flex items-center gap-2">
+                                                    <i class="fa-solid fa-user-plus text-gray-500"></i> Inscribir Equipo Tardío
                                                 </button>
-                                            </div>
+                                            @endif
 
+                                            <a href="{{ route('tournaments.schedule', ['tournament' => $tournament, 'group' => $groupName]) }}" 
+                                               class="px-3.5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-bold text-xs uppercase tracking-wider shadow transition flex items-center gap-2"
+                                               title="Ver calendario de este grupo">
+                                                <i class="fa-solid fa-calendar-days"></i> Ver Calendario
+                                            </a>
+                                        </div>
+
+                                        @if($tournament->status === 'active' || $tournament->status === 'in_progress')
                                             @if($wbRound == 1)
                                                 @php
                                                     $parts = explode(' - ', $groupName, 2);
@@ -552,24 +622,78 @@ TARJETA CAMPEÓN
                                             <!-- ================================================================= -->
                                             <!-- 1. BRACKET DE GANADORES (IZQUIERDA A DERECHA)                     -->
                                             <!-- ================================================================= -->
+                                            @php
+                                                $allGroupTeams = $tournament->teams->filter(function($t) use ($groupName) {
+                                                    return (($t->category ?? 'Sin Categoria') . ' - ' . ($t->strength ?? 'General')) === $groupName;
+                                                });
+
+                                                $settings = $tournament->settings ? $tournament->settings->settings : [];
+                                                $lateTeams = array_map('intval', $settings['brackets_data'][$groupName]['late_teams'] ?? []);
+
+                                                // 1. Calcular Byes de Winner Bracket (excluyendo equipos tardíos que van al Loser Bracket)
+                                                $activeWbTeams = array_values(array_diff($allGroupTeams->pluck('id')->toArray(), $lateTeams));
+                                                $wbByesByRound = [];
+                                                foreach ($data['bracket']['winner_bracket'] as $rIdx => $rGames) {
+                                                    $rNum = $rIdx + 1;
+                                                    $played = [];
+                                                    $winners = [];
+                                                    foreach ($rGames as $g) {
+                                                        if ($g->local_team_id) $played[] = $g->local_team_id;
+                                                        if ($g->away_team_id) $played[] = $g->away_team_id;
+                                                        if ($g->status === 'finished') {
+                                                            $winners[] = ($g->local_team_score > $g->away_team_score) ? $g->local_team_id : $g->away_team_id;
+                                                        }
+                                                    }
+                                                    $byes = array_values(array_diff($activeWbTeams, $played));
+                                                    $wbByesByRound[$rNum] = $byes;
+                                                    $activeWbTeams = array_merge($winners, $byes);
+                                                }
+
+                                                // 2. Calcular Byes de Loser Bracket
+                                                $activeLbTeams = $lateTeams; // Los equipos tardíos inician en el Loser Bracket
+                                                $lbByesByRound = [];
+                                                foreach ($data['bracket']['loser_bracket'] as $rIdx => $rGames) {
+                                                    $rNum = $rIdx + 1;
+                                                    $newEntrants = [];
+                                                    if ($rIdx === 0) {
+                                                        $wbGames = $data['bracket']['winner_bracket'][0] ?? [];
+                                                        foreach ($wbGames as $g) {
+                                                            if ($g->status === 'finished') {
+                                                                $newEntrants[] = ($g->local_team_score > $g->away_team_score) ? $g->away_team_id : $g->local_team_id;
+                                                            }
+                                                        }
+                                                    } elseif ($rIdx % 2 !== 0) {
+                                                        $wbRoundIndex = ($rIdx + 1) / 2;
+                                                        $wbGames = $data['bracket']['winner_bracket'][$wbRoundIndex] ?? [];
+                                                        foreach ($wbGames as $g) {
+                                                            if ($g->status === 'finished') {
+                                                                $newEntrants[] = ($g->local_team_score > $g->away_team_score) ? $g->away_team_id : $g->local_team_id;
+                                                            }
+                                                        }
+                                                    }
+                                                    $activeLbTeams = array_values(array_unique(array_merge($activeLbTeams, $newEntrants)));
+                                                    $played = [];
+                                                    $winners = [];
+                                                    foreach ($rGames as $g) {
+                                                        if ($g->local_team_id) $played[] = $g->local_team_id;
+                                                        if ($g->away_team_id) $played[] = $g->away_team_id;
+                                                        if ($g->status === 'finished') {
+                                                            $winners[] = ($g->local_team_score > $g->away_team_score) ? $g->local_team_id : $g->away_team_id;
+                                                        }
+                                                    }
+                                                    $byes = array_values(array_diff($activeLbTeams, $played));
+                                                    $lbByesByRound[$rNum] = $byes;
+                                                    $activeLbTeams = array_values(array_unique(array_merge($winners, $byes)));
+                                                }
+                                            @endphp
+
                                             <div class="flex flex-col gap-4 border-r border-dashed border-blue-200 pr-6 shrink-0">
-                                                <div class="text-center bg-blue-600 text-white font-black text-xs uppercase tracking-widest py-2 px-4 rounded-lg shadow-sm">
-                                                    ⚡ Bracket Ganadores (LTR)
+                                                <div class="nba-bracket-title nba-bracket-title-winners">
+                                                    BRACKET DE GANADORES
                                                 </div>
 
                                                 <div class="flex flex-row items-center gap-2 md:gap-4 h-full">
                                                     @foreach($data['bracket']['winner_bracket'] as $roundIndex => $games)
-                                                        @if(!$loop->first)
-                                                            <!-- Línea / Conector Visual entre Rondas (Winner Bracket) -->
-                                                            <div class="flex items-center justify-center shrink-0 w-8">
-                                                                <div class="w-full h-0.5 bg-gradient-to-r from-blue-300 to-blue-500 relative flex items-center justify-center">
-                                                                    <svg class="w-4 h-4 text-blue-600 bg-white rounded-full p-0.5 border border-blue-400 shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
-                                                                    </svg>
-                                                                </div>
-                                                            </div>
-                                                        @endif
-
                                                         <div class="flex flex-col justify-around gap-6 h-full min-w-[240px]">
                                                             <!-- Encabezado de Ronda -->
                                                             <div class="text-center">
@@ -581,7 +705,7 @@ TARJETA CAMPEÓN
                                                             <!-- Partidos de la Ronda -->
                                                             <div class="flex flex-col justify-around gap-6 flex-1">
                                                                 @foreach($games as $game)
-                                                                    <div class="nba-card w-60 shadow-md hover:shadow-xl transition-all duration-200 border-l-4 border-l-blue-500">
+                                                                    <div class="nba-card w-60 shadow-md hover:shadow-xl transition-all duration-200 border-l-4 border-l-blue-500 relative">
                                                                         <!-- Local -->
                                                                         <div @class([
                                                                             'nba-team-row',
@@ -590,7 +714,7 @@ TARJETA CAMPEÓN
                                                                         ])>
                                                                             <img src="{{ asset('storage/' . ($game->localTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
                                                                             <span class="nba-team-name">{{ $game->localTeam->name ?? 'Por definir' }}</span>
-                                                                            <span class="nba-team-score {{ is_numeric($game->local_team_score) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $game->local_team_score ?? '-' }}</span>
+                                                                            <span class="nba-team-score {{ is_numeric($game->local_team_score ?? ($game->localTeam ? '0' : null)) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $game->local_team_score ?? ($game->localTeam ? '0' : '-') }}</span>
                                                                         </div>
                                                                         <!-- Visitante -->
                                                                         <div @class([
@@ -600,145 +724,213 @@ TARJETA CAMPEÓN
                                                                         ])>
                                                                             <img src="{{ asset('storage/' . ($game->awayTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
                                                                             <span class="nba-team-name">{{ $game->awayTeam->name ?? 'Por definir' }}</span>
-                                                                            <span class="nba-team-score {{ is_numeric($game->away_team_score) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $game->away_team_score ?? '-' }}</span>
+                                                                            <span class="nba-team-score {{ is_numeric($game->away_team_score ?? ($game->awayTeam ? '0' : null)) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $game->away_team_score ?? ($game->awayTeam ? '0' : '-') }}</span>
+                                                                        </div>
+                                                                        <!-- Estado del Juego Centrado -->
+                                                                        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
+                                                                            @if(($game->status ?? 'pending') === 'pending')
+                                                                                <span class="nba-status-badge nba-status-pending">Pendiente</span>
+                                                                            @elseif(($game->status ?? 'pending') === 'playing')
+                                                                                <span class="nba-status-badge nba-status-playing">En Juego</span>
+                                                                            @elseif(($game->status ?? 'pending') === 'finished')
+                                                                                <span class="nba-status-badge nba-status-finished">Finalizado</span>
+                                                                            @endif
                                                                         </div>
                                                                     </div>
+                                                                @endforeach
+
+                                                                @php
+                                                                    $roundByes = $wbByesByRound[$roundIndex + 1] ?? [];
+                                                                    $normalByes = [];
+                                                                    $lateByes = [];
+                                                                    foreach ($roundByes as $byeId) {
+                                                                        if (in_array((int)$byeId, $lateTeams)) {
+                                                                            $lateByes[] = $byeId;
+                                                                        } else {
+                                                                            $normalByes[] = $byeId;
+                                                                        }
+                                                                    }
+                                                                @endphp
+                                                                
+                                                                <!-- 1. BYEs Tradicionales -->
+                                                                @foreach($normalByes as $byeTeamId)
+                                                                    @php
+                                                                        $byeTeam = $allGroupTeams->firstWhere('id', $byeTeamId);
+                                                                    @endphp
+                                                                    @if($byeTeam)
+                                                                        <div class="nba-card w-60 border-l-4 border-l-orange-500 bg-orange-50/10 shadow-md hover:shadow-xl transition-all duration-200 relative overflow-hidden flex flex-col justify-between py-2 px-3 min-h-[114px]">
+                                                                            <div class="absolute right-2 top-2 z-10">
+                                                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-orange-100 text-orange-800 border border-orange-200">
+                                                                                    BYE
+                                                                                </span>
+                                                                            </div>
+                                                                            <div class="flex items-center gap-3 py-1">
+                                                                                <img src="{{ asset('storage/' . ($byeTeam->image_path ?? '')) }}" class="w-8 h-8 rounded-full border border-gray-200 object-cover shadow-sm bg-white" alt="logo team" onerror="this.style.display='none'">
+                                                                                <div class="flex flex-col min-w-0">
+                                                                                    <span class="text-xs font-black text-slate-800 uppercase tracking-wide truncate">{{ $byeTeam->name }}</span>
+                                                                                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Avanza Directo</span>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="mt-2 bg-gradient-to-r from-orange-50 to-orange-100/50 text-orange-700 py-1 px-2 rounded-lg text-center font-extrabold text-[9px] uppercase tracking-wider border border-orange-200/60 font-sans">
+                                                                                ⚡ Pase Automático
+                                                                            </div>
+                                                                        </div>
+                                                                    @endif
+                                                                @endforeach
+
+                                                                <!-- 2. Equipos Tardíos (Abajo del Todo) -->
+                                                                @foreach($lateByes as $byeTeamId)
+                                                                    @php
+                                                                        $byeTeam = $allGroupTeams->firstWhere('id', $byeTeamId);
+                                                                    @endphp
+                                                                    @if($byeTeam)
+                                                                        <div class="nba-card w-60 border-l-4 border-l-blue-500 bg-blue-50/10 shadow-md hover:shadow-xl transition-all duration-200 relative overflow-hidden flex flex-col justify-between py-2 px-3 min-h-[114px]">
+                                                                            <div class="absolute right-2 top-2 z-10">
+                                                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-blue-100 text-blue-800 border border-blue-200">
+                                                                                    Tardío
+                                                                                </span>
+                                                                            </div>
+                                                                            <div class="flex items-center gap-3 py-1">
+                                                                                <img src="{{ asset('storage/' . ($byeTeam->image_path ?? '')) }}" class="w-8 h-8 rounded-full border border-gray-200 object-cover shadow-sm bg-white" alt="logo team" onerror="this.style.display='none'">
+                                                                                <div class="flex flex-col min-w-0">
+                                                                                    <span class="text-xs font-black text-slate-800 uppercase tracking-wide truncate">{{ $byeTeam->name }}</span>
+                                                                                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Equipo Registrado</span>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="mt-2 bg-gradient-to-r from-blue-50 to-blue-100/50 text-blue-700 py-1 px-2 rounded-lg text-center font-extrabold text-[9px] uppercase tracking-wider border border-blue-200/60 font-sans">
+                                                                                ⚡ Registro Tardío
+                                                                            </div>
+                                                                        </div>
+                                                                    @endif
                                                                 @endforeach
                                                             </div>
                                                         </div>
                                                     @endforeach
-
-                                                    <!-- Conector Final de Winner Bracket a Gran Final -->
-                                                    <div class="flex items-center justify-center shrink-0 w-8">
-                                                        <div class="w-full h-0.5 bg-gradient-to-r from-blue-500 to-yellow-500 relative flex items-center justify-center">
-                                                            <svg class="w-4 h-4 text-yellow-600 bg-white rounded-full p-0.5 border border-yellow-400 shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
-                                                            </svg>
-                                                        </div>
-                                                    </div>
                                                 </div>
                                             </div>
 
                                             <!-- ================================================================= -->
                                             <!-- 2. SECCIÓN CENTRAL: GRAN FINAL & DEFINICIÓN                        -->
                                             <!-- ================================================================= -->
-                                            <div class="flex flex-col items-center justify-center gap-6 px-4 shrink-0 min-w-[300px] border-x border-gray-300 bg-gradient-to-b from-gray-50 to-white rounded-xl py-6 shadow-sm">
-                                                <div class="text-center">
-                                                    <span class="inline-block px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest bg-gray-900 text-white shadow-md border-b-4 border-yellow-500">
-                                                        🏆 Gran Final
-                                                    </span>
+                                            <div class="flex flex-col items-center gap-4 px-4 shrink-0 min-w-[300px]">
+                                                <div class="nba-bracket-title nba-bracket-title-final">
+                                                    GRAN FINAL
                                                 </div>
 
-                                                <!-- 1. PARTIDO DE GRAN FINAL (GF) -->
-                                                @if(isset($data['bracket']['grand_final']))
-                                                    @php 
-                                                        $gf = $data['bracket']['grand_final']; 
-                                                        $wfLocal = $gf->local_team_score > $gf->away_team_score; 
-                                                    @endphp
-                                                    
-                                                    <div class="w-72 relative z-10">
-                                                        <div class="nba-card border-2 border-yellow-500 shadow-2xl bg-white relative overflow-hidden">
-                                                            @if($gf->status === 'finished')
-                                                                <div class="absolute inset-0 bg-gradient-to-t from-yellow-100/50 to-transparent opacity-60 z-0 pointer-events-none"></div>
-                                                            @endif
-
-                                                            <div class="bg-yellow-500 text-gray-900 py-1 text-center font-black text-[10px] uppercase tracking-widest shadow-inner">
-                                                                Partido Definitorio
-                                                            </div>
-
-                                                            <!-- LOCAL -->
-                                                            <div @class([
-                                                                'nba-team-row relative z-10',
-                                                                'nba-winner' => $wfLocal,
-                                                                'nba-loser' => !$wfLocal && $gf->status === 'finished'
-                                                            ])>
-                                                                <img src="{{ asset('storage/' . ($gf->localTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
-                                                                <span class="nba-team-name">{{ $gf->localTeam->name ?? 'Campeón Winner' }}</span>
-                                                                <span class="nba-team-score {{ is_numeric($gf->local_team_score) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $gf->local_team_score ?? '-' }}</span>
-                                                            </div>
-
-                                                            <!-- VISITANTE -->
-                                                            <div @class([
-                                                                'nba-team-row relative z-10',
-                                                                'nba-winner' => !$wfLocal && $gf->status === 'finished',
-                                                                'nba-loser' => $wfLocal
-                                                            ])>
-                                                                <img src="{{ asset('storage/' . ($gf->awayTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
-                                                                <span class="nba-team-name">{{ $gf->awayTeam->name ?? 'Campeón Loser' }}</span>
-                                                                <span class="nba-team-score {{ is_numeric($gf->away_team_score) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $gf->away_team_score ?? '-' }}</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                @endif
-
-                                                <!-- 2. PARTIDO DE REVANCHA (GR) -->
-                                                @if(isset($data['bracket']['reset_game']))
-                                                    @php 
-                                                        $g = $data['bracket']['reset_game']; 
-                                                        $wLocal = $g->local_team_score > $g->away_team_score; 
-                                                    @endphp
-                                                    
-                                                    <div class="w-72 mt-2">
-                                                        <div class="text-center mb-2">
-                                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-yellow-100 text-yellow-800 border border-yellow-300 shadow-sm">
-                                                                ⚠️ Partido de Revancha (Si aplica)
-                                                            </span>
-                                                        </div>
+                                                <div class="flex-1 flex flex-col justify-center items-center gap-6 w-full">
+                                                    <!-- 1. PARTIDO DE GRAN FINAL (GF) -->
+                                                    @if(isset($data['bracket']['grand_final']))
+                                                        @php 
+                                                            $gf = $data['bracket']['grand_final']; 
+                                                            $wfLocal = $gf->local_team_score > $gf->away_team_score; 
+                                                        @endphp
                                                         
-                                                        <div class="nba-card border-2 border-yellow-400 shadow-lg bg-white">
-                                                            <!-- LOCAL -->
-                                                            <div @class([
-                                                                'nba-team-row',
-                                                                'nba-winner' => $wLocal,
-                                                                'nba-loser' => !$wLocal && $g->status === 'finished'
-                                                            ])>
-                                                                <img src="{{ asset('storage/' . ($g->localTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
-                                                                <span class="nba-team-name">{{ $g->localTeam->name ?? 'Por definir' }}</span>
-                                                                <span class="nba-team-score {{ is_numeric($g->local_team_score) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $g->local_team_score ?? '-' }}</span>
-                                                            </div>
-                                                            
-                                                            <!-- VISITANTE -->
-                                                            <div @class([
-                                                                'nba-team-row',
-                                                                'nba-winner' => !$wLocal && $g->status === 'finished',
-                                                                'nba-loser' => $wLocal
-                                                            ])>
-                                                                <img src="{{ asset('storage/' . ($g->awayTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
-                                                                <span class="nba-team-name">{{ $g->awayTeam->name ?? 'Por definir' }}</span>
-                                                                <span class="nba-team-score {{ is_numeric($g->away_team_score) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $g->away_team_score ?? '-' }}</span>
+                                                        <div class="w-72 relative z-10">
+                                                            <div class="nba-card border-2 border-yellow-500 shadow-2xl bg-white relative overflow-hidden">
+                                                                @if($gf->status === 'finished')
+                                                                    <div class="absolute inset-0 bg-gradient-to-t from-yellow-100/50 to-transparent opacity-60 z-0 pointer-events-none"></div>
+                                                                @endif
+
+
+                                                                <!-- LOCAL -->
+                                                                <div @class([
+                                                                    'nba-team-row relative z-10',
+                                                                    'nba-winner' => $wfLocal,
+                                                                    'nba-loser' => !$wfLocal && $gf->status === 'finished'
+                                                                ])>
+                                                                    <img src="{{ asset('storage/' . ($gf->localTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
+                                                                    <span class="nba-team-name">{{ $gf->localTeam->name ?? 'Campeón Winner' }}</span>
+                                                                    <span class="nba-team-score {{ is_numeric($gf->local_team_score ?? ($gf->localTeam ? '0' : null)) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $gf->local_team_score ?? ($gf->localTeam ? '0' : '-') }}</span>
+                                                                </div>
+
+                                                                <!-- VISITANTE -->
+                                                                <div @class([
+                                                                    'nba-team-row relative z-10',
+                                                                    'nba-winner' => !$wfLocal && $gf->status === 'finished',
+                                                                    'nba-loser' => $wfLocal
+                                                                ])>
+                                                                    <img src="{{ asset('storage/' . ($gf->awayTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
+                                                                    <span class="nba-team-name">{{ $gf->awayTeam->name ?? 'Campeón Loser' }}</span>
+                                                                    <span class="nba-team-score {{ is_numeric($gf->away_team_score ?? ($gf->awayTeam ? '0' : null)) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $gf->away_team_score ?? ($gf->awayTeam ? '0' : '-') }}</span>
+                                                                </div>
+                                                                <!-- Estado del Juego Centrado -->
+                                                                <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
+                                                                    @if(($gf->status ?? 'pending') === 'pending')
+                                                                        <span class="nba-status-badge nba-status-pending">Pendiente</span>
+                                                                    @elseif(($gf->status ?? 'pending') === 'playing')
+                                                                        <span class="nba-status-badge nba-status-playing">En Juego</span>
+                                                                    @elseif(($gf->status ?? 'pending') === 'finished')
+                                                                        <span class="nba-status-badge nba-status-finished">Finalizado</span>
+                                                                    @endif
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                @endif
+                                                    @endif
 
-                                                @if(!isset($data['bracket']['grand_final']) && !isset($data['bracket']['reset_game']))
-                                                    <div class="w-full text-center py-8 px-4 border-2 border-dashed border-gray-300 rounded-xl bg-white shadow-inner">
-                                                        <p class="text-gray-400 font-bold uppercase tracking-widest text-xs">Esperando Finalistas</p>
-                                                    </div>
-                                                @endif
+                                                    <!-- 2. PARTIDO DE REVANCHA (GR) -->
+                                                    @if(isset($data['bracket']['reset_game']))
+                                                        @php 
+                                                            $g = $data['bracket']['reset_game']; 
+                                                            $wLocal = $g->local_team_score > $g->away_team_score; 
+                                                        @endphp
+                                                        
+                                                        <div class="w-72 mt-2">
+                                                            <div class="nba-card border-2 border-yellow-400 shadow-lg bg-white relative overflow-hidden">
+                                                                <!-- LOCAL -->
+                                                                <div @class([
+                                                                    'nba-team-row',
+                                                                    'nba-winner' => $wLocal,
+                                                                    'nba-loser' => !$wLocal && $g->status === 'finished'
+                                                                ])>
+                                                                    <img src="{{ asset('storage/' . ($g->localTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
+                                                                    <span class="nba-team-name">{{ $g->localTeam->name ?? 'Por definir' }}</span>
+                                                                    <span class="nba-team-score {{ is_numeric($g->local_team_score ?? ($g->localTeam ? '0' : null)) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $g->local_team_score ?? ($g->localTeam ? '0' : '-') }}</span>
+                                                                </div>
+                                                                
+                                                                <!-- VISITANTE -->
+                                                                <div @class([
+                                                                    'nba-team-row',
+                                                                    'nba-winner' => !$wLocal && $g->status === 'finished',
+                                                                    'nba-loser' => $wLocal
+                                                                ])>
+                                                                    <img src="{{ asset('storage/' . ($g->awayTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
+                                                                    <span class="nba-team-name">{{ $g->awayTeam->name ?? 'Por definir' }}</span>
+                                                                    <span class="nba-team-score {{ is_numeric($g->away_team_score ?? ($g->awayTeam ? '0' : null)) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $g->away_team_score ?? ($g->awayTeam ? '0' : '-') }}</span>
+                                                                </div>
+                                                                <!-- Estado del Juego Centrado -->
+                                                                <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
+                                                                    @if(($g->status ?? 'pending') === 'pending')
+                                                                        <span class="nba-status-badge nba-status-pending">Pendiente</span>
+                                                                    @elseif(($g->status ?? 'pending') === 'playing')
+                                                                        <span class="nba-status-badge nba-status-playing">En Juego</span>
+                                                                    @elseif(($g->status ?? 'pending') === 'finished')
+                                                                        <span class="nba-status-badge nba-status-finished">Finalizado</span>
+                                                                    @endif
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    @endif
+
+                                                    @if(!isset($data['bracket']['grand_final']) && !isset($data['bracket']['reset_game']))
+                                                        <div class="w-full text-center py-8 px-4 border-2 border-dashed border-gray-300 rounded-xl bg-white shadow-inner">
+                                                            <p class="text-gray-400 font-bold uppercase tracking-widest text-xs">Esperando Finalistas</p>
+                                                        </div>
+                                                    @endif
+                                                </div>
                                             </div>
 
                                             <!-- ================================================================= -->
                                             <!-- 3. BRACKET DE PERDEDORES (DERECHA A IZQUIERDA: flex-row-reverse)  -->
                                             <!-- ================================================================= -->
                                             <div class="flex flex-col gap-4 border-l border-dashed border-red-200 pl-6 shrink-0">
-                                                <div class="text-center bg-red-600 text-white font-black text-xs uppercase tracking-widest py-2 px-4 rounded-lg shadow-sm">
-                                                    🔥 Bracket Perdedores (RTL)
+                                                <div class="nba-bracket-title nba-bracket-title-losers">
+                                                    BRACKET DE PERDEDORES
                                                 </div>
 
                                                 <!-- flex-row-reverse coloca la Ronda 1 en el extremo derecho y avanza hacia la izquierda -->
                                                 <div class="flex flex-row-reverse items-center gap-2 md:gap-4 h-full">
                                                     @foreach($data['bracket']['loser_bracket'] as $roundIndex => $games)
-                                                        @if(!$loop->first)
-                                                            <!-- Línea / Conector Visual entre Rondas (Loser Bracket) -->
-                                                            <div class="flex items-center justify-center shrink-0 w-8">
-                                                                <div class="w-full h-0.5 bg-gradient-to-l from-red-300 to-red-500 relative flex items-center justify-center">
-                                                                    <svg class="w-4 h-4 text-red-600 bg-white rounded-full p-0.5 border border-red-400 shadow-sm transform rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
-                                                                    </svg>
-                                                                </div>
-                                                            </div>
-                                                        @endif
+
 
                                                         <div class="flex flex-col justify-around gap-6 h-full min-w-[240px]">
                                                             <!-- Encabezado de Ronda -->
@@ -751,7 +943,7 @@ TARJETA CAMPEÓN
                                                             <!-- Partidos de la Ronda -->
                                                             <div class="flex flex-col justify-around gap-6 flex-1">
                                                                 @foreach($games as $game)
-                                                                    <div class="nba-card w-60 shadow-md hover:shadow-xl transition-all duration-200 border-r-4 border-r-red-500">
+                                                                    <div class="nba-card w-60 shadow-md hover:shadow-xl transition-all duration-200 border-r-4 border-r-red-500 relative">
                                                                         <!-- Local -->
                                                                         <div @class([
                                                                             'nba-team-row',
@@ -760,7 +952,7 @@ TARJETA CAMPEÓN
                                                                         ])>
                                                                             <img src="{{ asset('storage/' . ($game->localTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
                                                                             <span class="nba-team-name">{{ $game->localTeam->name ?? 'Por definir' }}</span>
-                                                                            <span class="nba-team-score {{ is_numeric($game->local_team_score) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $game->local_team_score ?? '-' }}</span>
+                                                                            <span class="nba-team-score {{ is_numeric($game->local_team_score ?? ($game->localTeam ? '0' : null)) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $game->local_team_score ?? ($game->localTeam ? '0' : '-') }}</span>
                                                                         </div>
                                                                         <!-- Visitante -->
                                                                         <div @class([
@@ -770,22 +962,90 @@ TARJETA CAMPEÓN
                                                                         ])>
                                                                             <img src="{{ asset('storage/' . ($game->awayTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
                                                                             <span class="nba-team-name">{{ $game->awayTeam->name ?? 'Por definir' }}</span>
-                                                                            <span class="nba-team-score {{ is_numeric($game->away_team_score) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $game->away_team_score ?? '-' }}</span>
+                                                                            <span class="nba-team-score {{ is_numeric($game->away_team_score ?? ($game->awayTeam ? '0' : null)) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $game->away_team_score ?? ($game->awayTeam ? '0' : '-') }}</span>
+                                                                        </div>
+                                                                        <!-- Estado del Juego Centrado -->
+                                                                        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
+                                                                            @if(($game->status ?? 'pending') === 'pending')
+                                                                                <span class="nba-status-badge nba-status-pending">Pendiente</span>
+                                                                            @elseif(($game->status ?? 'pending') === 'playing')
+                                                                                <span class="nba-status-badge nba-status-playing">En Juego</span>
+                                                                            @elseif(($game->status ?? 'pending') === 'finished')
+                                                                                <span class="nba-status-badge nba-status-finished">Finalizado</span>
+                                                                            @endif
                                                                         </div>
                                                                     </div>
+                                                                @endforeach
+
+                                                                @php
+                                                                    $roundByes = $lbByesByRound[$roundIndex + 1] ?? [];
+                                                                    $normalByes = [];
+                                                                    $lateByes = [];
+                                                                    foreach ($roundByes as $byeId) {
+                                                                        if (in_array((int)$byeId, $lateTeams)) {
+                                                                            $lateByes[] = $byeId;
+                                                                        } else {
+                                                                            $normalByes[] = $byeId;
+                                                                        }
+                                                                    }
+                                                                @endphp
+                                                                
+                                                                <!-- 1. BYEs Tradicionales -->
+                                                                @foreach($normalByes as $byeTeamId)
+                                                                    @php
+                                                                        $byeTeam = $allGroupTeams->firstWhere('id', $byeTeamId);
+                                                                    @endphp
+                                                                    @if($byeTeam)
+                                                                        <div class="nba-card w-60 border-r-4 border-r-orange-500 bg-orange-50/10 shadow-md hover:shadow-xl transition-all duration-200 relative overflow-hidden flex flex-col justify-between py-2 px-3 min-h-[114px]">
+                                                                            <div class="absolute left-2 top-2 z-10">
+                                                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-orange-100 text-orange-800 border border-orange-200">
+                                                                                    BYE
+                                                                                </span>
+                                                                            </div>
+                                                                            <div class="flex items-center gap-3 py-1 justify-end text-right">
+                                                                                <div class="flex flex-col min-w-0 font-sans">
+                                                                                    <span class="text-xs font-black text-slate-800 uppercase tracking-wide truncate">{{ $byeTeam->name }}</span>
+                                                                                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Avanza Directo</span>
+                                                                                </div>
+                                                                                <img src="{{ asset('storage/' . ($byeTeam->image_path ?? '')) }}" class="w-8 h-8 rounded-full border border-gray-200 object-cover shadow-sm bg-white" alt="logo team" onerror="this.style.display='none'">
+                                                                            </div>
+                                                                            <div class="mt-2 bg-gradient-to-r from-orange-50 to-orange-100/50 text-orange-700 py-1 px-2 rounded-lg text-center font-extrabold text-[9px] uppercase tracking-wider border border-orange-200/60 font-sans">
+                                                                                ⚡ Pase Automático
+                                                                            </div>
+                                                                        </div>
+                                                                    @endif
+                                                                @endforeach
+
+                                                                <!-- 2. Equipos Tardíos (Abajo del Todo) -->
+                                                                @foreach($lateByes as $byeTeamId)
+                                                                    @php
+                                                                        $byeTeam = $allGroupTeams->firstWhere('id', $byeTeamId);
+                                                                    @endphp
+                                                                    @if($byeTeam)
+                                                                        <div class="nba-card w-60 border-r-4 border-r-blue-500 bg-blue-50/10 shadow-md hover:shadow-xl transition-all duration-200 relative overflow-hidden flex flex-col justify-between py-2 px-3 min-h-[114px]">
+                                                                            <div class="absolute left-2 top-2 z-10">
+                                                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-blue-100 text-blue-800 border border-blue-200">
+                                                                                    Tardío
+                                                                                </span>
+                                                                            </div>
+                                                                            <div class="flex items-center gap-3 py-1 justify-end text-right">
+                                                                                <div class="flex flex-col min-w-0 font-sans">
+                                                                                    <span class="text-xs font-black text-slate-800 uppercase tracking-wide truncate">{{ $byeTeam->name }}</span>
+                                                                                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Equipo Registrado</span>
+                                                                                </div>
+                                                                                <img src="{{ asset('storage/' . ($byeTeam->image_path ?? '')) }}" class="w-8 h-8 rounded-full border border-gray-200 object-cover shadow-sm bg-white" alt="logo team" onerror="this.style.display='none'">
+                                                                            </div>
+                                                                            <div class="mt-2 bg-gradient-to-r from-blue-50 to-blue-100/50 text-blue-700 py-1 px-2 rounded-lg text-center font-extrabold text-[9px] uppercase tracking-wider border border-blue-200/60 font-sans">
+                                                                                ⚡ Registro Tardío
+                                                                            </div>
+                                                                        </div>
+                                                                    @endif
                                                                 @endforeach
                                                             </div>
                                                         </div>
                                                     @endforeach
 
-                                                    <!-- Conector Final de Loser Bracket a Gran Final -->
-                                                    <div class="flex items-center justify-center shrink-0 w-8">
-                                                        <div class="w-full h-0.5 bg-gradient-to-l from-red-500 to-yellow-500 relative flex items-center justify-center">
-                                                            <svg class="w-4 h-4 text-yellow-600 bg-white rounded-full p-0.5 border border-yellow-400 shadow-sm transform rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
-                                                            </svg>
-                                                        </div>
-                                                    </div>
+
                                                 </div>
                                             </div>
 
@@ -923,7 +1183,7 @@ TARJETA CAMPEÓN
 
                                             <!-- Lista de Partidos -->
                                             @foreach($round['games'] ?? [] as $game)
-                                            <div class="nba-card">
+                                            <div class="nba-card relative">
 
                                                 <!-- FILA LOCAL -->
                                                 <div @class([
@@ -945,7 +1205,7 @@ TARJETA CAMPEÓN
                                                     @endif
 
                                                     <!-- MARCADOR -->
-                                                    <span class="nba-team-score {{ is_numeric($game->local_team_score) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $game->local_team_score ?? '-' }}</span>
+                                                    <span class="nba-team-score {{ is_numeric($game->local_team_score ?? ($game->localTeam ? '0' : null)) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $game->local_team_score ?? ($game->localTeam ? '0' : '-') }}</span>
                                                 </div>
 
                                                 <!-- FILA VISITANTE -->
@@ -968,7 +1228,17 @@ TARJETA CAMPEÓN
                                                     @endif
 
                                                     <!-- MARCADOR -->
-                                                    <span class="nba-team-score {{ is_numeric($game->away_team_score) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $game->away_team_score ?? '-' }}</span>
+                                                    <span class="nba-team-score {{ is_numeric($game->away_team_score ?? ($game->awayTeam ? '0' : null)) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $game->away_team_score ?? ($game->awayTeam ? '0' : '-') }}</span>
+                                                </div>
+                                                <!-- Estado del Juego Centrado -->
+                                                <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
+                                                    @if(($game->status ?? 'pending') === 'pending')
+                                                        <span class="nba-status-badge nba-status-pending">Pendiente</span>
+                                                    @elseif(($game->status ?? 'pending') === 'playing')
+                                                        <span class="nba-status-badge nba-status-playing">En Juego</span>
+                                                    @elseif(($game->status ?? 'pending') === 'finished')
+                                                        <span class="nba-status-badge nba-status-finished">Finalizado</span>
+                                                    @endif
                                                 </div>
                                             </div>
                                             @endforeach
