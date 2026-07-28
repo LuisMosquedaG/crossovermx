@@ -1,6 +1,8 @@
 <x-app-layout>
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Graduate&display=swap');
+
 /* --- MODO CLARO FINAL --- */
 
 .nba-bg {
@@ -12,98 +14,129 @@
 
 .nba-card {
     background-color: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
     overflow: hidden;
-    transition: all 0.2s ease;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
     position: relative;
 }
 
 .nba-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    border-color: #d1d5db;
+    transform: translateY(-4px);
+    box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.12);
+    border-color: #cbd5e1;
 }
 
 .nba-header {
     text-transform: uppercase;
     letter-spacing: 1px;
     font-size: 0.75rem;
-    color: #6b7280;
+    color: #64748b;
     text-align: center;
     padding: 0.5rem;
-    background-color: #f3f4f6;
+    background-color: #f8fafc;
     font-weight: 700;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e2e8f0;
 }
 
 /* FILA DE EQUIPOS */
 .nba-team-row {
     display: flex;
     align-items: center;
-    padding: 0 12px;
-    border-bottom: 1px solid #f3f4f6;
-    height: 60px;
+    padding: 0 16px;
+    border-bottom: 1px solid #f1f5f9;
+    height: 56px;
     position: relative;
     overflow: hidden;
+    background-color: #ffffff;
 }
 .nba-team-row:last-child { border-bottom: none; }
 
-/* LOGO GRANDE Y CORTADO (IZQUIERDA) - REDUCIDO 20% */
+/* LOGO GRANDE Y CORTADO (IZQUIERDA) */
 .nba-team-logo {
     position: absolute;
     top: 50%;
-    left: -10px;
+    left: -8px;
     transform: translateY(-50%);
-    height: 104px;
+    height: 90px;
     width: auto;
-    opacity: 0.15;
+    opacity: 0.08;
     z-index: 0;
     object-fit: contain;
+    pointer-events: none;
+    transition: all 0.3s ease;
 }
 
-/* MARCADOR BASE (DERECHA) */
+/* MARCADOR BASE (DERECHA) - GRANDE Y DESVANECIDO */
 .nba-team-score {
-    position: relative;
-    z-index: 10;
-    margin-left: auto;
-    font-family: 'Arial', sans-serif;
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Outfit', 'Inter', 'Arial Black', sans-serif;
     line-height: 1;
+    user-select: none;
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+/* Marcador con puntos */
+.nba-score-numeric {
+    font-size: 3.4rem;
+    font-weight: 700;
+    z-index: 1;
+    font-family: 'Graduate', 'Courier New', monospace, serif;
+    transform: translateY(-50%) scaleY(1.4) scaleX(0.95); /* Stretches vertically and keeps them thicker */
+    transform-origin: right center;
+}
+
+/* Marcador vacío (guión) */
+.nba-score-empty {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #94a3b8;
+    opacity: 0.6;
+    right: 18px;
+    z-index: 10;
 }
 
 /* =========================================
 ESTILO GANADOR
 ========================================= */
 .nba-winner {
-    background-color: transparent;
+    background-color: #f8fafc;
 }
 
-.nba-winner .nba-team-score {
-    color: #059669;
-    font-weight: 900;
-    font-size: 1.8rem;
-    text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+.nba-winner .nba-team-name {
+    color: #0f172a;
+    font-weight: 800;
+}
+
+.nba-winner .nba-team-score.nba-score-numeric {
+    color: rgba(16, 185, 129, 0.18); /* Green faded watermark */
 }
 
 /* =========================================
 ESTILO PERDEDOR
 ========================================= */
-.nba-loser::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background-color: rgba(75, 85, 99, 0.5);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+.nba-loser {
+    background-color: #ffffff;
 }
 
-.nba-loser .nba-team-score {
-    color: #d1d5db;
-    font-weight: 700;
-    font-size: 1.4rem;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+.nba-loser .nba-team-name {
+    color: #94a3b8;
+    font-weight: 500;
+    opacity: 0.7;
+}
+
+.nba-loser .nba-team-score.nba-score-numeric {
+    color: rgba(148, 163, 184, 0.12); /* Slate/grey faded watermark */
+}
+
+.nba-loser .nba-team-logo {
+    opacity: 0.03;
+    filter: grayscale(100%);
 }
 
 /* ESTADOS (Ocultos) */
@@ -191,22 +224,40 @@ TARJETA CAMPEÓN
 .nba-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
 .nba-scroll::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
 
-/* NOMBRE DEL EQUIPO CENTRADO */
+/* NOMBRE DEL EQUIPO CENTRADO CON DISEÑO TIPO PASTILLA BLANCO TRANSPARENTE */
 .nba-team-name {
     position: relative;
     z-index: 10;
-    flex-grow: 1;
-    text-align: center;
-    padding-left: 75px;  /* Mueve el texto a la derecha para evitar el logo grande */
-    padding-right: 30px; /* Espacio para el marcador */
+    flex-grow: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    background-color: rgba(255, 255, 255, 0.1); /* Highly transparent to perfectly reveal the logo and giant score numbers */
+    backdrop-filter: none; /* Removed blur entirely so background numbers are crystal clear */
+    -webkit-backdrop-filter: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 9999px;
+    padding: 0 16px;
     font-weight: 700;
     font-size: 0.85rem;
-    color: #374151; /* Gris oscuro */
+    color: #0f172a; /* Slate dark text for readability over transparency */
     text-transform: uppercase;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis; /* Puntos suspensivos si el nombre es muy largo */
-    letter-spacing: 0.5px;
+    text-overflow: ellipsis;
+    letter-spacing: 0.75px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.01);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    width: fit-content;
+    max-width: 90%;
+    margin: 0 auto; /* Centers the pill within the team row container */
+}
+
+.nba-card:hover .nba-team-name {
+    background-color: rgba(255, 255, 255, 0.3); /* Slightly more visible on hover but still highly transparent */
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
 </style>
@@ -539,7 +590,7 @@ TARJETA CAMPEÓN
                                                                         ])>
                                                                             <img src="{{ asset('storage/' . ($game->localTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
                                                                             <span class="nba-team-name">{{ $game->localTeam->name ?? 'Por definir' }}</span>
-                                                                            <span class="nba-team-score">{{ $game->local_team_score ?? '-' }}</span>
+                                                                            <span class="nba-team-score {{ is_numeric($game->local_team_score) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $game->local_team_score ?? '-' }}</span>
                                                                         </div>
                                                                         <!-- Visitante -->
                                                                         <div @class([
@@ -549,7 +600,7 @@ TARJETA CAMPEÓN
                                                                         ])>
                                                                             <img src="{{ asset('storage/' . ($game->awayTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
                                                                             <span class="nba-team-name">{{ $game->awayTeam->name ?? 'Por definir' }}</span>
-                                                                            <span class="nba-team-score">{{ $game->away_team_score ?? '-' }}</span>
+                                                                            <span class="nba-team-score {{ is_numeric($game->away_team_score) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $game->away_team_score ?? '-' }}</span>
                                                                         </div>
                                                                     </div>
                                                                 @endforeach
@@ -603,7 +654,7 @@ TARJETA CAMPEÓN
                                                             ])>
                                                                 <img src="{{ asset('storage/' . ($gf->localTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
                                                                 <span class="nba-team-name">{{ $gf->localTeam->name ?? 'Campeón Winner' }}</span>
-                                                                <span class="nba-team-score">{{ $gf->local_team_score ?? '-' }}</span>
+                                                                <span class="nba-team-score {{ is_numeric($gf->local_team_score) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $gf->local_team_score ?? '-' }}</span>
                                                             </div>
 
                                                             <!-- VISITANTE -->
@@ -614,7 +665,7 @@ TARJETA CAMPEÓN
                                                             ])>
                                                                 <img src="{{ asset('storage/' . ($gf->awayTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
                                                                 <span class="nba-team-name">{{ $gf->awayTeam->name ?? 'Campeón Loser' }}</span>
-                                                                <span class="nba-team-score">{{ $gf->away_team_score ?? '-' }}</span>
+                                                                <span class="nba-team-score {{ is_numeric($gf->away_team_score) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $gf->away_team_score ?? '-' }}</span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -643,7 +694,7 @@ TARJETA CAMPEÓN
                                                             ])>
                                                                 <img src="{{ asset('storage/' . ($g->localTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
                                                                 <span class="nba-team-name">{{ $g->localTeam->name ?? 'Por definir' }}</span>
-                                                                <span class="nba-team-score">{{ $g->local_team_score ?? '-' }}</span>
+                                                                <span class="nba-team-score {{ is_numeric($g->local_team_score) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $g->local_team_score ?? '-' }}</span>
                                                             </div>
                                                             
                                                             <!-- VISITANTE -->
@@ -654,7 +705,7 @@ TARJETA CAMPEÓN
                                                             ])>
                                                                 <img src="{{ asset('storage/' . ($g->awayTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
                                                                 <span class="nba-team-name">{{ $g->awayTeam->name ?? 'Por definir' }}</span>
-                                                                <span class="nba-team-score">{{ $g->away_team_score ?? '-' }}</span>
+                                                                <span class="nba-team-score {{ is_numeric($g->away_team_score) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $g->away_team_score ?? '-' }}</span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -709,7 +760,7 @@ TARJETA CAMPEÓN
                                                                         ])>
                                                                             <img src="{{ asset('storage/' . ($game->localTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo local" onerror="this.style.display='none'">
                                                                             <span class="nba-team-name">{{ $game->localTeam->name ?? 'Por definir' }}</span>
-                                                                            <span class="nba-team-score">{{ $game->local_team_score ?? '-' }}</span>
+                                                                            <span class="nba-team-score {{ is_numeric($game->local_team_score) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $game->local_team_score ?? '-' }}</span>
                                                                         </div>
                                                                         <!-- Visitante -->
                                                                         <div @class([
@@ -719,7 +770,7 @@ TARJETA CAMPEÓN
                                                                         ])>
                                                                             <img src="{{ asset('storage/' . ($game->awayTeam->image_path ?? '')) }}" class="nba-team-logo" alt="logo visitante" onerror="this.style.display='none'">
                                                                             <span class="nba-team-name">{{ $game->awayTeam->name ?? 'Por definir' }}</span>
-                                                                            <span class="nba-team-score">{{ $game->away_team_score ?? '-' }}</span>
+                                                                            <span class="nba-team-score {{ is_numeric($game->away_team_score) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $game->away_team_score ?? '-' }}</span>
                                                                         </div>
                                                                     </div>
                                                                 @endforeach
@@ -894,7 +945,7 @@ TARJETA CAMPEÓN
                                                     @endif
 
                                                     <!-- MARCADOR -->
-                                                    <span class="nba-team-score">{{ $game->local_team_score ?? '-' }}</span>
+                                                    <span class="nba-team-score {{ is_numeric($game->local_team_score) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $game->local_team_score ?? '-' }}</span>
                                                 </div>
 
                                                 <!-- FILA VISITANTE -->
@@ -917,7 +968,7 @@ TARJETA CAMPEÓN
                                                     @endif
 
                                                     <!-- MARCADOR -->
-                                                    <span class="nba-team-score">{{ $game->away_team_score ?? '-' }}</span>
+                                                    <span class="nba-team-score {{ is_numeric($game->away_team_score) ? 'nba-score-numeric' : 'nba-score-empty' }}">{{ $game->away_team_score ?? '-' }}</span>
                                                 </div>
                                             </div>
                                             @endforeach
