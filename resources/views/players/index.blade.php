@@ -201,7 +201,7 @@
 
                                     <div>
                                         <x-input-label for="modal_number" :value="__('Número *')" />
-                                        <x-text-input id="modal_number" class="block mt-1 w-full focus:border-orange-500 focus:ring-orange-500" type="number" name="number" required />
+                                        <x-text-input id="modal_number" class="block mt-1 w-full focus:border-orange-500 focus:ring-orange-500" type="text" name="number" inputmode="numeric" pattern="[0-9]*" maxlength="3" required />
                                     </div>
 
                                     <div>

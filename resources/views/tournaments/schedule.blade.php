@@ -610,7 +610,7 @@
                                     <!-- Solo Número -->
                                     <div>
                                         <label for="qp_number" class="block text-sm font-medium text-gray-700">Número</label>
-                                        <input type="number" name="number" id="qp_number" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm border p-2">
+                                        <input type="text" name="number" id="qp_number" required inputmode="numeric" pattern="[0-9]*" maxlength="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm border p-2">
                                     </div>
                                 </div>
                             </div>

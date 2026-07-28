@@ -9,9 +9,11 @@
                     <div class="mb-6 flex flex-col md:flex-row items-center gap-4">
                         
                         <!-- Botón Crear Partido -->
-                        <button onclick="openCreateModal()" class="w-full md:w-auto shrink-0 bg-orange-600 text-white font-bold py-2 px-4 rounded hover:bg-orange-700 transition duration-150 ease-in-out">
-                            Crear Nuevo Partido
-                        </button>
+                        @if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach'))
+                            <button onclick="openCreateModal()" class="w-full md:w-auto shrink-0 bg-orange-600 text-white font-bold py-2 px-4 rounded hover:bg-orange-700 transition duration-150 ease-in-out">
+                                Crear Nuevo Partido
+                            </button>
+                        @endif
 
                         <!-- Formulario de Búsqueda -->
                         <form action="{{ route('games.index') }}" method="GET" class="relative w-full md:flex-1">
@@ -65,60 +67,65 @@
                                         <!-- 1. Acciones (Orden: Editar -> Lapiz Arbitro -> Play -> Stats -> Eliminar) -->
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                                             <div class="flex items-center justify-center space-x-2">
-                                                
-                                                <!-- 1. Editar Partido (Lápiz Índigo) -->
-                                                <button onclick="openEditModal({{ $game->toJson() }})" class="text-indigo-600 hover:text-indigo-900" title="Editar Partido">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                                                    </svg>
-                                                </button>
+                                                                                                <!-- 1. Editar Partido (Lápiz Índigo) -->
+                                                 @if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach'))
+                                                     <button onclick="openEditModal({{ $game->toJson() }})" class="text-indigo-600 hover:text-indigo-900" title="Editar Partido">
+                                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                                             <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                                         </svg>
+                                                     </button>
+                                                 @endif
 
-                                                <!-- 2. Lápiz: Asignar Árbitro (Solo Visible para Admin/Super Admin/Organizador) -->
-                                                @if(!auth()->user()->hasRole('Arbitro'))
-                                                    <button onclick="openAssignRefereeModal({{ $game->id }}, '{{ $game->referee_id ?? '' }}')" class="text-yellow-600 transition-colors" title="Asignar Árbitro">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zM19.5 7.125L18 14v4.75" />
-                                                        </svg>
-                                                    </button>
-                                                @endif
+                                                 <!-- 2. Lápiz: Asignar Árbitro (Solo Visible para Admin/Super Admin/Organizador) -->
+                                                 @if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach'))
+                                                     <button onclick="openAssignRefereeModal({{ $game->id }}, '{{ $game->referee_id ?? '' }}')" class="text-yellow-600 transition-colors" title="Asignar Árbitro">
+                                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zM19.5 7.125L18 14v4.75" />
+                                                         </svg>
+                                                     </button>
+                                                 @endif
 
-                                                <!-- 3. Play / Iniciar (Lógica Condicional) -->
-                                                @if($game->status === 'pending')
-                                                    <!-- Si es pendiente, abre modal de jugadores -->
-                                                    <button onclick="openPlayerSelectionModal({{ $game->id }})" class="text-orange-600 hover:text-orange-800" title="Iniciar Partido">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
-                                                        </svg>
-                                                    </button>
-                                                @elseif($game->status === 'playing')
-                                                    <!-- Si está jugando, va al Live -->
-                                                    <a href="{{ route('games.live', $game->id) }}" class="text-orange-600 hover:text-orange-800" title="Operar Partido">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
-                                                        </svg>
-                                                    </a>
-                                                @endif
+                                                 <!-- 3. Play / Iniciar (Lógica Condicional - No visible para Coach) -->
+                                                 @if(!auth()->user()->hasRole('Coach'))
+                                                     @if($game->status === 'pending')
+                                                         <!-- Si es pendiente, abre modal de jugadores -->
+                                                         <button onclick="openPlayerSelectionModal({{ $game->id }})" class="text-orange-600 hover:text-orange-800" title="Iniciar Partido">
+                                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+                                                             </svg>
+                                                         </button>
+                                                     @elseif($game->status === 'playing')
+                                                         <!-- Si está jugando, va al Live -->
+                                                         <a href="{{ route('games.live', $game->id) }}" class="text-orange-600 hover:text-orange-800" title="Operar Partido">
+                                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+                                                             </svg>
+                                                         </a>
+                                                     @endif
+                                                 @endif
 
-                                                <!-- 4. Stats: Ver Estadísticas (Solo si finalizado) -->
-                                                @if($game->status === 'finished')
-                                                    <a href="{{ route('games.stats', $game->id) }}" class="text-indigo-600 hover:text-indigo-900" title="Ver Estadísticas">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125z" />
-                                                        </svg>
-                                                    </a>
-                                                @endif
+                                                 <!-- 4. Stats: Ver Estadísticas (Solo si finalizado) -->
+                                                 @if($game->status === 'finished')
+                                                     <a href="{{ route('games.stats', $game->id) }}" class="text-indigo-600 hover:text-indigo-900" title="Ver Estadísticas">
+                                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125z" />
+                                                         </svg>
+                                                     </a>
+                                                 @endif
 
-                                                <!-- 5. Eliminar -->
-                                                <form action="{{ route('games.destroy', $game) }}" method="POST" onsubmit="return confirm('¿Eliminar este partido?');" class="inline">
-                                                    @csrf @method('DELETE')
-                                                    <button type="submit" class="text-red-600 hover:text-red-900" title="Eliminar">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                                                        </svg>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
+                                                 <!-- 5. Eliminar -->
+                                                 @if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach'))
+                                                     <form action="{{ route('games.destroy', $game) }}" method="POST" onsubmit="return confirm('¿Eliminar este partido?');" class="inline">
+                                                         @csrf @method('DELETE')
+                                                         <button type="submit" class="text-red-600 hover:text-red-900" title="Eliminar">
+                                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                                             </svg>
+                                                         </button>
+                                                     </form>
+                                                 @endif
+                                             </div>
+                                         </td>
 
                                         <!-- 2. Imagen (Logo Local) -->
                                         <td class="px-6 py-4 whitespace-nowrap flex justify-center items-center">
@@ -496,7 +503,7 @@
                                     
                                     <div>
                                         <label for="qp_number" class="block text-sm font-medium text-gray-700">Número</label>
-                                        <input type="number" name="number" id="qp_number" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm border p-2">
+                                        <input type="text" name="number" id="qp_number" required inputmode="numeric" pattern="[0-9]*" maxlength="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm border p-2">
                                     </div>
                                 </div>
                             </div>

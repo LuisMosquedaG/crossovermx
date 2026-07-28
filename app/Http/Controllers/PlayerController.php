@@ -51,7 +51,9 @@ class PlayerController extends Controller
                 'name' => 'required|string|max:255',            
                 'number' => [
                     'required', 
-                    'integer',
+                    'string',
+                    'max:3',
+                    'regex:/^[0-9]{1,3}$/',
                     Rule::unique('players')->where(function ($query) use ($request) {
                         return $query->where('team_id', $request->team_id);
                     })
@@ -77,6 +79,7 @@ class PlayerController extends Controller
                 'emergency_contact_phone' => 'nullable|string|max:20',
             ], [
                 'number.unique' => 'El número de camiseta ya está en uso en este equipo.',
+                'number.regex' => 'El número de camiseta debe ser un valor numérico de hasta 3 dígitos.',
                 'curp.unique' => 'Este jugador ya está inscrito en este equipo.'
             ]);
 
@@ -122,7 +125,9 @@ class PlayerController extends Controller
             'name' => 'required|string|max:255',
             'number' => [
                 'required',
-                'integer',
+                'string',
+                'max:3',
+                'regex:/^[0-9]{1,3}$/',
                 Rule::unique('players')->where(function ($query) use ($request) {
                     return $query->where('team_id', $request->team_id);
                 })->ignore($player->id)
@@ -148,6 +153,7 @@ class PlayerController extends Controller
             'emergency_contact_phone' => 'nullable|string|max:20',
         ], [
             'number.unique' => 'El número de camiseta ya está en uso en este equipo.',
+            'number.regex' => 'El número de camiseta debe ser un valor numérico de hasta 3 dígitos.',
             'curp.unique' => 'Este jugador ya está inscrito en este equipo (mismo torneo/categoría).'
         ]);
 

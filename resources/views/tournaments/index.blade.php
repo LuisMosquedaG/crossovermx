@@ -14,7 +14,7 @@
                     <div class="mb-6 flex flex-col xl:flex-row items-center gap-3">
                         
                         <!-- 1. El Botón Crear -->
-                        @if(!auth()->user()->hasRole('Arbitro'))
+                        @if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach'))
                             <button onclick="openCreateModal()" class="w-full xl:w-auto shrink-0 bg-orange-600 text-white font-bold py-2 px-4 rounded hover:bg-orange-700 transition duration-150 ease-in-out">
                                 Crear Nuevo Torneo
                             </button>
@@ -847,7 +847,7 @@
                                         </div>
                                         <div>
                                             <x-input-label for="player_quick_number" :value="__('Número de Camiseta')" />
-                                            <x-text-input id="player_quick_number" name="number" class="block mt-1 w-full focus:border-orange-500 focus:ring-orange-500" type="number" required />
+                                            <x-text-input id="player_quick_number" name="number" class="block mt-1 w-full focus:border-orange-500 focus:ring-orange-500" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" required />
                                         </div>
                                         <div>
                                             <x-input-label for="player_quick_image" :value="__('Fotografía (Opcional)')" />
@@ -873,6 +873,7 @@
     </div>
 
 <script>
+    const isCoachOrArbitro = {{ (auth()->user()->hasRole('Coach') || auth()->user()->hasRole('Arbitro')) ? 'true' : 'false' }};
     const allCourts = @json($courts);
     function openCreateModal() {
         resetForm();
@@ -1382,13 +1383,18 @@
 
     function setViewActions(tournamentId, status) {
         let cloneButton = '';
-        if (status === 'finished') {
+        if (status === 'finished' && !isCoachOrArbitro) {
             cloneButton = `<button type="button" onclick="cloneTournament(${tournamentId})" class="inline-flex justify-center rounded-md border border-transparent bg-orange-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 sm:ml-3 sm:w-auto transition duration-150 ease-in-out">Crear Torneo Nuevo</button>`;
+        }
+
+        let deleteCalendarButton = '';
+        if (!isCoachOrArbitro) {
+            deleteCalendarButton = `<button type="button" onclick="deleteCalendar(${tournamentId})" class="inline-flex justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:ml-3 sm:w-auto">Eliminar Calendario</button>`;
         }
 
         document.getElementById('calendarModalActions').innerHTML = `
             ${cloneButton}
-            <button type="button" onclick="deleteCalendar(${tournamentId})" class="inline-flex justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:ml-3 sm:w-auto">Eliminar Calendario</button>
+            ${deleteCalendarButton}
             <button type="button" onclick="closeCalendarModal()" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Cerrar</button>
         `;
     }
