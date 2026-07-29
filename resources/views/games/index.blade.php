@@ -598,9 +598,22 @@
                     currentLocalTeamId = data.local_team.id;
                     currentAwayTeamId = data.away_team.id;
                     
-                    // 2. CORRECCIÓN PUNTO 2: Guardamos Categorías (Necesario para el botón +)
-                    currentLocalTeamCategory = data.local_team.category || '';
-                    currentAwayTeamCategory = data.away_team.category || '';
+                    // Determinar categorías de forma robusta e insensible a mayúsculas
+                    let categoryGroup = (data.category_group || data.group_name || '').toString().toLowerCase();
+                    let localCat = (data.local_team.category || '').toString().toLowerCase();
+                    let awayCat = (data.away_team.category || '').toString().toLowerCase();
+
+                    if (categoryGroup.includes('varonil') || localCat.includes('varonil') || awayCat.includes('varonil')) {
+                        currentLocalTeamCategory = 'Varonil';
+                        currentAwayTeamCategory = 'Varonil';
+                    } else if (categoryGroup.includes('femenil') || localCat.includes('femenil') || awayCat.includes('femenil')) {
+                        currentLocalTeamCategory = 'Femenil';
+                        currentAwayTeamCategory = 'Femenil';
+                    } else {
+                        // Fallback a los valores crudos
+                        currentLocalTeamCategory = data.local_team.category || '';
+                        currentAwayTeamCategory = data.away_team.category || '';
+                    }
                     
                     populatePlayerList('localTeamPlayers', data.local_team.players, 'local');
                     populatePlayerList('awayTeamPlayers', data.away_team.players, 'away');
@@ -699,9 +712,10 @@
 
             // --- LÓGICA DE ASIGNACIÓN DE GÉNERO ---
             let genderValue = '';
-            if (category === 'Varonil') {
+            const normalizedCategory = (category || '').toString().trim().toLowerCase();
+            if (normalizedCategory === 'varonil') {
                 genderValue = 'hombre';
-            } else if (category === 'Femenil') {
+            } else if (normalizedCategory === 'femenil') {
                 genderValue = 'mujer';
             }
             document.getElementById('qp_gender').value = genderValue;
