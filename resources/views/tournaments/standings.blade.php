@@ -546,50 +546,55 @@ TARJETA CAMPEÓN
                                                         </div>
                                                     </form>
                                                 </dialog>
-
-                                                <!-- Modal para Crear Nuevo Equipo vía AJAX -->
-                                                <dialog id="modalCreateTeamFromStandings-{{ Str::slug($groupName) }}" class="p-6 rounded-2xl shadow-2xl backdrop:bg-gray-900/50 max-w-md w-full border border-gray-200 text-left">
-                                                    <form onsubmit="submitCreateTeamFromStandings(event, '{{ Str::slug($groupName) }}')" class="space-y-4">
-                                                        @csrf
-                                                        <input type="hidden" name="tournament_id" value="{{ $tournament->id }}">
-                                                        <input type="hidden" name="category" value="{{ $groupCategory }}">
-                                                        <input type="hidden" name="strength" value="{{ $groupStrength }}">
-                                                        <input type="hidden" name="status" value="active">
-                                                        <input type="hidden" name="skip_double_elim_late" value="1">
-
-                                                        <div class="flex items-center justify-between border-b pb-2">
-                                                            <h3 class="text-lg font-black text-gray-900 flex items-center gap-2">
-                                                                <i class="fa-solid fa-user-plus text-orange-500"></i> Crear Nuevo Equipo
-                                                            </h3>
-                                                            <button type="button" onclick="document.getElementById('modalCreateTeamFromStandings-{{ Str::slug($groupName) }}').close()" class="text-gray-400 hover:text-gray-600 font-bold">&times;</button>
-                                                        </div>
-
-                                                        <p class="text-xs text-gray-600 leading-relaxed">
-                                                            Se creará un nuevo equipo directamente para el torneo <strong>{{ $tournament->name }}</strong>, categoría <strong>{{ $groupCategory }}</strong> y nivel <strong>{{ $groupStrength }}</strong>.
-                                                        </p>
-
-                                                        <div>
-                                                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nombre del Equipo</label>
-                                                            <input type="text" name="name" required class="w-full border-gray-300 rounded-lg text-sm focus:ring-orange-500 focus:border-orange-500 shadow-sm animate-pulse-once" placeholder="Ej. Lakers">
-                                                        </div>
-
-                                                        <div>
-                                                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Entrenador (Coach)</label>
-                                                            <select name="coach_id" class="w-full border-gray-300 rounded-lg text-sm focus:ring-orange-500 focus:border-orange-500 shadow-sm bg-white">
-                                                                <option value="">-- Sin Entrenador --</option>
-                                                                @foreach ($coaches as $coach)
-                                                                    <option value="{{ $coach->id }}">{{ $coach->name }}</option>
-                                                                @endforeach
-                                                            </select>
-                                                        </div>
-
-                                                        <div class="flex justify-end gap-2 pt-3 border-t">
-                                                            <button type="button" onclick="document.getElementById('modalCreateTeamFromStandings-{{ Str::slug($groupName) }}').close()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-300">Cancelar</button>
-                                                            <button type="submit" class="px-4 py-2 bg-orange-600 text-white rounded-lg text-xs font-bold hover:bg-orange-700 shadow-md">Crear Equipo</button>
-                                                        </div>
-                                                    </form>
-                                                </dialog>
                                             @endif
+
+                                            <!-- Modal para Crear Nuevo Equipo vía AJAX -->
+                                            @php
+                                                $parts = explode(' - ', $groupName, 2);
+                                                $groupCategory = trim($parts[0] ?? 'Varonil');
+                                                $groupStrength = trim($parts[1] ?? 'Libre');
+                                            @endphp
+                                            <dialog id="modalCreateTeamFromStandings-{{ Str::slug($groupName) }}" class="p-6 rounded-2xl shadow-2xl backdrop:bg-gray-900/50 max-w-md w-full border border-gray-200 text-left">
+                                                <form onsubmit="submitCreateTeamFromStandings(event, '{{ Str::slug($groupName) }}')" class="space-y-4">
+                                                    @csrf
+                                                    <input type="hidden" name="tournament_id" value="{{ $tournament->id }}">
+                                                    <input type="hidden" name="category" value="{{ $groupCategory }}">
+                                                    <input type="hidden" name="strength" value="{{ $groupStrength }}">
+                                                    <input type="hidden" name="status" value="active">
+                                                    <input type="hidden" name="skip_double_elim_late" value="1">
+
+                                                    <div class="flex items-center justify-between border-b pb-2">
+                                                        <h3 class="text-lg font-black text-gray-900 flex items-center gap-2">
+                                                            <i class="fa-solid fa-user-plus text-orange-500"></i> Crear Nuevo Equipo
+                                                        </h3>
+                                                        <button type="button" onclick="document.getElementById('modalCreateTeamFromStandings-{{ Str::slug($groupName) }}').close()" class="text-gray-400 hover:text-gray-600 font-bold">&times;</button>
+                                                    </div>
+
+                                                    <p class="text-xs text-gray-600 leading-relaxed">
+                                                        Se creará un nuevo equipo directamente para el torneo <strong>{{ $tournament->name }}</strong>, categoría <strong>{{ $groupCategory }}</strong> y nivel <strong>{{ $groupStrength }}</strong>.
+                                                    </p>
+
+                                                    <div>
+                                                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nombre del Equipo</label>
+                                                        <input type="text" name="name" required class="w-full border-gray-300 rounded-lg text-sm focus:ring-orange-500 focus:border-orange-500 shadow-sm animate-pulse-once" placeholder="Ej. Lakers">
+                                                    </div>
+
+                                                    <div>
+                                                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Entrenador (Coach)</label>
+                                                        <select name="coach_id" class="w-full border-gray-300 rounded-lg text-sm focus:ring-orange-500 focus:border-orange-500 shadow-sm bg-white">
+                                                            <option value="">-- Sin Entrenador --</option>
+                                                            @foreach ($coaches as $coach)
+                                                                <option value="{{ $coach->id }}">{{ $coach->name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="flex justify-end gap-2 pt-3 border-t">
+                                                        <button type="button" onclick="document.getElementById('modalCreateTeamFromStandings-{{ Str::slug($groupName) }}').close()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-300">Cancelar</button>
+                                                        <button type="submit" class="px-4 py-2 bg-orange-600 text-white rounded-lg text-xs font-bold hover:bg-orange-700 shadow-md">Crear Equipo</button>
+                                                    </div>
+                                                </form>
+                                            </dialog>
 
                                             <!-- Modal de Equipo Tardío -->
                                             <dialog id="modalAddLateTeam-{{ Str::slug($groupName) }}" class="p-6 rounded-2xl shadow-2xl backdrop:bg-gray-900/50 max-w-md w-full border border-gray-200 text-left">
@@ -610,14 +615,21 @@ TARJETA CAMPEÓN
 
                                                     <div>
                                                         <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Seleccionar Equipo Tardío</label>
-                                                        <select name="team_id" required class="w-full border-gray-300 rounded-lg text-sm focus:ring-orange-500 focus:border-orange-500 shadow-sm">
-                                                            <option value="">-- Selecciona un equipo --</option>
-                                                            @foreach(\App\Models\Team::where('client_id', auth()->user()->client_id ?? 1)->orderBy('name')->get() as $t)
-                                                                @if(!$tournament->teams->contains($t->id))
-                                                                    <option value="{{ $t->id }}">{{ $t->name }}</option>
-                                                                @endif
-                                                            @endforeach
-                                                        </select>
+                                                        <div class="flex">
+                                                            <select name="team_id" required class="flex-1 border-gray-300 rounded-l-lg text-sm focus:ring-orange-500 focus:border-orange-500 shadow-sm bg-white border-r-0 team-select-{{ Str::slug($groupName) }}">
+                                                                <option value="">-- Selecciona un equipo --</option>
+                                                                @foreach(\App\Models\Team::where('client_id', auth()->user()->client_id ?? 1)->orderBy('name')->get() as $t)
+                                                                    @if(!$tournament->teams->contains($t->id))
+                                                                        <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                                                    @endif
+                                                                @endforeach
+                                                            </select>
+                                                            <button type="button" onclick="openCreateTeamModalFromStandings('{{ Str::slug($groupName) }}', 'team_id')" class="bg-orange-600 hover:bg-orange-700 text-white rounded-r-lg border border-l-0 border-orange-600 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition duration-150 ease-in-out flex items-center justify-center" title="Crear nuevo equipo">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                                                </svg>
+                                                            </button>
+                                                        </div>
                                                     </div>
 
                                                     <div class="flex justify-end gap-2 pt-3 border-t">
@@ -834,6 +846,51 @@ TARJETA CAMPEÓN
                                             <!-- ================================================================= -->
                                             <div class="flex flex-col items-center gap-4 px-4 shrink-0 min-w-[300px]">
                                                 <div class="nba-header">GRAN FINAL</div>
+
+                                                @php
+                                                    $doubleElimChampion = null;
+                                                    $doubleElimChampionLogo = null;
+                                                    
+                                                    $gf = $data['bracket']['grand_final'] ?? null;
+                                                    $gr = $data['bracket']['reset_game'] ?? null;
+                                                    
+                                                    if ($gr && $gr->status === 'finished') {
+                                                        if ($gr->local_team_score > $gr->away_team_score) {
+                                                            $doubleElimChampion = $gr->localTeam->name ?? null;
+                                                            $doubleElimChampionLogo = $gr->localTeam->image_path ?? null;
+                                                        } elseif ($gr->local_team_score < $gr->away_team_score) {
+                                                            $doubleElimChampion = $gr->awayTeam->name ?? null;
+                                                            $doubleElimChampionLogo = $gr->awayTeam->image_path ?? null;
+                                                        }
+                                                    } elseif ($gf && $gf->status === 'finished') {
+                                                        if ($gf->local_team_score > $gf->away_team_score) {
+                                                            $doubleElimChampion = $gf->localTeam->name ?? null;
+                                                            $doubleElimChampionLogo = $gf->localTeam->image_path ?? null;
+                                                        }
+                                                    }
+                                                @endphp
+
+                                                @if($doubleElimChampion)
+                                                    <div class="w-72">
+                                                        <div class="nba-champion-card border-2 border-yellow-500 shadow-2xl bg-white relative overflow-hidden">
+                                                            @if($doubleElimChampionLogo)
+                                                            <img src="{{ asset('storage/' . $doubleElimChampionLogo) }}" class="champion-bg-logo" alt="logo campeon" onerror="this.style.display='none'">
+                                                            @endif
+                                                            <div class="champion-content">
+                                                                <div class="champion-label">Campeón</div>
+                                                                <div class="champion-name">
+                                                                    {{ $doubleElimChampion }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    <div class="w-72">
+                                                        <div class="flex items-center justify-center border border-dashed border-gray-300 rounded-lg min-h-[80px] w-full bg-white/20">
+                                                            <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">Campeón Pendiente</span>
+                                                        </div>
+                                                    </div>
+                                                @endif
 
                                                 <div class="flex-1 flex flex-col justify-center items-center gap-6 w-full">
                                                     <!-- 1. PARTIDO DE GRAN FINAL (GF) -->
@@ -1169,28 +1226,142 @@ TARJETA CAMPEÓN
                                                 Playoffs
                                             </button>
                                         @endif
-
-                                        <!-- ICONO CALENDARIO -->
-                                        @if($tType !== 'single_elimination' && $tType !== 'elimination')
-                                            <a href="{{ route('tournaments.schedule', ['tournament' => $tournament, 'group' => $groupName]) }}" 
-                                            class="text-orange-500 hover:text-orange-700 hover:bg-orange-50 rounded-full p-1.5 transition-all duration-200 shrink-0"
-                                            title="Ver calendario de este grupo">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                                                </svg>
-                                            </a>
+                                        
+                                        <!-- INSCRIBIR EQUIPO (TODOS CONTRA TODOS) -->
+                                        @if($tType !== 'single_elimination' && $tType !== 'elimination' && ($tournament->status === 'active' || $tournament->status === 'in_progress'))
+                                            <button type="button" onclick="document.getElementById('modalAddLeagueLateTeam-{{ Str::slug($groupName) }}').showModal()" class="px-3.5 py-2 bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-lg font-bold text-xs uppercase tracking-wider shadow-sm transition flex items-center gap-2">
+                                                <i class="fa-solid fa-user-plus text-gray-500"></i> Inscribir Equipo
+                                            </button>
                                         @endif
 
+                                        <!-- BOTÓN CALENDARIO -->
+                                         @if($tType !== 'single_elimination' && $tType !== 'elimination')
+                                             <a href="{{ route('tournaments.schedule', ['tournament' => $tournament, 'group' => $groupName]) }}" 
+                                                class="px-3.5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-bold text-xs uppercase tracking-wider shadow transition flex items-center gap-2"
+                                                title="Ver calendario de este grupo">
+                                                 <i class="fa-solid fa-calendar-days"></i> Ver Calendario
+                                             </a>
+                                         @endif
+
                                     </div>
+
+                                    @if($tType !== 'single_elimination' && $tType !== 'elimination' && ($tournament->status === 'active' || $tournament->status === 'in_progress'))
+                                        <!-- Modal de Inscripción (Todos Contra Todos) -->
+                                        <dialog id="modalAddLeagueLateTeam-{{ Str::slug($groupName) }}" class="p-6 rounded-2xl shadow-2xl backdrop:bg-gray-900/50 max-w-md w-full border border-gray-200 text-left">
+                                            <form method="POST" action="{{ route('tournaments.add-normal-late-team', $tournament) }}" class="space-y-4">
+                                                @csrf
+                                                <input type="hidden" name="category_group" value="{{ $groupName }}">
+
+                                                <div class="flex items-center justify-between border-b pb-2">
+                                                    <h3 class="text-lg font-black text-gray-900 flex items-center gap-2">
+                                                        <i class="fa-solid fa-user-plus text-orange-500"></i> Inscribir Equipo
+                                                    </h3>
+                                                    <button type="button" onclick="document.getElementById('modalAddLeagueLateTeam-{{ Str::slug($groupName) }}').close()" class="text-gray-400 hover:text-gray-600 font-bold">&times;</button>
+                                                </div>
+
+                                                <p class="text-xs text-gray-600 leading-relaxed">
+                                                    Al inscribir este equipo, se generarán automáticamente partidos contra todos los equipos ya existentes en la categoría/fuerza <strong>{{ $groupName }}</strong>.
+                                                </p>
+
+                                                <div>
+                                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Seleccionar Equipo a Integrar</label>
+                                                    <div class="flex">
+                                                        <select name="team_id" required class="flex-1 border-gray-300 rounded-l-lg text-sm focus:ring-orange-500 focus:border-orange-500 shadow-sm bg-white border-r-0 team-select-{{ Str::slug($groupName) }}">
+                                                            <option value="">-- Selecciona un equipo --</option>
+                                                            @foreach(\App\Models\Team::where('client_id', auth()->user()->client_id ?? 1)->orderBy('name')->get() as $t)
+                                                                @if(!$tournament->teams->contains($t->id))
+                                                                    <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                                                @endif
+                                                            @endforeach
+                                                        </select>
+                                                        <button type="button" onclick="openCreateTeamModalFromStandings('{{ Str::slug($groupName) }}', 'team_id')" class="bg-orange-600 hover:bg-orange-700 text-white rounded-r-lg border border-l-0 border-orange-600 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition duration-150 ease-in-out flex items-center justify-center" title="Crear nuevo equipo">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div class="flex justify-end gap-2 pt-3 border-t">
+                                                    <button type="button" onclick="document.getElementById('modalAddLeagueLateTeam-{{ Str::slug($groupName) }}').close()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-300">Cancelar</button>
+                                                    <button type="submit" class="px-4 py-2 bg-orange-600 text-white rounded-lg text-xs font-bold hover:bg-orange-700 shadow-md">Inscribir Equipo</button>
+                                                </div>
+                                            </form>
+                                        </dialog>
+
+                                        <!-- Modal para Crear Nuevo Equipo vía AJAX -->
+                                        @php
+                                            $parts = explode(' - ', $groupName, 2);
+                                            $groupCategory = trim($parts[0] ?? 'Varonil');
+                                            $groupStrength = trim($parts[1] ?? 'Libre');
+                                        @endphp
+                                        <dialog id="modalCreateTeamFromStandings-{{ Str::slug($groupName) }}" class="p-6 rounded-2xl shadow-2xl backdrop:bg-gray-900/50 max-w-md w-full border border-gray-200 text-left">
+                                            <form onsubmit="submitCreateTeamFromStandings(event, '{{ Str::slug($groupName) }}')" class="space-y-4">
+                                                @csrf
+                                                <input type="hidden" name="tournament_id" value="{{ $tournament->id }}">
+                                                <input type="hidden" name="category" value="{{ $groupCategory }}">
+                                                <input type="hidden" name="strength" value="{{ $groupStrength }}">
+                                                <input type="hidden" name="status" value="active">
+                                                <input type="hidden" name="skip_double_elim_late" value="1">
+
+                                                <div class="flex items-center justify-between border-b pb-2">
+                                                    <h3 class="text-lg font-black text-gray-900 flex items-center gap-2">
+                                                        <i class="fa-solid fa-user-plus text-orange-500"></i> Crear Nuevo Equipo
+                                                    </h3>
+                                                    <button type="button" onclick="document.getElementById('modalCreateTeamFromStandings-{{ Str::slug($groupName) }}').close()" class="text-gray-400 hover:text-gray-600 font-bold">&times;</button>
+                                                </div>
+
+                                                <p class="text-xs text-gray-600 leading-relaxed">
+                                                    Se creará un nuevo equipo directamente para el torneo <strong>{{ $tournament->name }}</strong>, categoría <strong>{{ $groupCategory }}</strong> y nivel <strong>{{ $groupStrength }}</strong>.
+                                                </p>
+
+                                                <div>
+                                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nombre del Equipo</label>
+                                                    <input type="text" name="name" required class="w-full border-gray-300 rounded-lg text-sm focus:ring-orange-500 focus:border-orange-500 shadow-sm animate-pulse-once" placeholder="Ej. Lakers">
+                                                </div>
+
+                                                <div>
+                                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Entrenador (Coach)</label>
+                                                    <select name="coach_id" class="w-full border-gray-300 rounded-lg text-sm focus:ring-orange-500 focus:border-orange-500 shadow-sm bg-white">
+                                                        <option value="">-- Sin Entrenador --</option>
+                                                        @foreach ($coaches as $coach)
+                                                            <option value="{{ $coach->id }}">{{ $coach->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+
+                                                <div class="flex justify-end gap-2 pt-3 border-t">
+                                                    <button type="button" onclick="document.getElementById('modalCreateTeamFromStandings-{{ Str::slug($groupName) }}').close()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-300">Cancelar</button>
+                                                    <button type="submit" class="px-4 py-2 bg-orange-600 text-white rounded-lg text-xs font-bold hover:bg-orange-700 shadow-md">Crear Equipo</button>
+                                                </div>
+                                            </form>
+                                        </dialog>
+                                    @endif
                                 </div>
 
                                 <!-- ================================================================= -->
                                 <!-- VISUALIZACIÓN DE PLAYOFFS (FINAL) -->
                                 <!-- ================================================================= -->
                                 @if(isset($data['has_playoffs']) && $data['has_playoffs'])
-                                 @php
-                                     // Calcular Byes de playoffs dinámicamente
-                                     $activePlayoffTeams = ($data['teams'] ?? collect())->pluck('id')->toArray();
+                                  @php
+                                      // Calcular Byes de playoffs dinámicamente
+                                     $tSettings = $tournament->settings ? $tournament->settings->settings : [];
+                                     $tType = $tSettings['tournament_type'] ?? 'round_robin';
+                                     
+                                     if ($tType === 'single_elimination' || $tType === 'elimination' || $tType === 'double_elimination') {
+                                         $activePlayoffTeams = ($data['teams'] ?? collect())->pluck('id')->toArray();
+                                     } else {
+                                         // Para playoffs de Round Robin / Liga, solo consideramos los equipos que tienen partidos en la Ronda 1 de Playoffs
+                                         $firstRoundGames = $data['playoff_rounds'][0]['games'] ?? collect();
+                                         $firstRoundTeams = [];
+                                         foreach ($firstRoundGames as $g) {
+                                             if ($g->local_team_id) $firstRoundTeams[] = (int) $g->local_team_id;
+                                             if ($g->away_team_id) $firstRoundTeams[] = (int) $g->away_team_id;
+                                         }
+                                         $byes = $tSettings['current_byes'][$groupName] ?? [];
+                                         $activePlayoffTeams = array_merge($firstRoundTeams, $byes);
+                                     }
+                                     
                                      $playoffByesByRound = [];
                                      foreach ($data['playoff_rounds'] ?? [] as $rIdx => $rData) {
                                          $rGames = $rData['games'] ?? [];
@@ -1233,7 +1404,7 @@ TARJETA CAMPEÓN
                                              // Detectar BYEs: equipos del grupo sin ningún partido playoff
                                              // Primero verificar en current_byes (settings), luego buscar equipos sin partido
                                              $playoffByes = $tSettings['current_byes'][$groupName] ?? [];
-                                             if (empty($playoffByes) && !empty($teamIdsInGroup)) {
+                                             if (empty($playoffByes) && !empty($teamIdsInGroup) && ($tType === 'single_elimination' || $tType === 'elimination')) {
                                                  // Buscar equipos del grupo que no tienen partido playoff asignado
                                                  $teamsInPlayGames = \App\Models\Game::where('tournament_id', $tournament->id)
                                                      ->where('is_playoff', true)
@@ -1413,12 +1584,12 @@ TARJETA CAMPEÓN
                                              </dialog>
 
                                              <!-- Modal para Crear Nuevo Equipo vía AJAX (Playoffs / Eliminatoria Directa) -->
+                                             @php
+                                                 $parts = explode(' - ', $groupName, 2);
+                                                 $groupCategory = trim($parts[0] ?? 'Varonil');
+                                                 $groupStrength = trim($parts[1] ?? 'Libre');
+                                             @endphp
                                              <dialog id="modalCreateTeamFromStandings-{{ Str::slug($groupName) }}" class="p-6 rounded-2xl shadow-2xl backdrop:bg-gray-900/50 max-w-md w-full border border-gray-200 text-left">
-                                                 @php
-                                                     $parts = explode(' - ', $groupName, 2);
-                                                     $groupCategory = trim($parts[0] ?? 'Varonil');
-                                                     $groupStrength = trim($parts[1] ?? 'Libre');
-                                                 @endphp
                                                  <form onsubmit="submitCreateTeamFromStandings(event, '{{ Str::slug($groupName) }}')" class="space-y-4">
                                                      @csrf
                                                      <input type="hidden" name="tournament_id" value="{{ $tournament->id }}">
@@ -1670,6 +1841,7 @@ TARJETA CAMPEÓN
                     <form id="roundForm" onsubmit="submitRound(event)">
                         @csrf
                         <input type="hidden" name="team_ids" id="round_team_ids" value="">
+                        <input type="hidden" name="category_group" id="round_category_group" value="">
                         
                         <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                             <div class="sm:flex sm:items-start">
@@ -1715,6 +1887,7 @@ TARJETA CAMPEÓN
                     <form id="eliminationForm" onsubmit="submitElimination(event)">
                         @csrf
                         <input type="hidden" name="team_ids" id="elimination_team_ids" value="">
+                        <input type="hidden" name="category_group" id="elimination_category_group" value="">
                         
                         <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                             <div class="sm:flex sm:items-start">
@@ -1767,6 +1940,8 @@ TARJETA CAMPEÓN
             } else {
                 hiddenInput.value = '';
             }
+
+            document.getElementById('round_category_group').value = groupName;
             
             document.getElementById('roundModal').classList.remove('hidden');
         }
@@ -1812,6 +1987,8 @@ TARJETA CAMPEÓN
             if (hiddenInput) {
                  hiddenInput.value = teamIds ? JSON.stringify(teamIds) : '';
             }
+
+            document.getElementById('elimination_category_group').value = groupName;
 
             document.getElementById('eliminationModal').classList.remove('hidden');
         }

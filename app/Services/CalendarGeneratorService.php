@@ -288,6 +288,7 @@ class CalendarGeneratorService
                                 'date_time' => $slot['date_time'],
                                 'status' => 'pending',
                                 'group_name' => $groupName, 
+                                'category_group' => $groupName, 
                                 'created_at' => now(),
                                 'updated_at' => now(),
                             ];

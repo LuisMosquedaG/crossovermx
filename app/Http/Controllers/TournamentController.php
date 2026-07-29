@@ -1279,6 +1279,7 @@ public function store(Request $request)
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'team_ids' => 'nullable|string',
+            'category_group' => 'required|string',
         ]);
 
         if (!$tournament->settings) {
@@ -1299,12 +1300,11 @@ public function store(Request $request)
         DB::transaction(function () use ($tournament, $config, $calendarService, $request, $specificTeamIds) {
             
             // 1. El servicio genera los juegos. 
-            // IMPORTANTE: En este punto, se crean con round_number = 1 (o defecto de BD).
             $result = $calendarService->generateRoundRobinSchedule(
                 $tournament->id, 
                 $config, 
                 $specificTeamIds, 
-                null 
+                $request->category_group 
             );
 
             if (!$result['success']) {
@@ -1312,15 +1312,17 @@ public function store(Request $request)
             }
 
             // 2. CORRECCIÓN: Calcular y asignar la Ronda Correcta
-            // Buscamos cuál es la ronda más alta existente actualmente
-            $maxRound = Game::where('tournament_id', $tournament->id)->max('round_number');
+            // Buscamos cuál es la ronda más alta existente actualmente en este grupo
+            $maxRound = Game::where('tournament_id', $tournament->id)
+                ->where('group_name', $request->category_group)
+                ->max('round_number');
             
             // Si no hay juegos o es 0, empezamos en 1. Si hay, sumamos 1.
             $nextRoundNumber = ($maxRound) ? $maxRound + 1 : 1;
 
-            // Actualizamos los juegos que acabamos de crear.
-            // Criterio de seguridad: Actualizar solo los juegos que tengan la fecha de inicio de la nueva ronda.
+            // Actualizamos los juegos que acabamos de crear para este grupo.
             Game::where('tournament_id', $tournament->id)
+                ->where('group_name', $request->category_group)
                 ->where('date_time', '>=', $request->start_date)
                 ->update(['round_number' => $nextRoundNumber]);
             
@@ -1336,7 +1338,7 @@ public function store(Request $request)
 
         return response()->json([
             'success' => true,
-            'message' => 'Vuelta generada exitosamente. Se ha asignado la Ronda ' . ($tournament->games()->max('round_number')) . '.',
+            'message' => 'Vuelta generada exitosamente. Se ha asignado la Ronda ' . ($tournament->games()->where('group_name', $request->category_group)->max('round_number')) . '.',
             'redirect_url' => route('tournaments.standings', $tournament)
         ]);
     }
@@ -1353,9 +1355,11 @@ public function store(Request $request)
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'team_ids' => 'nullable|string', 
+            'category_group' => 'required|string',
         ]);
 
         $teamsCount = $request->teams_count;
+        $groupName = $request->category_group;
         
         // Decodificar los IDs del grupo específico
         $specificTeamIds = $request->input('team_ids');
@@ -1379,6 +1383,13 @@ public function store(Request $request)
 
         $finishedGames = $query->get();
         $standings = [];
+
+        // Inicializar posiciones para todos los equipos del grupo con 0 puntos
+        if ($specificTeamIds) {
+            foreach ($specificTeamIds as $tId) {
+                $standings[$tId] = ['team_id' => $tId, 'points' => 0];
+            }
+        }
 
         foreach ($finishedGames as $game) {
             $localId = $game->local_team_id;
@@ -1410,6 +1421,9 @@ public function store(Request $request)
             $qualifiedTeamIds = array_keys($qualifiedTeams);
         }
 
+        // Reindexar de manera secuencial (0, 1, 2...)
+        $qualifiedTeamIds = array_values($qualifiedTeamIds);
+
         if (count($qualifiedTeamIds) < $teamsCount) {
             return response()->json(['success' => false, 'message' => 'No hay suficientes equipos clasificados.']);
         }
@@ -1419,7 +1433,9 @@ public function store(Request $request)
         for ($i = 0; $i < $teamsCount / 2; $i++) {
             $matchups[] = [
                 'local' => $qualifiedTeamIds[$i],
-                'away' => $qualifiedTeamIds[count($qualifiedTeamIds) - 1 - $i]
+                'away' => $qualifiedTeamIds[count($qualifiedTeamIds) - 1 - $i],
+                'group_name' => $groupName,
+                'category_group' => $groupName
             ];
         }
 
@@ -1431,7 +1447,7 @@ public function store(Request $request)
         $settings = $tournament->settings ? $tournament->settings->settings : [];
         
         // Pasamos $settings para que use Domingos/Sábados, 19:00, Canchas, etc.
-        $this->calendarService->schedulePlayoffRound($tournament, $matchups, $startDate, $endDate, $settings);
+        $this->calendarService->schedulePlayoffRound($tournament, $matchups, $startDate, $endDate, $settings, null, true);
         // --------------------------------------------------------------
 
         return response()->json([
@@ -1468,6 +1484,7 @@ public function store(Request $request)
         }
 
         $gamesCreated = 0;
+        $groupsUpdated = 0;
         $message = "No hay rondas listas para generar aún.";
 
         try {
@@ -1529,8 +1546,8 @@ public function store(Request $request)
                         if (isset($settings['current_byes'][$groupName])) {
                             $currentRoundByes = $settings['current_byes'][$groupName];
                         } 
-                        // B. FALLBACK SOLO PARA RONDA 1 (Evita revivir muertos)
-                        elseif ($tournament->games()->where('is_playoff', true)->count() === count($lastRoundGames)) {
+                        // B. FALLBACK SOLO PARA RONDA 1 (Evita revivir muertos, solo aplica a eliminatorias directas)
+                        elseif (($tournamentType === 'single_elimination' || $tournamentType === 'elimination') && $tournament->games()->where('is_playoff', true)->count() === count($lastRoundGames)) {
                             // Verificación: Solo usamos el cálculo automático si estos son los ÚNICOS juegos del torneo.
                             // Esto confirma que estamos en Ronda 1. Si ya hay rondas anteriores, es inseguro.
                             
@@ -2033,10 +2050,6 @@ public function store(Request $request)
         $settings = $tournament->settings ? $tournament->settings->settings : [];
         $tournamentType = $settings['tournament_type'] ?? ($tournament->tournament_settings['tournament_type'] ?? null);
 
-        if ($tournamentType !== 'double_elimination' && $tournamentType !== 'single_elimination' && $tournamentType !== 'elimination') {
-            return back()->with('error', 'La inscripción normal en torneo iniciado solo está disponible para Doble Eliminatoria o Eliminatoria Directa.');
-        }
-
         $groupName = $request->category_group;
 
         if ($tournamentType === 'double_elimination') {
@@ -2083,7 +2096,7 @@ public function store(Request $request)
             } catch (\Exception $e) {
                 return back()->with('error', 'Error al inscribir equipo: ' . $e->getMessage());
             }
-        } else {
+        } elseif ($tournamentType === 'single_elimination' || $tournamentType === 'elimination') {
             // Lógica para Eliminatoria Directa
             $teamIdsInGroup = $tournament->teams()
                 ->where(function($q) use ($groupName) {
@@ -2310,6 +2323,86 @@ public function store(Request $request)
                 return back()->with('success', $msg);
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('[addNormalLateTeam] Exception', ['msg' => $e->getMessage()]);
+                return back()->with('error', 'Error al inscribir equipo: ' . $e->getMessage());
+            }
+        } else {
+            // Lógica para todos contra todos / Round Robin
+            if (empty($request->team_id)) {
+                return back()->with('error', 'Debes seleccionar un equipo para inscribir.');
+            }
+            $newTeamId = (int) $request->team_id;
+
+            // Obtener equipos existentes en este grupo
+            $parts = explode(' - ', $groupName, 2);
+            $category = trim($parts[0] ?? 'Varonil');
+            $strength = trim($parts[1] ?? 'Libre');
+
+            $existingTeams = \App\Models\Team::where('tournament_id', $tournament->id)
+                ->where('category', $category)
+                ->where('strength', $strength)
+                ->where('id', '!=', $newTeamId)
+                ->get();
+
+            $existingTeamIds = $existingTeams->pluck('id')->toArray();
+
+            try {
+                \Illuminate\Support\Facades\DB::transaction(function() use ($tournament, $newTeamId, $groupName, $category, $strength, $existingTeamIds, $settings) {
+                    // 1. Asignar el equipo al torneo con la categoría correcta
+                    $team = \App\Models\Team::find($newTeamId);
+                    if ($team) {
+                        $team->tournament_id = $tournament->id;
+                        $team->category = $category;
+                        $team->strength = $strength;
+                        $team->save();
+                    }
+
+                    // 2. Si hay otros equipos en el grupo, programar un partido contra cada uno
+                    if (!empty($existingTeamIds)) {
+                        $matchups = [];
+                        foreach ($existingTeamIds as $oppId) {
+                            $matchups[] = [
+                                'local' => $newTeamId,
+                                'away' => $oppId,
+                                'group_name' => $groupName,
+                                'category_group' => $groupName
+                            ];
+                        }
+
+                        // Buscar la última fecha de un partido regular en este grupo
+                        $allGroupTeamIds = array_merge($existingTeamIds, [$newTeamId]);
+                        $lastGameInGroup = \App\Models\Game::where('tournament_id', $tournament->id)
+                            ->where('is_playoff', false)
+                            ->where(function($q) use ($allGroupTeamIds) {
+                                $q->whereIn('local_team_id', $allGroupTeamIds)
+                                  ->orWhereIn('away_team_id', $allGroupTeamIds);
+                            })
+                            ->orderBy('date_time', 'desc')
+                            ->first();
+
+                        $startDate = $lastGameInGroup
+                            ? \Carbon\Carbon::parse($lastGameInGroup->date_time)
+                            : \Carbon\Carbon::parse($tournament->start_date);
+                        $endDate = $tournament->end_date
+                            ? \Carbon\Carbon::parse($tournament->end_date)
+                            : $startDate->copy()->addWeek();
+
+                        \Illuminate\Support\Facades\Log::info('[addNormalLateTeam-RR] Llamando schedulePlayoffRound', [
+                            'matchups'  => $matchups,
+                            'startDate' => $startDate->toDateTimeString(),
+                            'endDate'   => $endDate->toDateTimeString(),
+                        ]);
+
+                        $calendarService = app(\App\Services\CalendarGeneratorService::class);
+                        // Programar partidos como regulares (isPlayoff = false)
+                        $calendarService->schedulePlayoffRound(
+                            $tournament, $matchups, $startDate, $endDate, $settings, null, false
+                        );
+                    }
+                });
+
+                return back()->with('success', 'Equipo inscrito con éxito. Se han generado partidos contra los demás equipos del grupo.');
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('[addNormalLateTeam-RR] Exception', ['msg' => $e->getMessage()]);
                 return back()->with('error', 'Error al inscribir equipo: ' . $e->getMessage());
             }
         }
