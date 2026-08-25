@@ -787,11 +787,30 @@ public function store(Request $request)
 
     public function publicStandings(\Illuminate\Http\Request $request)
     {
-        $tournaments = \App\Models\Tournament::whereIn('status', ['active', 'finished'])->orderBy('name')->get();
+        // 1. Obtener todas las cuentas (Clientes) que tengan torneos activos o finalizados
+        $clients = \App\Models\Client::whereHas('tournaments', function($q) {
+            $q->whereIn('status', ['active', 'finished']);
+        })->orderBy('name')->get();
         
         $selectedTournamentId = $request->input('tournament_id');
-        
         $tournament = $selectedTournamentId ? \App\Models\Tournament::find($selectedTournamentId) : null;
+        
+        $selectedClientId = $request->input('client_id');
+        if ($tournament) {
+            $selectedClientId = $tournament->client_id;
+        }
+
+        // Si hay una cuenta seleccionada, filtramos los torneos de esa cuenta
+        // Si no hay cuenta seleccionada, la lista de torneos inicia vacía
+        if ($selectedClientId) {
+            $tournaments = \App\Models\Tournament::where('client_id', $selectedClientId)
+                ->whereIn('status', ['active', 'finished'])
+                ->orderBy('name')
+                ->get();
+        } else {
+            $tournaments = collect();
+        }
+        
         $standingsData = [];
         $dashboardData = [];
 
@@ -1117,7 +1136,7 @@ public function store(Request $request)
             }
         }
 
-        return view('public.standings', compact('tournaments', 'selectedTournamentId', 'tournament', 'standingsData', 'dashboardData'));
+        return view('public.standings', compact('tournaments', 'selectedTournamentId', 'tournament', 'standingsData', 'dashboardData', 'clients', 'selectedClientId'));
     }
     
     private function determineGroupWinner($games, &$winnerId)
