@@ -316,6 +316,10 @@
                                                         <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-blue-100 text-blue-800 uppercase w-max">
                                                             Varonil
                                                         </span>
+                                                    @elseif($game->localTeam->category == 'Infantil')
+                                                        <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-teal-100 text-teal-800 uppercase w-max">
+                                                            Infantil
+                                                        </span>
                                                     @else
                                                         <span class="text-gray-400 text-xs">-</span>
                                                     @endif

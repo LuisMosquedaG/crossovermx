@@ -257,6 +257,8 @@
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800">Femenil</span>
                                             @elseif($tournament->category == 'Mixto') <!-- CAMBIO AQUÍ: 'Mixto' -->
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">Mixto</span>
+                                            @elseif($tournament->category == 'Infantil')
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">Infantil</span>
                                             @elseif($tournament->category == 'Varios')
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-800">Varios</span>
                                             @else
@@ -1699,6 +1701,8 @@
                         categoryBadge = `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">Mixto</span>`;
                     } else if (team.category === 'Varonil') {
                         categoryBadge = `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Varonil</span>`;
+                    } else if (team.category === 'Infantil') {
+                        categoryBadge = `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-teal-100 text-teal-800">Infantil</span>`;
                     }
 
                     // 3. Fuerza
