@@ -1308,15 +1308,6 @@
                                     </button>
 
                                     <div class="flex items-center gap-2">
-                                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-orange-50 text-orange-600 border border-orange-100 uppercase tracking-wider">
-                                            @if($tData['tournament_type'] === 'round_robin')
-                                                Todos contra todos
-                                            @elseif($tData['tournament_type'] === 'double_elimination')
-                                                Doble Eliminatoria
-                                            @else
-                                                Eliminatoria
-                                            @endif
-                                        </span>
                                         @if($tData['tournament_status'] === 'finished')
                                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 border border-gray-200 uppercase tracking-wider">
                                                 <span class="h-1.5 w-1.5 rounded-full bg-gray-500"></span>
