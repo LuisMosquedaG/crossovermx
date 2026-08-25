@@ -9,6 +9,30 @@ class Player extends Model
 {
     use HasFactory;
 
+    protected $appends = ['avatar_url'];
+
+    public function getAvatarUrlAttribute()
+    {
+        if ($this->image_path) {
+            return asset('storage/' . $this->image_path);
+        }
+        
+        $category = null;
+        if ($this->team_id) {
+            // Buscamos el equipo y su categoría de forma eficiente
+            $team = $this->team;
+            if ($team) {
+                $category = trim(strtolower($team->category ?? ''));
+            }
+        }
+        
+        if ($category === 'infantil') {
+            return $this->gender === 'mujer' ? asset('images/niña.png') : asset('images/niño.png');
+        }
+        
+        return $this->gender === 'mujer' ? asset('images/mujer.png') : asset('images/hombre.png');
+    }
+
     protected $fillable = [
         'name',
         'number',

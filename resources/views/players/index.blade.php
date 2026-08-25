@@ -84,15 +84,9 @@
 
                                         <!-- Resto de columnas -->
                                         <td class="px-6 py-4 whitespace-nowrap flex justify-center items-center">
-                                            @if($player->image_path)
-                                                <!-- Si hay foto subida, muestra la foto -->
-                                                <img src="{{ asset('storage/' . $player->image_path) }}" alt="{{ $player->name }}" class="h-10 w-10 rounded-full object-cover">
-                                            @elseif($player->gender === 'hombre')
-                                                <!-- Si NO hay foto y es HOMBRE, muestra imagen default hombre -->
-                                                <img src="{{ asset('images/hombre.png') }}" alt="Hombre" class="h-10 w-10 rounded-full object-cover">
-                                            @elseif($player->gender === 'mujer')
-                                                <!-- Si NO hay foto y es MUJER, muestra imagen default mujer -->
-                                                <img src="{{ asset('images/mujer.png') }}" alt="Mujer" class="h-10 w-10 rounded-full object-cover">
+                                            @if($player->avatar_url)
+                                                <!-- Muestra la foto subida o el avatar predeterminado correspondiente -->
+                                                <img src="{{ $player->avatar_url }}" alt="{{ $player->name }}" class="h-10 w-10 rounded-full object-cover">
                                             @else
                                                 <!-- Si NO hay foto y NO hay género, muestra la letra -->
                                                 <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xs font-bold">
@@ -517,7 +511,11 @@
             const initialEl = document.getElementById('view_initial');
             const container = document.getElementById('view_image_container');
 
-            if (player.image_path) {
+            if (player.avatar_url) {
+                imgEl.src = player.avatar_url;
+                imgEl.classList.remove('hidden');
+                initialEl.classList.add('hidden');
+            } else if (player.image_path) {
                 imgEl.src = '{{ asset('storage') }}/' + player.image_path;
                 imgEl.classList.remove('hidden');
                 initialEl.classList.add('hidden');

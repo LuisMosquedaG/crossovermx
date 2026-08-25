@@ -1478,7 +1478,9 @@
             players.forEach(player => {
                 // --- 1. LÓGICA DE IMAGEN ---
                 let playerImage = '';
-                if (player.image_path) {
+                if (player.avatar_url) {
+                    playerImage = `<img src="${player.avatar_url}" alt="${player.name}" class="h-10 w-10 rounded-full object-cover">`;
+                } else if (player.image_path) {
                     let path = player.image_path;
                     let finalUrl = '';
                     if (path.startsWith('http')) {

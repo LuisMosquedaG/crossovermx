@@ -833,7 +833,6 @@
                         @csrf
                         <input type="hidden" name="team_id" id="player_quick_team_id">
                         <input type="hidden" name="status" value="active">
-                        <input type="hidden" name="gender" id="player_quick_gender" value="">
                         
                         <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                             <div class="sm:flex sm:items-start">
@@ -850,6 +849,13 @@
                                         <div>
                                             <x-input-label for="player_quick_number" :value="__('Número de Camiseta')" />
                                             <x-text-input id="player_quick_number" name="number" class="block mt-1 w-full focus:border-orange-500 focus:ring-orange-500" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" required />
+                                        </div>
+                                        <div id="player_quick_gender_container" class="hidden">
+                                            <x-input-label for="player_quick_gender" :value="__('Sexo')" />
+                                            <select name="gender" id="player_quick_gender" class="block mt-1 w-full rounded-md border-gray-300 border py-2 px-3 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm bg-white">
+                                                <option value="hombre">Hombre</option>
+                                                <option value="mujer">Mujer</option>
+                                            </select>
                                         </div>
                                         <div>
                                             <x-input-label for="player_quick_image" :value="__('Fotografía (Opcional)')" />
@@ -1910,7 +1916,9 @@
             if (players.length > 0) {
                 players.forEach(player => {
                     let playerImage = '';
-                    if (player.image_path) {
+                    if (player.avatar_url) {
+                        playerImage = `<img src="${player.avatar_url}" alt="${player.name}" class="h-10 w-10 rounded-full object-cover mx-auto">`;
+                    } else if (player.image_path) {
                         let path = player.image_path;
                         let finalUrl = '';
                         if (path.startsWith('http')) {
@@ -1970,16 +1978,33 @@
 
         // Determinar género por categoría del equipo para asignar avatar por default
         const team = currentTournamentTeams.find(t => t.id === currentActiveTeamId);
-        let genderValue = '';
+        const genderContainer = document.getElementById('player_quick_gender_container');
+        const genderSelect = document.getElementById('player_quick_gender');
+        
+        let genderValue = 'hombre'; // Default
+        
         if (team && team.category) {
             const cat = team.category.toString().trim().toLowerCase();
             if (cat === 'varonil') {
                 genderValue = 'hombre';
+                genderContainer.classList.add('hidden');
             } else if (cat === 'femenil') {
                 genderValue = 'mujer';
+                genderContainer.classList.add('hidden');
+            } else if (cat === 'infantil' || cat === 'mixto') {
+                // Infantil / Mixto -> Se muestra el selector para elegir si es niño o niña
+                genderValue = 'hombre'; // Valor inicial sugerido
+                genderContainer.classList.remove('hidden');
+            } else {
+                genderContainer.classList.remove('hidden');
             }
+        } else {
+            genderContainer.classList.remove('hidden');
         }
-        document.getElementById('player_quick_gender').value = genderValue;
+        
+        if (genderSelect) {
+            genderSelect.value = genderValue;
+        }
 
         document.getElementById('playerQuickModal').classList.remove('hidden');
     }

@@ -97,12 +97,8 @@
 
                     @if($topSingleGamePlayer)
                         <div class="flex items-center gap-3 my-auto py-1">
-                            @if($topSingleGamePlayer->image_path)
-                                <img src="{{ asset('storage/' . $topSingleGamePlayer->image_path) }}" alt="{{ $topSingleGamePlayer->name }}" class="w-10 h-10 rounded-full object-cover border-2 border-amber-400 shadow-sm shrink-0">
-                            @elseif($topSingleGamePlayer->gender === 'hombre')
-                                <img src="{{ asset('images/hombre.png') }}" alt="{{ $topSingleGamePlayer->name }}" class="w-10 h-10 rounded-full object-cover border-2 border-amber-400 shadow-sm shrink-0">
-                            @elseif($topSingleGamePlayer->gender === 'mujer')
-                                <img src="{{ asset('images/mujer.png') }}" alt="{{ $topSingleGamePlayer->name }}" class="w-10 h-10 rounded-full object-cover border-2 border-amber-400 shadow-sm shrink-0">
+                            @if($topSingleGamePlayer->avatar_url)
+                                <img src="{{ $topSingleGamePlayer->avatar_url }}" alt="{{ $topSingleGamePlayer->name }}" class="w-10 h-10 rounded-full object-cover border-2 border-amber-400 shadow-sm shrink-0">
                             @else
                                 <div class="w-10 h-10 rounded-full bg-amber-100 border-2 border-amber-300 flex items-center justify-center text-amber-700 font-bold text-sm shrink-0">
                                     {{ substr($topSingleGamePlayer->name, 0, 1) }}
@@ -242,12 +238,8 @@
                                         ])>
                                             {{ $index + 1 }}
                                         </span>
-                                        @if($scorer->image_path)
-                                            <img src="{{ asset('storage/' . $scorer->image_path) }}" alt="{{ $scorer->name }}" class="w-10 h-10 rounded-full object-cover border shrink-0">
-                                        @elseif($scorer->gender === 'hombre')
-                                            <img src="{{ asset('images/hombre.png') }}" alt="{{ $scorer->name }}" class="w-10 h-10 rounded-full object-cover border shrink-0">
-                                        @elseif($scorer->gender === 'mujer')
-                                            <img src="{{ asset('images/mujer.png') }}" alt="{{ $scorer->name }}" class="w-10 h-10 rounded-full object-cover border shrink-0">
+                                        @if($scorer->avatar_url)
+                                            <img src="{{ $scorer->avatar_url }}" alt="{{ $scorer->name }}" class="w-10 h-10 rounded-full object-cover border shrink-0">
                                         @else
                                             <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-700 font-bold flex items-center justify-center text-sm shrink-0">
                                                 {{ substr($scorer->name, 0, 1) }}
@@ -298,12 +290,8 @@
                                         <span class="w-7 h-7 rounded-full bg-rose-100 text-rose-800 flex items-center justify-center font-black text-xs shrink-0 border border-rose-200">
                                             {{ $index + 1 }}
                                         </span>
-                                        @if($foulPlayer->image_path)
-                                            <img src="{{ asset('storage/' . $foulPlayer->image_path) }}" alt="{{ $foulPlayer->name }}" class="w-10 h-10 rounded-full object-cover border shrink-0">
-                                        @elseif($foulPlayer->gender === 'hombre')
-                                            <img src="{{ asset('images/hombre.png') }}" alt="{{ $foulPlayer->name }}" class="w-10 h-10 rounded-full object-cover border shrink-0">
-                                        @elseif($foulPlayer->gender === 'mujer')
-                                            <img src="{{ asset('images/mujer.png') }}" alt="{{ $foulPlayer->name }}" class="w-10 h-10 rounded-full object-cover border shrink-0">
+                                        @if($foulPlayer->avatar_url)
+                                            <img src="{{ $foulPlayer->avatar_url }}" alt="{{ $foulPlayer->name }}" class="w-10 h-10 rounded-full object-cover border shrink-0">
                                         @else
                                             <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-700 font-bold flex items-center justify-center text-sm shrink-0">
                                                 {{ substr($foulPlayer->name, 0, 1) }}

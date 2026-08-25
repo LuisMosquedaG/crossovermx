@@ -54,6 +54,25 @@
         animation: orangeFlash 0.5s ease-out forwards;
     }
 
+    /* --- ANIMACIÓN PUNTOS FLOTANTES --- */
+    @keyframes floatUpAndFade {
+        0% {
+            transform: translate(-50%, -50%) translateY(20px) scale(0.6);
+            opacity: 0;
+        }
+        20% {
+            transform: translate(-50%, -50%) translateY(0px) scale(1.3);
+            opacity: 1;
+        }
+        100% {
+            transform: translate(-50%, -50%) translateY(-60px) scale(1);
+            opacity: 0;
+        }
+    }
+    .animate-float-up-fade {
+        animation: floatUpAndFade 1.2s cubic-bezier(0.25, 1, 0.50, 1) forwards;
+    }
+
     /* --- EFECTO BOTONES (CLICK) --- */
     
     /* Clase para animar puntos (Azul) */
@@ -1430,6 +1449,10 @@
             return;
         }
         triggerButtonEffect();
+        
+        // Disparar animación de puntos flotantes en el marcador general
+        showFloatingScoreAnimation(teamSide, points);
+
         const data = {
             game_id: gameId,
             player_id: playerId,
@@ -1452,6 +1475,27 @@
             document.getElementById(`${playerKey}-points`).textContent = playerStats[playerKey].points;
             addActionToLog(response.action);
         });
+    }
+
+    function showFloatingScoreAnimation(teamSide, points) {
+        const scoreEl = document.getElementById(teamSide === 'local' ? 'localScore' : 'awayScore');
+        if (!scoreEl) return;
+        
+        const parent = scoreEl.parentElement;
+        const floatingEl = document.createElement('span');
+        floatingEl.textContent = `+${points}`;
+        
+        const colorClass = teamSide === 'local' 
+            ? 'text-blue-400 drop-shadow-[0_2px_12px_rgba(96,165,250,0.95)]' 
+            : 'text-red-400 drop-shadow-[0_2px_12px_rgba(248,113,113,0.95)]';
+            
+        floatingEl.className = `absolute text-5xl md:text-7xl font-black z-50 pointer-events-none select-none animate-float-up-fade left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 ${colorClass}`;
+        
+        parent.appendChild(floatingEl);
+        
+        setTimeout(() => {
+            floatingEl.remove();
+        }, 1200);
     }
 
     function recordFoul(playerId, teamSide, foulType, slotIndex) {

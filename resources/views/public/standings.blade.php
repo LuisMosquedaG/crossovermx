@@ -1332,7 +1332,9 @@
                                                         <div class="flex items-center gap-3 relative z-10">
                                                             <span class="text-xs font-extrabold text-gray-400 bg-gray-50 h-6 w-6 rounded-full flex items-center justify-center">{{ $rank++ }}</span>
                                                             
-                                                            @if($scorer['player_logo'])
+                                                            @if(!empty($scorer['player_avatar_url']))
+                                                                <img src="{{ $scorer['player_avatar_url'] }}" class="h-8 w-8 rounded-full object-cover border border-gray-100" onerror="this.style.display='none'">
+                                                            @elseif($scorer['player_logo'])
                                                                 <img src="{{ asset('storage/' . $scorer['player_logo']) }}" class="h-8 w-8 rounded-full object-cover border border-gray-100" onerror="this.style.display='none'">
                                                             @elseif($scorer['player_gender'] === 'hombre')
                                                                 <img src="{{ asset('images/hombre.png') }}" class="h-8 w-8 rounded-full object-cover border border-gray-100">

@@ -831,6 +831,7 @@ public function store(Request $request)
                         return [
                             'player_name' => $action->player->name ?? 'Jugador',
                             'player_logo' => $action->player->image_path ?? null,
+                            'player_avatar_url' => $action->player ? $action->player->avatar_url : null,
                             'player_gender' => $action->player->gender ?? null,
                             'team_name' => $action->player->team->name ?? 'Equipo',
                             'team_logo' => $action->player->team->image_path ?? null,
@@ -1489,19 +1490,6 @@ public function store(Request $request)
         // Eliminada variable $isGroups
 
         $groupsStructure = $settings['groups_structure'] ?? null;
-
-        // Validar si existen partidos playoff pendientes o en juego en el torneo
-        $pendingPlayoffGames = Game::where('tournament_id', $tournament->id)
-            ->where('is_playoff', true)
-            ->where('status', '!=', 'finished')
-            ->count();
-
-        if ($pendingPlayoffGames > 0) {
-            return response()->json([
-                'success' => false,
-                'message' => "No se puede avanzar el torneo. Aún hay {$pendingPlayoffGames} partidos pendientes o en juego."
-            ], 400);
-        }
 
         $gamesCreated = 0;
         $groupsUpdated = 0;

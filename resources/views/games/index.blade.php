@@ -489,7 +489,6 @@
                         <input type="hidden" name="team_id" id="qp_team_id">
                         <input type="hidden" name="side" id="qp_side">
                         <input type="hidden" name="status" value="active">
-                        <input type="hidden" name="gender" id="qp_gender" value="">   
                         <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                             <div class="mt-3 text-center sm:text-left w-full">
                                 <h3 class="text-base font-semibold leading-6 text-gray-900">Agregar Jugador</h3>
@@ -504,6 +503,15 @@
                                     <div>
                                         <label for="qp_number" class="block text-sm font-medium text-gray-700">Número</label>
                                         <input type="text" name="number" id="qp_number" required inputmode="numeric" pattern="[0-9]*" maxlength="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm border p-2">
+                                    </div>
+
+                                    <!-- Selector de Género -->
+                                    <div id="qp_gender_container" class="hidden">
+                                        <label for="qp_gender" class="block text-sm font-medium text-gray-700">Sexo</label>
+                                        <select name="gender" id="qp_gender" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm border p-2 bg-white">
+                                            <option value="hombre">Hombre</option>
+                                            <option value="mujer">Mujer</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -623,7 +631,9 @@
         }
 
         function getPlayerAvatarHtml(player) {
-            if (player.image_path) {
+            if (player.avatar_url) {
+                return `<img src="${player.avatar_url}" alt="${player.name}" class="w-8 h-8 rounded-full object-cover ml-2 mr-2 shrink-0 border border-gray-200">`;
+            } else if (player.image_path) {
                 return `<img src="/storage/${player.image_path}" alt="${player.name}" class="w-8 h-8 rounded-full object-cover ml-2 mr-2 shrink-0 border border-gray-200">`;
             } else if (player.gender === 'hombre') {
                 return `<img src="/images/hombre.png" alt="Hombre" class="w-8 h-8 rounded-full object-cover ml-2 mr-2 shrink-0 border border-gray-200">`;
@@ -711,14 +721,29 @@
             document.querySelector('input[name="status"]').value = 'active';
 
             // --- LÓGICA DE ASIGNACIÓN DE GÉNERO ---
-            let genderValue = '';
+            const genderContainer = document.getElementById('qp_gender_container');
+            const genderSelect = document.getElementById('qp_gender');
+            
+            let genderValue = 'hombre'; // Default
             const normalizedCategory = (category || '').toString().trim().toLowerCase();
+            
             if (normalizedCategory === 'varonil') {
                 genderValue = 'hombre';
+                genderContainer.classList.add('hidden');
             } else if (normalizedCategory === 'femenil') {
                 genderValue = 'mujer';
+                genderContainer.classList.add('hidden');
+            } else if (normalizedCategory === 'infantil' || normalizedCategory === 'mixto') {
+                // Infantil o Mixto -> Mostramos el selector para elegir sexo
+                genderValue = 'hombre';
+                genderContainer.classList.remove('hidden');
+            } else {
+                genderContainer.classList.remove('hidden');
             }
-            document.getElementById('qp_gender').value = genderValue;
+            
+            if (genderSelect) {
+                genderSelect.value = genderValue;
+            }
             // --------------------------------------
 
             document.getElementById('quickPlayerModal').classList.remove('hidden');
@@ -761,6 +786,7 @@
                         number: data.player.number || formData.get('number'),
                         gender: data.player.gender || formData.get('gender'),
                         image_path: data.player.image_path,
+                        avatar_url: data.player.avatar_url,
                         status: 'active'
                     };
 
