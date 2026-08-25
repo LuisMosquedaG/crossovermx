@@ -2087,7 +2087,9 @@
             const el = document.getElementById(id);
             if (el) {
                 if (el.type === 'file' && el.files.length > 0) {
-                    formData.append(name, el.files[0]);
+                    if (name !== 'image') {
+                        formData.append(name, el.files[0]);
+                    }
                 } else {
                     formData.append(name, el.value);
                 }
@@ -2108,7 +2110,6 @@
         addField('status', 'team_modal_status');
         addField('category', 'team_modal_category');
         addField('strength', 'team_modal_strength');
-        addField('image', 'team_modal_image');
 
         const btn = document.getElementById('teamSaveButton');
         const originalText = btn.innerText;
@@ -2116,6 +2117,25 @@
         btn.innerText = 'Guardando...';
 
         try {
+            // Comprimir la imagen del logo si se seleccionó una y es mayor a 1MB
+            const logoInput = document.getElementById('team_modal_image');
+            if (logoInput && logoInput.files.length > 0) {
+                const file = logoInput.files[0];
+                if (file.size > 1024 * 1024) {
+                    btn.innerText = 'Comprimiendo logo...';
+                    try {
+                        const compressedBlob = await compressImage(file, 800, 800, 0.7);
+                        formData.append('image', compressedBlob, 'logo.jpg');
+                    } catch (e) {
+                        console.error('Error al comprimir el logo:', e);
+                        formData.append('image', file);
+                    }
+                } else {
+                    formData.append('image', file);
+                }
+            }
+            btn.innerText = 'Guardando...';
+
             const response = await fetch(form.action, {
                 method: 'POST',
                 body: formData,
@@ -2127,18 +2147,25 @@
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error("ERROR DEL SERVIDOR (HTML):", errorText);
-                alert("Error " + response.status + " del servidor:\n\n" + errorText.substring(0, 500) + "...");
+                let errorMsg = 'Error al guardar el equipo.';
+                try {
+                    const data = await response.json();
+                    errorMsg = data.message || errorMsg;
+                    if (data.errors) {
+                        Object.values(data.errors).forEach(msg => errorMsg += '\n' + msg[0]);
+                    }
+                } catch (e) {
+                    const errorText = await response.text();
+                    errorMsg = `Error del servidor (${response.status}): ${errorText.substring(0, 200)}...`;
+                }
+                alert(errorMsg);
                 return;
             }
 
             const data = await response.json();
 
-            if (response.ok) {
-                closeTeamModal();
-                showTeamsListModal(currentActiveTournamentId, currentActiveTournamentName);
-            }
+            closeTeamModal();
+            showTeamsListModal(currentActiveTournamentId, currentActiveTournamentName);
 
         } catch (error) {
             console.error('Error de red o JS:', error);
