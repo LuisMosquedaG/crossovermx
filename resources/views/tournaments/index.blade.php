@@ -1957,10 +1957,11 @@
         // Determinar género por categoría del equipo para asignar avatar por default
         const team = currentTournamentTeams.find(t => t.id === currentActiveTeamId);
         let genderValue = '';
-        if (team) {
-            if (team.category === 'Varonil') {
+        if (team && team.category) {
+            const cat = team.category.toString().trim().toLowerCase();
+            if (cat === 'varonil') {
                 genderValue = 'hombre';
-            } else if (team.category === 'Femenil') {
+            } else if (cat === 'femenil') {
                 genderValue = 'mujer';
             }
         }
@@ -1971,6 +1972,46 @@
 
     function closePlayerQuickModal() {
         document.getElementById('playerQuickModal').classList.add('hidden');
+    }
+
+    function compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.7) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = function(event) {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width = Math.round((width * maxHeight) / height);
+                            height = maxHeight;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    canvas.toBlob((blob) => {
+                        resolve(blob);
+                    }, 'image/jpeg', quality);
+                };
+                img.onerror = function(err) { reject(err); };
+            };
+            reader.onerror = function(err) { reject(err); };
+        });
     }
 
     async function submitPlayerQuickForm(event) {
@@ -1984,6 +2025,23 @@
         btn.innerText = 'Guardando...';
 
         try {
+            // Comprimir la imagen si se seleccionó una y es de tamaño considerable
+            const imageInput = document.getElementById('player_quick_image');
+            if (imageInput && imageInput.files.length > 0) {
+                const file = imageInput.files[0];
+                if (file.size > 1024 * 1024) { // mayor a 1MB
+                    btn.innerText = 'Comprimiendo foto...';
+                    try {
+                        const compressedBlob = await compressImage(file, 800, 800, 0.7);
+                        // Reemplazar la imagen en el formData con el blob comprimido
+                        formData.set('image', compressedBlob, 'jugador.jpg');
+                    } catch (e) {
+                        console.error('Error al comprimir la imagen:', e);
+                    }
+                }
+            }
+            btn.innerText = 'Guardando...';
+
             const response = await fetch('{{ route("players.store") }}', {
                 method: 'POST',
                 body: formData,
@@ -1995,8 +2053,14 @@
             });
 
             if (!response.ok) {
-                const data = await response.json();
-                alert(data.message || 'Error al guardar el jugador.');
+                let errorMsg = 'Error al guardar el jugador.';
+                try {
+                    const data = await response.json();
+                    errorMsg = data.message || errorMsg;
+                } catch (e) {
+                    errorMsg = `Error del servidor (${response.status}): ${response.statusText}`;
+                }
+                alert(errorMsg);
                 return;
             }
 
