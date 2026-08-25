@@ -806,7 +806,8 @@ public function store(Request $request)
         if ($selectedClientId) {
             $tournaments = \App\Models\Tournament::where('client_id', $selectedClientId)
                 ->whereIn('status', ['active', 'finished'])
-                ->orderBy('name')
+                ->orderByRaw("CASE WHEN status = 'active' THEN 0 ELSE 1 END")
+                ->orderBy('start_date', 'desc')
                 ->get();
         } else {
             $tournaments = collect();
@@ -818,51 +819,90 @@ public function store(Request $request)
         if (!$selectedTournamentId || $selectedTournamentId === '') {
             // General Dashboard Mode (No tournament selected yet)
             foreach ($tournaments as $t) {
-                // 1. Los 5 jugadores con más puntos
-                $topScorers = \App\Models\GameAction::whereIn('game_id', $t->games()->pluck('id'))
-                    ->where('action_type', 'point_scored')
-                    ->selectRaw('player_id, SUM(value) as total_points')
-                    ->groupBy('player_id')
-                    ->orderByDesc('total_points')
-                    ->limit(5)
-                    ->with('player.team')
-                    ->get()
-                    ->map(function($action) {
-                        return [
-                            'player_name' => $action->player->name ?? 'Jugador',
-                            'player_logo' => $action->player->image_path ?? null,
-                            'player_avatar_url' => $action->player ? $action->player->avatar_url : null,
-                            'player_gender' => $action->player->gender ?? null,
-                            'team_name' => $action->player->team->name ?? 'Equipo',
-                            'team_logo' => $action->player->team->image_path ?? null,
-                            'points' => $action->total_points
-                        ];
-                    });
-
-                // Get tournament type from settings
+                // Get tournament settings
                 $tSettings = $t->settings ? $t->settings->settings : [];
                 $tType = $tSettings['tournament_type'] ?? 'round_robin';
 
-                $topTeams = [];
+                // Agrupar equipos por Categoría - Fuerza
+                $groups = $t->teams->groupBy(function ($item) {
+                    $cat = $item->category ?? 'Sin Categoria';
+                    $strength = $item->strength ?? 'General';
+                    return $cat . ' - ' . $strength;
+                });
 
-                if ($tType === 'round_robin') {
-                    // 2. Los 3 equipos con más puntos (todos contra todos)
-                    $groups = $t->teams->groupBy(function ($item) {
-                        $cat = $item->category ?? 'Sin Categoria';
-                        $strength = $item->strength ?? 'General';
-                        return $cat . ' - ' . $strength;
+                $groupsData = [];
+
+                foreach ($groups as $groupName => $teamsInGroup) {
+                    $teamIdsInGroup = $teamsInGroup->pluck('id')->toArray();
+                    $playerIdsInGroup = \App\Models\Player::whereIn('team_id', $teamIdsInGroup)->pluck('id')->toArray();
+
+                    // Partidos que involucran al menos un equipo de este grupo
+                    $groupGameQuery = $t->games()->where(function($query) use ($teamIdsInGroup) {
+                        $query->whereIn('local_team_id', $teamIdsInGroup)
+                              ->orWhereIn('away_team_id', $teamIdsInGroup);
                     });
+                    $groupGameIds = $groupGameQuery->pluck('id');
 
-                    $allStandings = [];
-                    foreach ($groups as $groupName => $teamsInGroup) {
-                        $teamIdsInGroup = $teamsInGroup->pluck('id')->toArray();
-                        $groupGames = $t->games()
+                    // 1. Líderes anotadores de este grupo
+                    $groupTopScorers = \App\Models\GameAction::whereIn('game_id', $groupGameIds)
+                        ->where('action_type', 'point_scored')
+                        ->whereIn('player_id', $playerIdsInGroup)
+                        ->selectRaw('player_id, SUM(value) as total_points')
+                        ->groupBy('player_id')
+                        ->orderByDesc('total_points')
+                        ->limit(5)
+                        ->with('player.team')
+                        ->get()
+                        ->map(function($action) {
+                            return [
+                                'player_name' => $action->player->name ?? 'Jugador',
+                                'player_logo' => $action->player->image_path ?? null,
+                                'player_avatar_url' => $action->player ? $action->player->avatar_url : null,
+                                'player_gender' => $action->player->gender ?? null,
+                                'team_name' => $action->player->team->name ?? 'Equipo',
+                                'team_logo' => $action->player->team->image_path ?? null,
+                                'points' => $action->total_points
+                            ];
+                        });
+
+                    // 1.5 Récord de puntos en un partido (Individual)
+                    $bestIndividualPerformance = \App\Models\GameAction::whereIn('game_id', $groupGameIds)
+                        ->where('action_type', 'point_scored')
+                        ->whereIn('player_id', $playerIdsInGroup)
+                        ->selectRaw('player_id, game_id, SUM(value) as total_points')
+                        ->groupBy('player_id', 'game_id')
+                        ->orderByDesc('total_points')
+                        ->with(['player.team', 'game.localTeam', 'game.awayTeam'])
+                        ->first();
+
+                    $groupBestPerformance = null;
+                    if ($bestIndividualPerformance) {
+                        $g = $bestIndividualPerformance->game;
+                        $opponentName = ($bestIndividualPerformance->player && $bestIndividualPerformance->player->team_id === $g->local_team_id)
+                            ? ($g->awayTeam->name ?? 'Rival')
+                            : ($g->localTeam->name ?? 'Rival');
+
+                        $groupBestPerformance = [
+                            'player_name' => $bestIndividualPerformance->player->name ?? 'Jugador',
+                            'player_logo' => $bestIndividualPerformance->player->image_path ?? null,
+                            'player_avatar_url' => $bestIndividualPerformance->player ? $bestIndividualPerformance->player->avatar_url : null,
+                            'player_gender' => $bestIndividualPerformance->player->gender ?? null,
+                            'team_name' => $bestIndividualPerformance->player->team->name ?? 'Equipo',
+                            'team_logo' => $bestIndividualPerformance->player->team->image_path ?? null,
+                            'points' => $bestIndividualPerformance->total_points,
+                            'opponent_name' => $opponentName,
+                            'game_date' => $g->date_time ? $g->date_time->format('d/m') : '-'
+                        ];
+                    }
+
+                    // 2. Mejores equipos de este grupo
+                    $groupTopTeams = [];
+                    if ($tType === 'round_robin') {
+                        $groupGamesFinished = $t->games()
                             ->where('status', 'finished')
                             ->where('is_playoff', false)
-                            ->where(function($query) use ($teamIdsInGroup) {
-                                $query->whereIn('local_team_id', $teamIdsInGroup)
-                                      ->orWhereIn('away_team_id', $teamIdsInGroup);
-                            })->get();
+                            ->whereIn('id', $groupGameIds)
+                            ->get();
 
                         $standings = [];
                         foreach ($teamsInGroup as $team) {
@@ -871,7 +911,7 @@ public function store(Request $request)
                                 'points' => 0
                             ];
                         }
-                        foreach ($groupGames as $game) {
+                        foreach ($groupGamesFinished as $game) {
                             $localId = $game->local_team_id;
                             $awayId = $game->away_team_id;
                             if (!isset($standings[$localId]) || !isset($standings[$awayId])) continue;
@@ -886,79 +926,97 @@ public function store(Request $request)
                                 }
                             }
                         }
-                        foreach ($standings as $tid => $sData) {
-                            $allStandings[] = $sData;
-                        }
-                    }
-                    
-                    usort($allStandings, function($a, $b) {
-                        return $b['points'] <=> $a['points'];
-                    });
-                    
-                    $top3Teams = array_slice($allStandings, 0, 5);
-                    foreach ($top3Teams as $item) {
-                        $topTeams[] = [
-                            'team_name' => $item['team']->name,
-                            'team_logo' => $item['team']->image_path,
-                            'score' => $item['points'] . ' pts'
-                        ];
-                    }
-                } else {
-                    // 3. Los 3 equipos con más victorias (eliminatoria o doble eliminatoria)
-                    $finishedGames = $t->games()->where('status', 'finished')->get();
-                    $wins = [];
-                    foreach ($finishedGames as $game) {
-                        $wId = $game->getWinnerId();
-                        if ($wId) {
-                            $wins[$wId] = ($wins[$wId] ?? 0) + 1;
-                        }
-                    }
-                    arsort($wins);
-                    $top3Ids = array_slice(array_keys($wins), 0, 5, true);
-                    $teams = \App\Models\Team::whereIn('id', $top3Ids)->get()->keyBy('id');
-                    
-                    foreach ($top3Ids as $tid) {
-                        if (isset($teams[$tid])) {
-                            $topTeams[] = [
-                                'team_name' => $teams[$tid]->name,
-                                'team_logo' => $teams[$tid]->image_path,
-                                'score' => $wins[$tid] . ' victorias'
+                        
+                        $groupStandings = array_values($standings);
+                        usort($groupStandings, function($a, $b) {
+                            return $b['points'] <=> $a['points'];
+                        });
+
+                        foreach (array_slice($groupStandings, 0, 5) as $item) {
+                            $groupTopTeams[] = [
+                                'team_name' => $item['team']->name,
+                                'team_logo' => $item['team']->image_path,
+                                'score' => $item['points'] . ' pts'
                             ];
                         }
+                    } else {
+                        // Playoffs / Doble eliminatoria (Más victorias)
+                        $groupGamesFinished = $t->games()
+                            ->where('status', 'finished')
+                            ->whereIn('id', $groupGameIds)
+                            ->get();
+
+                        $wins = [];
+                        foreach ($groupGamesFinished as $game) {
+                            $wId = $game->getWinnerId();
+                            if ($wId && in_array($wId, $teamIdsInGroup)) {
+                                $wins[$wId] = ($wins[$wId] ?? 0) + 1;
+                            }
+                        }
+                        arsort($wins);
+                        $topWinsIds = array_slice(array_keys($wins), 0, 5, true);
+                        $teams = \App\Models\Team::whereIn('id', $topWinsIds)->get()->keyBy('id');
+
+                        foreach ($topWinsIds as $tid) {
+                            if (isset($teams[$tid])) {
+                                $groupTopTeams[] = [
+                                    'team_name' => $teams[$tid]->name,
+                                    'team_logo' => $teams[$tid]->image_path,
+                                    'score' => $wins[$tid] . ' victorias'
+                                ];
+                            }
+                        }
                     }
+
+                    // 3. Próximos encuentros de este grupo
+                    $groupUpcoming = $t->games()
+                        ->where('status', 'pending')
+                        ->where('date_time', '>=', now())
+                        ->whereIn('id', $groupGameIds)
+                        ->orderBy('date_time', 'asc')
+                        ->limit(3)
+                        ->with(['localTeam', 'awayTeam', 'court'])
+                        ->get()
+                        ->map(function($game) {
+                            $category = $game->localTeam->category ?? ($game->awayTeam->category ?? null);
+                            $strength = $game->localTeam->strength ?? ($game->awayTeam->strength ?? null);
+                            $catStr = $category ? ($strength ? "$category - $strength" : $category) : 'General';
+                            
+                            return [
+                                'local_name' => $game->localTeam->name ?? 'Pendiente',
+                                'local_logo' => $game->localTeam->image_path ?? null,
+                                'away_name' => $game->awayTeam->name ?? 'Pendiente',
+                                'away_logo' => $game->awayTeam->image_path ?? null,
+                                'court_name' => $game->court->name ?? 'Cancha',
+                                'category_strength' => $catStr,
+                                'date_time' => $game->date_time ? $game->date_time->format('d/m H:i') : '-'
+                            ];
+                        });
+
+                    $groupsData[$groupName] = [
+                        'top_scorers' => $groupTopScorers,
+                        'best_performance' => $groupBestPerformance,
+                        'top_teams' => $groupTopTeams,
+                        'upcoming_games' => $groupUpcoming
+                    ];
                 }
 
-                // 4. Proximos 3 partidos del torneo
-                $upcoming = $t->games()
-                    ->where('status', 'pending')
-                    ->where('date_time', '>=', now())
-                    ->orderBy('date_time', 'asc')
-                    ->limit(3)
-                    ->with(['localTeam', 'awayTeam', 'court'])
-                    ->get()
-                    ->map(function($game) {
-                        $category = $game->localTeam->category ?? ($game->awayTeam->category ?? null);
-                        $strength = $game->localTeam->strength ?? ($game->awayTeam->strength ?? null);
-                        $catStr = $category ? ($strength ? "$category - $strength" : $category) : 'General';
-                        
-                        return [
-                            'local_name' => $game->localTeam->name ?? 'Pendiente',
-                            'local_logo' => $game->localTeam->image_path ?? null,
-                            'away_name' => $game->awayTeam->name ?? 'Pendiente',
-                            'away_logo' => $game->awayTeam->image_path ?? null,
-                            'court_name' => $game->court->name ?? 'Cancha',
-                            'category_strength' => $catStr,
-                            'date_time' => $game->date_time ? $game->date_time->format('d/m H:i') : '-'
-                        ];
-                    });
+                // Fallback si no hay grupos
+                if (empty($groupsData)) {
+                    $groupsData['General'] = [
+                        'top_scorers' => collect(),
+                        'best_performance' => null,
+                        'top_teams' => [],
+                        'upcoming_games' => collect()
+                    ];
+                }
 
                 $dashboardData[] = [
+                    'tournament_id' => $t->id,
                     'tournament_name' => $t->name,
                     'tournament_type' => $tType,
                     'tournament_status' => $t->status,
-                    'top_scorers' => $topScorers,
-                    'top_teams' => $topTeams,
-                    'upcoming_games' => $upcoming
+                    'groups_data' => $groupsData
                 ];
             }
         }
