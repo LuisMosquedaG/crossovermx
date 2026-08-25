@@ -125,34 +125,48 @@ public function showLiveGame(Game $game)
                     }
                     $game->save();
 
-                    // --- NUEVO: DETECTAR KNOCK-OUT ---
+                    // --- NUEVO: DETECTAR KNOCK-OUT (MAX PUNTOS / DIFERENCIA DE PUNTOS) ---
                     $gameSettings = $game->settings ?? [];
                     $knockOutLimit = $gameSettings['knock_out'] ?? ($game->tournament->settings->settings['knock_out'] ?? null);
+                    $knockOutDiff = $gameSettings['knock_out_diff'] ?? ($game->tournament->settings->settings['knock_out_diff'] ?? null);
+                    
+                    $isKnockOut = false;
                     
                     if ($knockOutLimit && $knockOutLimit > 0) {
                         if ($game->local_team_score >= $knockOutLimit || $game->away_team_score >= $knockOutLimit) {
-                            $knockOutOccurred = true;
-                            
-                            $game->status = 'finished';
-                            $game->timer_status = 'finished';
-                            $game->save();
+                            $isKnockOut = true;
+                        }
+                    }
+                    
+                    if (!$isKnockOut && $knockOutDiff && $knockOutDiff > 0) {
+                        $scoreDifference = abs(($game->local_team_score ?? 0) - ($game->away_team_score ?? 0));
+                        if ($scoreDifference >= $knockOutDiff) {
+                            $isKnockOut = true;
+                        }
+                    }
+                    
+                    if ($isKnockOut) {
+                        $knockOutOccurred = true;
+                        
+                        $game->status = 'finished';
+                        $game->timer_status = 'finished';
+                        $game->save();
 
-                            // Lógica de torneo (Protegida para partidos manuales)
-                            if ($game->tournament) {
-                                try {
-                                    $game->tournament->checkCompletionStatus();
-                                } catch (\Exception $e) {
-                                    \Log::error('Error al actualizar torneo en knock-out: ' . $e->getMessage());
-                                }
-                            }
-
-                            // Descuento de suspensiones
+                        // Lógica de torneo (Protegida para partidos manuales)
+                        if ($game->tournament) {
                             try {
-                                $this->decrementSuspensions($game->localTeam, $game);
-                                $this->decrementSuspensions($game->awayTeam, $game);
+                                $game->tournament->checkCompletionStatus();
                             } catch (\Exception $e) {
-                                \Log::error('Error al decrementar suspensiones en knock-out: ' . $e->getMessage());
+                                \Log::error('Error al actualizar torneo en knock-out: ' . $e->getMessage());
                             }
+                        }
+
+                        // Descuento de suspensiones
+                        try {
+                            $this->decrementSuspensions($game->localTeam, $game);
+                            $this->decrementSuspensions($game->awayTeam, $game);
+                        } catch (\Exception $e) {
+                            \Log::error('Error al decrementar suspensiones en knock-out: ' . $e->getMessage());
                         }
                     }
                 }
