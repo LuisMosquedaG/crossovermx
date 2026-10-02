@@ -284,30 +284,43 @@ public function store(Request $request)
     
     public function generateCalendar(Request $request, CalendarGeneratorService $calendarService)
     {
-        $request->validate([
+        $isManual = $request->boolean('is_manual');
+
+        $rules = [
             'tournament_id' => 'required|exists:tournaments,id',
             'tournament_type' => 'required|string',
-            // Eliminadas validaciones de group_a_name y group_b_name
-            'days' => 'required|array',
-            'days.*' => 'integer|between:0,6',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
-            'rest_rules' => 'nullable|array', 
-            'rest_rules.*' => 'string',
             'periods_per_game' => 'required|integer|min:1',
             'game_duration' => 'required|integer|min:1',
             'rest_between_periods' => 'required|integer|min:0',
             'rest_between_games' => 'required|integer|min:0',
-            'courts' => 'required|array|exists:courts,id',
             'timeouts_per_game' => 'required|integer|min:0',
             'limit_foul_personal' => 'required|integer|min:1',
             'limit_foul_technical' => 'required|integer|min:1',
             'limit_foul_unsportsmanlike' => 'required|integer|min:1',
             'limit_foul_disqualifying' => 'required|integer|min:1',
-            'interleave_categories' => 'nullable|boolean',
             'knock_out' => 'nullable|integer|min:1',
             'knock_out_diff' => 'nullable|integer|min:1',
-        ]);
+        ];
+
+        if ($isManual) {
+            $rules['courts'] = 'nullable|array';
+            $rules['days'] = 'nullable|array';
+            $rules['start_time'] = 'nullable|date_format:H:i';
+            $rules['end_time'] = 'nullable|date_format:H:i';
+            $rules['rest_rules'] = 'nullable|array';
+            $rules['interleave_categories'] = 'nullable|boolean';
+        } else {
+            $rules['courts'] = 'required|array|exists:courts,id';
+            $rules['days'] = 'required|array';
+            $rules['days.*'] = 'integer|between:0,6';
+            $rules['start_time'] = 'required|date_format:H:i';
+            $rules['end_time'] = 'required|date_format:H:i|after:start_time';
+            $rules['rest_rules'] = 'nullable|array'; 
+            $rules['rest_rules.*'] = 'string';
+            $rules['interleave_categories'] = 'nullable|boolean';
+        }
+
+        $request->validate($rules);
 
         // Seguridad de Canchas
         $requestedCourts = $request->input('courts', []);
@@ -324,30 +337,36 @@ public function store(Request $request)
         $this->authorize('update', $tournament);
 
         $config = $request->all();
+        $config['is_manual'] = $isManual;
         $config['rest_rules'] = $config['rest_rules'] ?? []; 
         $config['days'] = $config['days'] ?? [0, 1, 2, 3, 4, 5, 6]; 
         $config['start_date'] = $tournament->start_date;
         $config['end_date'] = $tournament->end_date;
         $config['interleave_categories'] = isset($config['interleave_categories']) ? (bool)$config['interleave_categories'] : true;
+        if ($isManual) {
+            $config['tournament_type'] = 'round_robin';
+        }
 
         try {
-            DB::transaction(function () use ($tournament, $config, $calendarService) {
+            DB::transaction(function () use ($tournament, $config, $calendarService, $isManual) {
                 $tournament->games()->delete();
                 $tournament->settings()->delete();
 
-                // --- NUEVA VARIABLE PARA ACUMULAR JUEGOS ---
-                $cumulativeGames = collect(); 
+                if (!$isManual) {
+                    // --- NUEVA VARIABLE PARA ACUMULAR JUEGOS ---
+                    $cumulativeGames = collect(); 
 
-                // --- NUEVA LÓGICA DE ESTRATEGIAS ---
-                $strategy = $this->getStrategy($config['tournament_type']);
-                
-                // Ejecutamos la generación
-                $result = $strategy->generate($tournament, $config, $cumulativeGames);
-                
-                // Actualizamos variables con el resultado de la estrategia
-                $cumulativeGames = $result['games'];
-                $config = $result['config'];
-                // -----------------------------------
+                    // --- NUEVA LÓGICA DE ESTRATEGIAS ---
+                    $strategy = $this->getStrategy($config['tournament_type']);
+                    
+                    // Ejecutamos la generación
+                    $result = $strategy->generate($tournament, $config, $cumulativeGames);
+                    
+                    // Actualizamos variables con el resultado de la estrategia
+                    $cumulativeGames = $result['games'];
+                    $config = $result['config'];
+                    // -----------------------------------
+                }
 
                 TournamentSetting::create([
                     'tournament_id' => $tournament->id,
@@ -357,15 +376,17 @@ public function store(Request $request)
                 $tournament->status = 'active';
                 $tournament->save();
 
-                $totalGames = $tournament->games()->count();
-                if ($totalGames === 0) {
-                    throw new \Exception("Error crítico: El proceso finalizó pero no se crearon partidos en la base de datos. Verifica que hay fechas disponibles y suficientes equipos.");
+                if (!$isManual) {
+                    $totalGames = $tournament->games()->count();
+                    if ($totalGames === 0) {
+                        throw new \Exception("Error crítico: El proceso finalizó pero no se crearon partidos en la base de datos. Verifica que hay fechas disponibles y suficientes equipos.");
+                    }
                 }
             });
 
             return response()->json([
                 'success' => true,
-                'message' => 'Calendario generado exitosamente.',
+                'message' => $isManual ? 'Configuración de calendario manual guardada exitosamente.' : 'Calendario generado exitosamente.',
                 'redirect_url' => route('tournaments.index')
             ]);
 
@@ -557,9 +578,233 @@ public function store(Request $request)
 
             return $team;
         });
-        // ----------------------------------------------------------------------
+        // Canchas para asignación manual de partidos
+        $courtsQuery = Court::orderBy('name');
+        if ($tournament->client_id) {
+            $courtsQuery->where('client_id', $tournament->client_id);
+        } elseif (auth()->check() && auth()->user()->client_id) {
+            $courtsQuery->where('client_id', auth()->user()->client_id);
+        }
+        $courts = $courtsQuery->get();
 
-        return view('tournaments.schedule', compact('games', 'tournament', 'groups', 'categories', 'strengths', 'teams'));
+        // Duración estimada del partido en minutos según configuración del torneo
+        $tSettings = $tournament->settings ? $tournament->settings->settings : [];
+        $tPeriods = (int)($tSettings['periods_per_game'] ?? 4);
+        $tDuration = (int)($tSettings['game_duration'] ?? 10);
+        $tRest = (int)($tSettings['rest_between_periods'] ?? 0);
+        $gameDurationMinutes = ($tPeriods * $tDuration) + (($tPeriods > 1) ? ($tPeriods - 1) * $tRest : 0);
+        if ($gameDurationMinutes <= 0) $gameDurationMinutes = 40;
+
+        return view('tournaments.schedule', compact('games', 'tournament', 'groups', 'categories', 'strengths', 'teams', 'courts', 'gameDurationMinutes'));
+    }
+
+    /**
+     * Retorna la lista de partidos programados en una fecha dada y sus horarios de ocupación en canchas.
+     */
+    public function getCourtOccupancy(Request $request, Tournament $tournament)
+    {
+        $this->authorize('view', $tournament);
+        $date = $request->input('date');
+        if (!$date) {
+            return response()->json([]);
+        }
+
+        $clientId = $tournament->client_id ?? (auth()->check() ? auth()->user()->client_id : null);
+
+        $dateCarbon = \Carbon\Carbon::parse($date);
+        $dayStart = $dateCarbon->copy()->startOfDay()->subHours(2);
+        $dayEnd = $dateCarbon->copy()->endOfDay()->addHours(2);
+
+        $gamesQuery = Game::with(['localTeam', 'awayTeam', 'court'])
+            ->whereNotIn('status', ['finished', 'played', 'cancelled', 'canceled'])
+            ->whereBetween('date_time', [$dayStart, $dayEnd]);
+
+        if ($clientId) {
+            $gamesQuery->where(function($q) use ($clientId) {
+                $q->where('client_id', $clientId)
+                  ->orWhereHas('court', function($cq) use ($clientId) {
+                      $cq->where('client_id', $clientId);
+                  });
+            });
+        }
+
+        $games = $gamesQuery->get();
+
+        $occupancy = $games->map(function($game) {
+            $settings = $game->settings ?? ($game->tournament->settings->settings ?? []);
+            $periods = (int)($settings['periods_per_game'] ?? 4);
+            $duration = (int)($settings['game_duration'] ?? 10);
+            $restPeriods = (int)($settings['rest_between_periods'] ?? 0);
+            $totalMinutes = ($periods * $duration) + (($periods > 1) ? ($periods - 1) * $restPeriods : 0);
+            if ($totalMinutes <= 0) $totalMinutes = 40;
+
+            $start = \Carbon\Carbon::parse($game->date_time);
+            $end = $start->copy()->addMinutes($totalMinutes);
+
+            return [
+                'id' => $game->id,
+                'court_id' => $game->court_id,
+                'court_name' => $game->court->name ?? 'Cancha',
+                'start' => $start->format('H:i'),
+                'end' => $end->format('H:i'),
+                'start_timestamp' => $start->timestamp,
+                'end_timestamp' => $end->timestamp,
+                'date' => $start->format('Y-m-d'),
+                'local_team' => $game->localTeam->name ?? 'Local',
+                'away_team' => $game->awayTeam->name ?? 'Visitante',
+            ];
+        });
+
+        return response()->json($occupancy);
+    }
+
+    /**
+     * Guarda un partido creado manualmente dentro del torneo.
+     */
+    public function storeManualGame(Request $request, Tournament $tournament)
+    {
+        $this->authorize('update', $tournament);
+
+        $request->validate([
+            'date' => 'required|date',
+            'time' => 'required',
+            'court_id' => 'required|exists:courts,id',
+            'local_team_id' => 'required|exists:teams,id|different:away_team_id',
+            'away_team_id' => 'required|exists:teams,id',
+        ], [
+            'local_team_id.different' => 'El equipo local y el equipo visitante no pueden ser el mismo.',
+            'date.required' => 'La fecha del partido es obligatoria.',
+            'time.required' => 'El horario del partido es obligatorio.',
+            'court_id.required' => 'Debes seleccionar una cancha válida.',
+            'local_team_id.required' => 'Debes seleccionar el equipo local.',
+            'away_team_id.required' => 'Debes seleccionar el equipo visitante.',
+        ]);
+
+        $localTeam = Team::where('tournament_id', $tournament->id)->findOrFail($request->local_team_id);
+        $awayTeam = Team::where('tournament_id', $tournament->id)->findOrFail($request->away_team_id);
+
+        $dateTime = \Carbon\Carbon::parse($request->date . ' ' . $request->time);
+
+        $cat = $localTeam->category ?? ($awayTeam->category ?? 'Sin Categoria');
+        $str = $localTeam->strength ?? ($awayTeam->strength ?? 'General');
+        $groupName = trim($cat . ' - ' . $str);
+
+        // Hereda la configuración del torneo
+        $tournamentSettings = $tournament->settings ? $tournament->settings->settings : [];
+        if (empty($tournamentSettings['is_manual'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Solo se pueden agregar partidos manualmente a torneos con configuración de Calendario Manual.'
+            ], 422);
+        }
+
+        // 1. Calcular duración del partido a registrar
+        $periods = (int)($tournamentSettings['periods_per_game'] ?? 4);
+        $duration = (int)($tournamentSettings['game_duration'] ?? 10);
+        $restPeriods = (int)($tournamentSettings['rest_between_periods'] ?? 0);
+        $newGameDuration = ($periods * $duration) + (($periods > 1) ? ($periods - 1) * $restPeriods : 0);
+        if ($newGameDuration <= 0) $newGameDuration = 40;
+
+        $newGameStart = $dateTime->copy();
+        $newGameEnd = $newGameStart->copy()->addMinutes($newGameDuration);
+
+        // 2. Validar conflicto de horario en la cancha seleccionada
+        $conflictingGame = Game::with(['localTeam', 'awayTeam', 'court'])
+            ->where('court_id', $request->court_id)
+            ->whereNotIn('status', ['finished', 'played', 'cancelled', 'canceled'])
+            ->whereBetween('date_time', [$newGameStart->copy()->subHours(4), $newGameEnd->copy()->addHours(4)])
+            ->get()
+            ->first(function($exGame) use ($newGameStart, $newGameEnd) {
+                $exSettings = $exGame->settings ?? ($exGame->tournament->settings->settings ?? []);
+                $p = (int)($exSettings['periods_per_game'] ?? 4);
+                $d = (int)($exSettings['game_duration'] ?? 10);
+                $r = (int)($exSettings['rest_between_periods'] ?? 0);
+                $exDuration = ($p * $d) + (($p > 1) ? ($p - 1) * $r : 0);
+                if ($exDuration <= 0) $exDuration = 40;
+
+                $exStart = \Carbon\Carbon::parse($exGame->date_time);
+                $exEnd = $exStart->copy()->addMinutes($exDuration);
+
+                // Solapamiento de intervalos
+                return ($newGameStart < $exEnd && $newGameEnd > $exStart);
+            });
+
+        if ($conflictingGame) {
+            $confSettings = $conflictingGame->settings ?? ($conflictingGame->tournament->settings->settings ?? []);
+            $cp = (int)($confSettings['periods_per_game'] ?? 4);
+            $cd = (int)($confSettings['game_duration'] ?? 10);
+            $cr = (int)($confSettings['rest_between_periods'] ?? 0);
+            $cDuration = ($cp * $cd) + (($cp > 1) ? ($cp - 1) * $cr : 0);
+            if ($cDuration <= 0) $cDuration = 40;
+
+            $cStart = \Carbon\Carbon::parse($conflictingGame->date_time);
+            $cEnd = $cStart->copy()->addMinutes($cDuration);
+
+            $localName = $conflictingGame->localTeam->name ?? 'Local';
+            $awayName = $conflictingGame->awayTeam->name ?? 'Visitante';
+            $courtName = $conflictingGame->court->name ?? 'la cancha seleccionada';
+
+            return response()->json([
+                'success' => false,
+                'message' => "La cancha '{$courtName}' ya está ocupada en ese horario ({$cStart->format('H:i')} - {$cEnd->format('H:i')}) por el partido {$localName} vs {$awayName}."
+            ], 422);
+        }
+
+        $activeRound = (int)($tournamentSettings['active_rounds'][$groupName] ?? 1);
+        if ($activeRound < 1) $activeRound = 1;
+
+        $game = Game::create([
+            'tournament_id' => $tournament->id,
+            'client_id' => $tournament->client_id ?? (auth()->check() ? auth()->user()->client_id : null),
+            'local_team_id' => $localTeam->id,
+            'away_team_id' => $awayTeam->id,
+            'court_id' => $request->court_id,
+            'date_time' => $dateTime,
+            'status' => 'pending',
+            'group_name' => $groupName,
+            'category_group' => $groupName,
+            'is_playoff' => false,
+            'round_number' => $activeRound,
+            'settings' => $tournamentSettings,
+        ]);
+
+        if ($tournament->status !== 'active') {
+            $tournament->status = 'active';
+            $tournament->save();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Partido agregado exitosamente al rol de juegos (Vuelta {$activeRound}).",
+            'game' => $game
+        ]);
+    }
+
+    /**
+     * Elimina un partido manual pendiente.
+     */
+    public function destroyManualGame(Tournament $tournament, Game $game)
+    {
+        $this->authorize('update', $tournament);
+
+        if ($game->tournament_id !== $tournament->id) {
+            abort(403, 'El partido no pertenece a este torneo.');
+        }
+
+        if ($game->status !== 'pending') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Solo se pueden eliminar partidos en estado pendiente.'
+            ], 422);
+        }
+
+        $game->actions()->delete();
+        $game->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Partido eliminado exitosamente del rol de juegos.'
+        ]);
     }
    
     /**
@@ -679,14 +924,25 @@ public function store(Request $request)
                               ->orWhereIn('away_team_id', $teamIdsInGroup);
                     })->get();
                 
-                $teamsCount = $teamsInGroup->count();
-                $gamesPerRound = ($teamsCount * ($teamsCount - 1)) / 2;
-                $finishedGamesCount = $allGroupGames->where('status', 'finished')->count();
-                $roundsPlayed = floor($finishedGamesCount / $gamesPerRound);
-                $nextRoundNumber = $roundsPlayed + 1;
-                $roundOrdinal = '1ra';
-                if($nextRoundNumber == 2) $roundOrdinal = '2da';
-                if($nextRoundNumber == 3) $roundOrdinal = '3ra';
+                $regularGames = $allGroupGames->where('is_playoff', false);
+                $activeRound = (int)($settings['active_rounds'][$groupName] ?? 1);
+                $maxRoundInGames = (int)$regularGames->max('round_number') ?: 1;
+                $currentRoundNumber = max($activeRound, $maxRoundInGames);
+
+                $currentRoundGames = $regularGames->where('round_number', $currentRoundNumber);
+                
+                $isGroupFinished = false;
+                if ($currentRoundGames->count() > 0) {
+                    $isGroupFinished = ($currentRoundGames->count() === $currentRoundGames->where('status', 'finished')->count())
+                                    && ($regularGames->where('status', '!=', 'finished')->count() === 0);
+                }
+
+                $nextRoundNumber = $currentRoundNumber + 1;
+                $ordinalMap = [
+                    1 => '1ra', 2 => '2da', 3 => '3ra', 4 => '4ta', 5 => '5ta',
+                    6 => '6ta', 7 => '7ma', 8 => '8va', 9 => '9na', 10 => '10ma',
+                ];
+                $roundOrdinal = $ordinalMap[$nextRoundNumber] ?? ($nextRoundNumber . 'a');
 
                 $groupPlayoffGames = $tournament->games()
                     ->where('is_playoff', true)
@@ -757,7 +1013,7 @@ public function store(Request $request)
                 $standingsData[$groupName] = [
                     'standings' => $standings,
                     'teams' => $teamsInGroup->keyBy('id'),
-                    'is_finished' => ($allGroupGames->count() > 0 && $allGroupGames->count() === $allGroupGames->where('status', 'finished')->count()),
+                    'is_finished' => $isGroupFinished,
                     'team_ids' => $teamIdsInGroup,
                     'next_round_number' => $nextRoundNumber,
                     'round_ordinal' => $roundOrdinal,
@@ -1106,14 +1362,25 @@ public function store(Request $request)
                                   ->orWhereIn('away_team_id', $teamIdsInGroup);
                         })->get();
                     
-                    $teamsCount = $teamsInGroup->count();
-                    $gamesPerRound = $teamsCount > 1 ? ($teamsCount * ($teamsCount - 1)) / 2 : 1;
-                    $finishedGamesCount = $allGroupGames->where('status', 'finished')->count();
-                    $roundsPlayed = floor($finishedGamesCount / $gamesPerRound);
-                    $nextRoundNumber = $roundsPlayed + 1;
-                    $roundOrdinal = '1ra';
-                    if($nextRoundNumber == 2) $roundOrdinal = '2da';
-                    if($nextRoundNumber == 3) $roundOrdinal = '3ra';
+                    $regularGames = $allGroupGames->where('is_playoff', false);
+                    $activeRound = (int)($settings['active_rounds'][$groupName] ?? 1);
+                    $maxRoundInGames = (int)$regularGames->max('round_number') ?: 1;
+                    $currentRoundNumber = max($activeRound, $maxRoundInGames);
+
+                    $currentRoundGames = $regularGames->where('round_number', $currentRoundNumber);
+                    
+                    $isGroupFinished = false;
+                    if ($currentRoundGames->count() > 0) {
+                        $isGroupFinished = ($currentRoundGames->count() === $currentRoundGames->where('status', 'finished')->count())
+                                        && ($regularGames->where('status', '!=', 'finished')->count() === 0);
+                    }
+
+                    $nextRoundNumber = $currentRoundNumber + 1;
+                    $ordinalMap = [
+                        1 => '1ra', 2 => '2da', 3 => '3ra', 4 => '4ta', 5 => '5ta',
+                        6 => '6ta', 7 => '7ma', 8 => '8va', 9 => '9na', 10 => '10ma',
+                    ];
+                    $roundOrdinal = $ordinalMap[$nextRoundNumber] ?? ($nextRoundNumber . 'a');
 
                     $groupPlayoffGames = $tournament->games()
                         ->where('is_playoff', true)
@@ -1181,7 +1448,7 @@ public function store(Request $request)
                     $standingsData[$groupName] = [
                         'standings' => $standings,
                         'teams' => $teamsInGroup->keyBy('id'),
-                        'is_finished' => ($allGroupGames->count() > 0 && $allGroupGames->count() === $allGroupGames->where('status', 'finished')->count()),
+                        'is_finished' => $isGroupFinished,
                         'team_ids' => $teamIdsInGroup,
                         'next_round_number' => $nextRoundNumber,
                         'round_ordinal' => $roundOrdinal,
@@ -1354,18 +1621,58 @@ public function store(Request $request)
 
     public function generateSecondRound(Request $request, CalendarGeneratorService $calendarService, Tournament $tournament)
     {
-        $request->validate([
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'team_ids' => 'nullable|string',
-            'category_group' => 'required|string',
-        ]);
+        $this->authorize('update', $tournament);
 
         if (!$tournament->settings) {
             return response()->json(['success' => false, 'message' => 'No se encontró configuración del torneo original.']);
         }
 
         $config = $tournament->settings->settings;
+        $isManual = !empty($config['is_manual']);
+
+        $request->validate([
+            'start_date' => $isManual ? 'nullable|date' : 'required|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'team_ids' => 'nullable|string',
+            'category_group' => 'required|string',
+        ]);
+
+        if ($isManual) {
+            $groupName = $request->category_group;
+            $currentActive = (int)($config['active_rounds'][$groupName] ?? 0);
+            $maxRoundInGames = (int)Game::where('tournament_id', $tournament->id)
+                ->where(function ($q) use ($groupName) {
+                    $q->where('group_name', $groupName)
+                      ->orWhere('category_group', $groupName);
+                })
+                ->where('is_playoff', false)
+                ->max('round_number');
+
+            $nextRoundNumber = max($currentActive, $maxRoundInGames, 1) + 1;
+
+            if (!isset($config['active_rounds'])) {
+                $config['active_rounds'] = [];
+            }
+            $config['active_rounds'][$groupName] = $nextRoundNumber;
+
+            $tournament->settings->update(['settings' => $config]);
+
+            $tournament->status = 'active';
+            $tournament->save();
+
+            $ordinalMap = [
+                1 => '1ra', 2 => '2da', 3 => '3ra', 4 => '4ta', 5 => '5ta',
+                6 => '6ta', 7 => '7ma', 8 => '8va', 9 => '9na', 10 => '10ma',
+            ];
+            $ordinal = $ordinalMap[$nextRoundNumber] ?? ($nextRoundNumber . 'a');
+
+            return response()->json([
+                'success' => true,
+                'message' => "Se ha habilitado la {$ordinal} Vuelta para {$groupName}. Ahora puedes agregar los partidos correspondientes manualmente desde el Rol de Juegos.",
+                'redirect_url' => route('tournaments.schedule', $tournament)
+            ]);
+        }
+
         $config['start_date'] = $request->start_date;
         $config['end_date'] = $request->end_date;
 
@@ -1376,36 +1683,49 @@ public function store(Request $request)
             $specificTeamIds = array_reverse($specificTeamIds);
         }
 
-        DB::transaction(function () use ($tournament, $config, $calendarService, $request, $specificTeamIds) {
+        $groupName = $request->category_group;
+        $currentActive = (int)($config['active_rounds'][$groupName] ?? 0);
+        $maxRoundInGames = (int)Game::where('tournament_id', $tournament->id)
+            ->where(function ($q) use ($groupName) {
+                $q->where('group_name', $groupName)
+                  ->orWhere('category_group', $groupName);
+            })
+            ->where('is_playoff', false)
+            ->max('round_number');
+
+        $nextRoundNumber = max($currentActive, $maxRoundInGames, 1) + 1;
+        $config['next_round_number'] = $nextRoundNumber;
+
+        DB::transaction(function () use ($tournament, $config, $calendarService, $request, $specificTeamIds, $nextRoundNumber, $groupName) {
             
             // 1. El servicio genera los juegos. 
             $result = $calendarService->generateRoundRobinSchedule(
                 $tournament->id, 
                 $config, 
                 $specificTeamIds, 
-                $request->category_group 
+                $groupName 
             );
 
             if (!$result['success']) {
                 throw new \Exception($result['message']);
             }
 
-            // 2. CORRECCIÓN: Calcular y asignar la Ronda Correcta
-            // Buscamos cuál es la ronda más alta existente actualmente en este grupo
-            $maxRound = Game::where('tournament_id', $tournament->id)
-                ->where('group_name', $request->category_group)
-                ->max('round_number');
-            
-            // Si no hay juegos o es 0, empezamos en 1. Si hay, sumamos 1.
-            $nextRoundNumber = ($maxRound) ? $maxRound + 1 : 1;
-
-            // Actualizamos los juegos que acabamos de crear para este grupo.
+            // Aseguramos que los juegos recién generados tengan el round_number correcto
             Game::where('tournament_id', $tournament->id)
-                ->where('group_name', $request->category_group)
-                ->where('date_time', '>=', $request->start_date)
+                ->where(function ($q) use ($groupName) {
+                    $q->where('group_name', $groupName)
+                      ->orWhere('category_group', $groupName);
+                })
+                ->where(function ($q) use ($request, $nextRoundNumber) {
+                    $q->where('date_time', '>=', $request->start_date)
+                      ->orWhere('round_number', $nextRoundNumber);
+                })
                 ->update(['round_number' => $nextRoundNumber]);
-            
-            // ------------------------------------------------
+
+            if (!isset($config['active_rounds'])) {
+                $config['active_rounds'] = [];
+            }
+            $config['active_rounds'][$groupName] = $nextRoundNumber;
 
             $tournament->settings->update(['settings' => $config]);
 

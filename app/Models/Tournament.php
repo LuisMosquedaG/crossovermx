@@ -51,11 +51,6 @@ class Tournament extends Model
      */
     public function checkCompletionStatus()
     {
-        // Solo verificamos si el torneo ya está activo (no pendiente ni terminado ya)
-        if ($this->status !== 'active') {
-            return;
-        }
-
         $totalGames = $this->games()->count();
         
         // Si hay partidos generados
@@ -64,8 +59,30 @@ class Tournament extends Model
 
             // Si todos los partidos están finalizados
             if ($totalGames === $finishedGames) {
-                $this->status = 'finished';
-                $this->save();
+                // Verificar si hay una siguiente vuelta activa sin juegos creados aún
+                $settings = $this->settings ? $this->settings->settings : [];
+                $hasActiveNextRound = false;
+                if (!empty($settings['is_manual']) && !empty($settings['active_rounds'])) {
+                    foreach ($settings['active_rounds'] as $grp => $activeRnd) {
+                        $maxRndGames = $this->games()->where(function($q) use ($grp) {
+                            $q->where('group_name', $grp)->orWhere('category_group', $grp);
+                        })->where('is_playoff', false)->max('round_number');
+                        if ($activeRnd > ($maxRndGames ?: 1)) {
+                            $hasActiveNextRound = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!$hasActiveNextRound) {
+                    $this->status = 'finished';
+                    $this->save();
+                }
+            } else {
+                if ($this->status === 'finished') {
+                    $this->status = 'active';
+                    $this->save();
+                }
             }
         }
     }

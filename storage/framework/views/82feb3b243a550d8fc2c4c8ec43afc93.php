@@ -1,8 +1,17 @@
-<x-app-layout>
-    @php
+<?php if (isset($component)) { $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54 = $attributes; } ?>
+<?php $component = App\View\Components\AppLayout::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('app-layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\App\View\Components\AppLayout::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+    <?php
         $tournamentSettings = $tournament->settings ? $tournament->settings->settings : [];
         $isManualTournament = !empty($tournamentSettings['is_manual']);
-    @endphp
+    ?>
 
     <div class="py-12">
         <div class="w-[96%] md:w-[90%] mx-auto mb-[10vh]">
@@ -12,13 +21,13 @@
                     <div class="mb-6">
                         
                         <!-- FORMULARIO DE FILTROS (SIN BORDE/CONTORNO) -->
-                        <form action="{{ route('tournaments.schedule', $tournament) }}" method="GET" class="w-full flex flex-col gap-3">
+                        <form action="<?php echo e(route('tournaments.schedule', $tournament)); ?>" method="GET" class="w-full flex flex-col gap-3">
                             
                             <!-- FILA 1: BOTÓN VOLVER (Izquierda) y BUSCADOR GENERAL (Derecha) -->
                             <div class="flex flex-col sm:flex-row w-full gap-2">
                                 
                                 <!-- BOTÓN VOLVER (Puesto primero, a la izquierda) -->
-                                <a href="{{ route('tournaments.index') }}" class="w-full sm:w-auto shrink-0 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded shadow transition duration-150 ease-in-out flex items-center justify-center text-center">
+                                <a href="<?php echo e(route('tournaments.index')); ?>" class="w-full sm:w-auto shrink-0 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded shadow transition duration-150 ease-in-out flex items-center justify-center text-center">
                                     ← Volver a Torneos
                                 </a>
 
@@ -29,7 +38,7 @@
                                             <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
                                         </svg>
                                     </div>
-                                    <input type="text" name="search" value="{{ request('search') }}" 
+                                    <input type="text" name="search" value="<?php echo e(request('search')); ?>" 
                                         class="search-input block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 sm:text-sm transition duration-150 ease-in-out" 
                                         placeholder="Buscar equipo o cancha...">
                                 </div>
@@ -40,7 +49,7 @@
                             <div class="flex flex-col md:flex-row w-full gap-2">
                                 
                                 <!-- BOTÓN: IR A POSICIONES (Naranja Intenso) -->
-                                <a href="{{ route('tournaments.standings', $tournament) }}" class="w-full md:w-auto shrink-0 bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded shadow transition duration-150 ease-in-out flex items-center justify-center gap-2 text-center" title="Tabla de Posiciones">
+                                <a href="<?php echo e(route('tournaments.standings', $tournament)); ?>" class="w-full md:w-auto shrink-0 bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded shadow transition duration-150 ease-in-out flex items-center justify-center gap-2 text-center" title="Tabla de Posiciones">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125z" />
                                     </svg>
@@ -54,27 +63,28 @@
                                 </button>
 
                                 <!-- BOTÓN: AGREGAR PARTIDO MANUAL (Solo torneos manuales y solo Admin) -->
-                                @if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach') && $isManualTournament)
+                                <?php if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach') && $isManualTournament): ?>
                                     <button type="button" onclick="openAddManualGameModal()" class="w-full md:w-auto shrink-0 bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-3.5 rounded shadow transition duration-150 ease-in-out flex items-center justify-center gap-1.5 text-center" title="Agregar Partido Manual">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-white">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                                         </svg>
                                         <span class="text-sm font-semibold">Agregar Partido</span>
                                     </button>
-                                @endif
+                                <?php endif; ?>
 
                                 <!-- CAMPO 1: CATEGORÍA -->
                                 <div class="w-full md:flex-1">
                                     <select name="category" onchange="this.form.submit()" 
                                         class="w-full pl-3 pr-8 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 sm:text-sm">
                                         <option value="">Categoría</option>
-                                        @if(isset($categories))
-                                            @foreach($categories as $cat)
-                                                <option value="{{ $cat }}" {{ request('category') == $cat ? 'selected' : '' }}>
-                                                    {{ $cat }}
+                                        <?php if(isset($categories)): ?>
+                                            <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <option value="<?php echo e($cat); ?>" <?php echo e(request('category') == $cat ? 'selected' : ''); ?>>
+                                                    <?php echo e($cat); ?>
+
                                                 </option>
-                                            @endforeach
-                                        @endif
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                        <?php endif; ?>
                                     </select>
                                 </div>
 
@@ -83,13 +93,14 @@
                                     <select name="strength" onchange="this.form.submit()" 
                                         class="w-full pl-3 pr-8 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 sm:text-sm">
                                         <option value="">Fuerza</option>
-                                        @if(isset($strengths))
-                                            @foreach($strengths as $str)
-                                                <option value="{{ $str }}" {{ request('strength') == $str ? 'selected' : '' }}>
-                                                    {{ $str }}
+                                        <?php if(isset($strengths)): ?>
+                                            <?php $__currentLoopData = $strengths; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $str): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <option value="<?php echo e($str); ?>" <?php echo e(request('strength') == $str ? 'selected' : ''); ?>>
+                                                    <?php echo e($str); ?>
+
                                                 </option>
-                                            @endforeach
-                                        @endif
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                        <?php endif; ?>
                                     </select>
                                 </div>
 
@@ -98,20 +109,21 @@
                                     <select name="group" onchange="this.form.submit()" 
                                         class="w-full pl-3 pr-8 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 sm:text-sm">
                                         <option value="">Grupo</option>
-                                        @if(isset($groups))
-                                            @foreach($groups as $grp)
-                                                <option value="{{ $grp }}" {{ request('group') == $grp ? 'selected' : '' }}>
-                                                    {{ $grp }}
+                                        <?php if(isset($groups)): ?>
+                                            <?php $__currentLoopData = $groups; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $grp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <option value="<?php echo e($grp); ?>" <?php echo e(request('group') == $grp ? 'selected' : ''); ?>>
+                                                    <?php echo e($grp); ?>
+
                                                 </option>
-                                            @endforeach
-                                        @endif
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                        <?php endif; ?>
                                     </select>
                                 </div>
 
                                 <!-- CAMPO 4: FECHA INICIO -->
                                 <div class="w-full md:flex-1">
                                     <input type="date" name="start_date" 
-                                        value="{{ request('start_date') ? request('start_date') : \Carbon\Carbon::now()->setTimezone('America/Mexico_City')->toDateString() }}" 
+                                        value="<?php echo e(request('start_date') ? request('start_date') : \Carbon\Carbon::now()->setTimezone('America/Mexico_City')->toDateString()); ?>" 
                                         onchange="this.form.submit()"
                                         class="w-full pl-3 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 sm:text-sm">
                                 </div>
@@ -119,7 +131,7 @@
                                 <!-- CAMPO 5: FECHA FIN -->
                                 <div class="w-full md:flex-1">
                                     <input type="date" name="end_date" 
-                                        value="{{ request('end_date') }}" 
+                                        value="<?php echo e(request('end_date')); ?>" 
                                         onchange="this.form.submit()"
                                         class="w-full pl-3 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 sm:text-sm" placeholder="Hasta...">
                                 </div>
@@ -130,7 +142,7 @@
 
                     </div>
 
-                    @if ($games->isEmpty())
+                    <?php if($games->isEmpty()): ?>
                         <div class="text-center py-16 bg-gray-50/80 rounded-2xl border-2 border-dashed border-gray-200">
                             <div class="mx-auto w-14 h-14 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center mb-3 shadow-sm border border-orange-100">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-7 h-7 text-orange-600">
@@ -139,22 +151,22 @@
                             </div>
                             <h3 class="text-base font-bold text-gray-800 mb-1">No hay partidos registrados</h3>
                             <p class="text-gray-500 text-sm max-w-md mx-auto mb-5">
-                                @if($isManualTournament)
+                                <?php if($isManualTournament): ?>
                                     Aún no se han programado partidos para este torneo. Puedes comenzar agregando el primer partido manualmente.
-                                @else
+                                <?php else: ?>
                                     No se han generado partidos para este torneo.
-                                @endif
+                                <?php endif; ?>
                             </p>
-                            @if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach') && $isManualTournament)
+                            <?php if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach') && $isManualTournament): ?>
                                 <button type="button" onclick="openAddManualGameModal()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg shadow font-bold text-white bg-orange-600 hover:bg-orange-700 transition duration-150 ease-in-out">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-white">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                                     </svg>
                                     <span>Agregar Primer Partido</span>
                                 </button>
-                            @endif
+                            <?php endif; ?>
                         </div>
-                    @else
+                    <?php else: ?>
                         <!-- WRAPPER RESPONSIVE -->
                         <div class="overflow-x-auto rounded-lg border border-gray-200">
                             <table class="min-w-full divide-y divide-gray-200">
@@ -197,131 +209,131 @@
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    @foreach ($games as $game)
+                                    <?php $__currentLoopData = $games; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $game): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <tr>
                                             <!-- 1. COLUMNA: ACCIONES (MOVIDA AL INICIO) -->
                                             <td class="px-4 py-3 whitespace-nowrap text-center align-middle">
                                                 <div class="flex items-center justify-center space-x-2">
                                                     <!-- Botón Asignar Árbitro (COLOR FIJO: AMARILLO) -->
-                                                    @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin'))
-                                                        <button onclick="openAssignRefereeModal({{ $game->id }}, '{{ $game->referee->id ?? '' }}')" class="text-yellow-600 transition-colors" title="Asignar Árbitro">
+                                                    <?php if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin')): ?>
+                                                        <button onclick="openAssignRefereeModal(<?php echo e($game->id); ?>, '<?php echo e($game->referee->id ?? ''); ?>')" class="text-yellow-600 transition-colors" title="Asignar Árbitro">
                                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zM19.5 7.125L18 14v4.75" />
                                                             </svg>
                                                         </button>
-                                                    @endif
+                                                    <?php endif; ?>
 
                                                     <!-- Botón Estadísticas (COLOR FIJO: ÍNDIGO) -->
-                                                    @if($game->status === 'finished')
-                                                        <a href="{{ route('games.stats', $game->id) }}" class="text-indigo-600 transition-colors" title="Ver Estadísticas">
+                                                    <?php if($game->status === 'finished'): ?>
+                                                        <a href="<?php echo e(route('games.stats', $game->id)); ?>" class="text-indigo-600 transition-colors" title="Ver Estadísticas">
                                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125z" />
                                                             </svg>
                                                         </a>
-                                                        @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Arbitro'))
+                                                        <?php if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Arbitro')): ?>
                                                             <!-- Botón Editar Marcador Final -->
-                                                            @if($game->isRoundClosed())
+                                                            <?php if($game->isRoundClosed()): ?>
                                                                 <button type="button" disabled class="text-gray-300 cursor-not-allowed transition-colors p-0.5" title="Ronda cerrada: No se puede modificar el marcador">
                                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
                                                                     </svg>
                                                                 </button>
-                                                            @else
-                                                                <button onclick="openSetFinalScoreModal({{ $game->id }}, '{{ addslashes($game->localTeam->name) }}', '{{ addslashes($game->awayTeam->name) }}', {{ $game->local_team_score ?? 0 }}, {{ $game->away_team_score ?? 0 }})" class="text-emerald-600 hover:text-emerald-700 transition-colors" title="Modificar Marcador Final">
+                                                            <?php else: ?>
+                                                                <button onclick="openSetFinalScoreModal(<?php echo e($game->id); ?>, '<?php echo e(addslashes($game->localTeam->name)); ?>', '<?php echo e(addslashes($game->awayTeam->name)); ?>', <?php echo e($game->local_team_score ?? 0); ?>, <?php echo e($game->away_team_score ?? 0); ?>)" class="text-emerald-600 hover:text-emerald-700 transition-colors" title="Modificar Marcador Final">
                                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
                                                                     </svg>
                                                                 </button>
-                                                            @endif
-                                                        @endif
+                                                            <?php endif; ?>
+                                                        <?php endif; ?>
                                                          <!-- Botón Comentarios (COLOR FIJO: NARANJA) -->
-                                                         <button onclick="openCommentsModal({{ $game->id }})" class="text-orange-600 transition-colors" title="Comentarios">
+                                                         <button onclick="openCommentsModal(<?php echo e($game->id); ?>)" class="text-orange-600 transition-colors" title="Comentarios">
                                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
                                                             </svg>
                                                         </button>
                                                     
                                                     <!-- Jugando -->
-                                                    @elseif($game->status === 'playing')
-                                                        @if(auth()->user()->hasRole('Arbitro') || auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin'))
+                                                    <?php elseif($game->status === 'playing'): ?>
+                                                        <?php if(auth()->user()->hasRole('Arbitro') || auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin')): ?>
                                                             <!-- Botón Live (COLOR FIJO: VERDE) -->
-                                                            <a href="{{ route('games.live', $game->id) }}" class="text-green-600 transition-colors" title="Operar Partido">
+                                                            <a href="<?php echo e(route('games.live', $game->id)); ?>" class="text-green-600 transition-colors" title="Operar Partido">
                                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0Z" />
                                                                 </svg>
                                                             </a>
-                                                        @endif
-                                                        @if(auth()->user()->hasRole('Coach'))
+                                                        <?php endif; ?>
+                                                        <?php if(auth()->user()->hasRole('Coach')): ?>
                                                             <span class="text-gray-400 text-xs italic">En Curso</span>
-                                                        @endif
+                                                        <?php endif; ?>
 
                                                     <!-- Pendiente -->
-                                                    @else
-                                                        @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Arbitro'))
+                                                    <?php else: ?>
+                                                        <?php if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Arbitro')): ?>
                                                             <!-- Botón Iniciar (COLOR FIJO: NARANJA) -->
-                                                            <button onclick="openPlayerSelectionModal({{ $game->id }})" class="text-orange-600 transition-colors" title="Iniciar Partido">
+                                                            <button onclick="openPlayerSelectionModal(<?php echo e($game->id); ?>)" class="text-orange-600 transition-colors" title="Iniciar Partido">
                                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
                                                                 </svg>
                                                             </button>
 
                                                             <!-- Botón Marcador Final Directo -->
-                                                            @if($game->isRoundClosed())
+                                                            <?php if($game->isRoundClosed()): ?>
                                                                 <button type="button" disabled class="text-gray-300 cursor-not-allowed transition-colors p-0.5" title="Ronda cerrada: No se puede registrar marcador">
                                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
                                                                     </svg>
                                                                 </button>
-                                                            @else
-                                                                <button onclick="openSetFinalScoreModal({{ $game->id }}, '{{ addslashes($game->localTeam->name) }}', '{{ addslashes($game->awayTeam->name) }}', {{ $game->local_team_score ?? 0 }}, {{ $game->away_team_score ?? 0 }})" class="text-emerald-600 hover:text-emerald-700 transition-colors" title="Registrar Marcador Final">
+                                                            <?php else: ?>
+                                                                <button onclick="openSetFinalScoreModal(<?php echo e($game->id); ?>, '<?php echo e(addslashes($game->localTeam->name)); ?>', '<?php echo e(addslashes($game->awayTeam->name)); ?>', <?php echo e($game->local_team_score ?? 0); ?>, <?php echo e($game->away_team_score ?? 0); ?>)" class="text-emerald-600 hover:text-emerald-700 transition-colors" title="Registrar Marcador Final">
                                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
                                                                     </svg>
                                                                 </button>
-                                                            @endif
-                                                        @endif
+                                                            <?php endif; ?>
+                                                        <?php endif; ?>
                                                         
-                                                        @if(auth()->user()->hasRole('Coach'))
+                                                        <?php if(auth()->user()->hasRole('Coach')): ?>
                                                             <span class="text-blue-400 text-xs italic">Pendiente</span>
-                                                        @endif
+                                                        <?php endif; ?>
 
                                                         <!-- Botón Auto Finalizar -->
-                                                        @if((auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin')) && ($game->localTeam->status === 'suspended' || $game->awayTeam->status === 'suspended'))
-                                                            <button onclick="autoFinishGame({{ $game->id }})" class="text-red-600 hover:text-red-900 bg-red-50 p-1 rounded" title="Finalizar por Suspensión">
+                                                        <?php if((auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin')) && ($game->localTeam->status === 'suspended' || $game->awayTeam->status === 'suspended')): ?>
+                                                            <button onclick="autoFinishGame(<?php echo e($game->id); ?>)" class="text-red-600 hover:text-red-900 bg-red-50 p-1 rounded" title="Finalizar por Suspensión">
                                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                                                                 </svg>
                                                             </button>
-                                                        @endif
+                                                        <?php endif; ?>
                                                         
                                                         <!-- Botón Cancelación (COLOR FIJO: ROJO) -->
-                                                        @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Arbitro'))
-                                                            <button onclick="openCancelModal({{ $game->id }}, '{{ $game->localTeam->name }}', '{{ $game->awayTeam->name }}')" class="text-red-600 transition-colors" title="Cancelar Partido">
+                                                        <?php if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Arbitro')): ?>
+                                                            <button onclick="openCancelModal(<?php echo e($game->id); ?>, '<?php echo e($game->localTeam->name); ?>', '<?php echo e($game->awayTeam->name); ?>')" class="text-red-600 transition-colors" title="Cancelar Partido">
                                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                                                                 </svg>
                                                             </button>
-                                                        @endif
+                                                        <?php endif; ?>
 
                                                         <!-- Botón Eliminar Partido (Solo Admin) -->
-                                                        @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin'))
-                                                            <button onclick="deleteManualGame({{ $game->id }})" class="text-rose-600 transition-colors" title="Eliminar Partido">
+                                                        <?php if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin')): ?>
+                                                            <button onclick="deleteManualGame(<?php echo e($game->id); ?>)" class="text-rose-600 transition-colors" title="Eliminar Partido">
                                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                                                 </svg>
                                                             </button>
-                                                        @endif
+                                                        <?php endif; ?>
                                                         <!-- BOTÓN REEMPLAZO (VERIFICA QUE LOS ARGUMENTOS SEAN group_name) -->
-                                                        @if( (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin')) && $game->round_number == 1 )
+                                                        <?php if( (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin')) && $game->round_number == 1 ): ?>
                                                             <button onclick="openSwapModal(
-                                                                {{ $game->id }}, 
-                                                                {{ $game->local_team_id }}, 
-                                                                '{{ $game->localTeam->name }}',
-                                                                '{{ $game->group_name }}', 
-                                                                {{ $game->away_team_id }}, 
-                                                                '{{ $game->awayTeam->name }}',
-                                                                '{{ $game->group_name }}'   
+                                                                <?php echo e($game->id); ?>, 
+                                                                <?php echo e($game->local_team_id); ?>, 
+                                                                '<?php echo e($game->localTeam->name); ?>',
+                                                                '<?php echo e($game->group_name); ?>', 
+                                                                <?php echo e($game->away_team_id); ?>, 
+                                                                '<?php echo e($game->awayTeam->name); ?>',
+                                                                '<?php echo e($game->group_name); ?>'   
                                                             )"
                                                             class="text-blue-500 hover:text-blue-700 transition-colors p-1 rounded hover:bg-blue-50" 
                                                             title="Reemplazar Equipo (Global)">
@@ -329,8 +341,8 @@
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
                                                                 </svg>
                                                             </button>
-                                                        @endif
-                                                    @endif
+                                                        <?php endif; ?>
+                                                    <?php endif; ?>
                                                 </div>
                                             </td>
 
@@ -339,10 +351,12 @@
                                                 <div class="flex flex-col justify-center leading-tight">
                                             <!-- Cambié max-w-[120px] por max-w-[180px] o más, según necesites -->
                                             <span class="font-bold text-gray-900 text-sm truncate max-w-[180px] mx-auto">
-                                                {{ $game->date_time->format('d-m-Y H:i') }}
+                                                <?php echo e($game->date_time->format('d-m-Y H:i')); ?>
+
                                             </span>
-                                                    <span class="text-sm text-gray-500 truncate max-w-[120px] mx-auto" title="{{ $game->court->name }}">
-                                                        {{ $game->court->name }}
+                                                    <span class="text-sm text-gray-500 truncate max-w-[120px] mx-auto" title="<?php echo e($game->court->name); ?>">
+                                                        <?php echo e($game->court->name); ?>
+
                                                     </span>
                                                 </div>
                                             </td>
@@ -350,29 +364,31 @@
                                             <!-- 3. COLUMNA: EQUIPO LOCAL -->
                                             <td class="px-4 py-3 whitespace-nowrap text-center align-middle">
                                                 <div class="flex flex-col justify-center items-center leading-tight mx-auto">
-                                                    @if($game->status === 'finished')
-                                                        <span class="font-bold text-gray-900 text-sm truncate w-full text-center">{{ $game->localTeam->name }}</span>
+                                                    <?php if($game->status === 'finished'): ?>
+                                                        <span class="font-bold text-gray-900 text-sm truncate w-full text-center"><?php echo e($game->localTeam->name); ?></span>
                                                         <!-- Text-sm y leading-none para mantener la fila compacta -->
                                                         <span class="font-black text-orange-600 text-sm leading-none mt-0.5">
-                                                            {{ $game->local_team_score ?? 0 }}
+                                                            <?php echo e($game->local_team_score ?? 0); ?>
+
                                                         </span>
-                                                    @else
-                                                        <span class="font-bold text-gray-900 text-sm truncate w-full text-center">{{ $game->localTeam->name }}</span>
-                                                    @endif
+                                                    <?php else: ?>
+                                                        <span class="font-bold text-gray-900 text-sm truncate w-full text-center"><?php echo e($game->localTeam->name); ?></span>
+                                                    <?php endif; ?>
                                                 </div>
                                             </td>
 
                                             <!-- 4. COLUMNA: EQUIPO VISITANTE -->
                                             <td class="px-4 py-3 whitespace-nowrap text-center align-middle">
                                                 <div class="flex flex-col justify-center items-center leading-tight mx-auto">
-                                                    @if($game->status === 'finished')
-                                                        <span class="font-medium text-gray-700 text-sm truncate w-full text-center">{{ $game->awayTeam->name }}</span>
+                                                    <?php if($game->status === 'finished'): ?>
+                                                        <span class="font-medium text-gray-700 text-sm truncate w-full text-center"><?php echo e($game->awayTeam->name); ?></span>
                                                         <span class="font-black text-orange-600 text-sm leading-none mt-0.5">
-                                                            {{ $game->away_team_score ?? 0 }}
+                                                            <?php echo e($game->away_team_score ?? 0); ?>
+
                                                         </span>
-                                                    @else
-                                                        <span class="font-medium text-gray-700 text-sm truncate w-full text-center">{{ $game->awayTeam->name }}</span>
-                                                    @endif
+                                                    <?php else: ?>
+                                                        <span class="font-medium text-gray-700 text-sm truncate w-full text-center"><?php echo e($game->awayTeam->name); ?></span>
+                                                    <?php endif; ?>
                                                 </div>
                                             </td>
                                             
@@ -380,71 +396,83 @@
                                             <td class="px-4 py-3 whitespace-nowrap text-center align-middle">
                                                 <div class="flex flex-col justify-center items-center leading-tight space-y-1">
                                                     
-                                                    @if($game->localTeam->category == 'Femenil')
+                                                    <?php if($game->localTeam->category == 'Femenil'): ?>
                                                         <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-pink-100 text-pink-800 uppercase w-max">
                                                             Femenil
                                                         </span>
-                                                    @elseif($game->localTeam->category == 'Mixto')
+                                                    <?php elseif($game->localTeam->category == 'Mixto'): ?>
                                                         <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-purple-100 text-purple-800 uppercase w-max">
                                                             Mixto
                                                         </span>
-                                                    @elseif($game->localTeam->category == 'Varonil')
+                                                    <?php elseif($game->localTeam->category == 'Varonil'): ?>
                                                         <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-blue-100 text-blue-800 uppercase w-max">
                                                             Varonil
                                                         </span>
-                                                    @elseif($game->localTeam->category == 'Infantil')
+                                                    <?php elseif($game->localTeam->category == 'Infantil'): ?>
                                                         <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-teal-100 text-teal-800 uppercase w-max">
                                                             Infantil
                                                         </span>
-                                                    @else
+                                                    <?php else: ?>
                                                         <span class="text-gray-400 text-xs">-</span>
-                                                    @endif
+                                                    <?php endif; ?>
 
                                                     <span class="text-[10px] text-gray-400 font-semibold tracking-wider">
-                                                        {{ $game->localTeam->strength ?? '-' }}
+                                                        <?php echo e($game->localTeam->strength ?? '-'); ?>
+
                                                     </span>
                                                 </div>
                                             </td>
 
                                             <!-- 6. COLUMNA: ESTADO -->
                                             <td class="px-4 py-3 whitespace-nowrap text-center align-middle">
-                                                @if($game->status === 'playing')
+                                                <?php if($game->status === 'playing'): ?>
                                                     <span class="px-2 py-1 inline-flex text-xs leading-4 font-semibold rounded-full bg-green-100 text-green-800">En Juego</span>
-                                                @elseif($game->status === 'finished')
+                                                <?php elseif($game->status === 'finished'): ?>
                                                     <span class="px-2 py-1 inline-flex text-xs leading-4 font-semibold rounded-full bg-gray-200 text-gray-800">Finalizado</span>
-                                                @else
+                                                <?php else: ?>
                                                     <span class="px-2 py-1 inline-flex text-xs leading-4 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pendiente</span>
-                                                @endif
+                                                <?php endif; ?>
                                             </td>
                                             
                                             <!-- 7. COLUMNA: ÁRBITRO -->
                                             <td class="px-4 py-3 whitespace-nowrap text-center align-middle">
-                                                @if($game->referee)
-                                                    <div class="text-sm font-medium text-gray-900 truncate mx-auto" title="{{ $game->referee->name }}">
-                                                        {{ $game->referee->name }}
+                                                <?php if($game->referee): ?>
+                                                    <div class="text-sm font-medium text-gray-900 truncate mx-auto" title="<?php echo e($game->referee->name); ?>">
+                                                        <?php echo e($game->referee->name); ?>
+
                                                     </div>
-                                                @else
+                                                <?php else: ?>
                                                     <span class="text-sm text-gray-400 italic">Sin asignar</span>
-                                                @endif
+                                                <?php endif; ?>
                                             </td>
                                             
                                         </tr>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </tbody>
                             </table>
                             <!-- CONTROLES DE PAGINACIÓN -->
                             <div class="mt-4 px-4 pb-4">
-                                {{ $games->links() }}
+                                <?php echo e($games->links()); ?>
+
                             </div>
                         </div>
                         <!-- FIN WRAPPER RESPONSIVE -->
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
 
-</x-app-layout>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $attributes = $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $component = $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
 
     <!-- Modal para Agregar Partido Manual -->
     <div id="addManualGameModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
@@ -453,7 +481,7 @@
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all border border-gray-100">
                     <form id="addManualGameForm" onsubmit="submitAddManualGame(event)">
-                        @csrf
+                        <?php echo csrf_field(); ?>
                         <div class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
                             <h3 class="text-lg font-semibold leading-6 text-gray-900" id="modalManualGameTitle">Crear Partido Manual</h3>
 
@@ -467,7 +495,7 @@
                                 <div>
                                     <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 flex items-center justify-between">
                                         <span>Horario</span>
-                                        <span class="text-[10px] font-normal text-gray-500 lowercase">(duración: {{ $gameDurationMinutes ?? 40 }} min)</span>
+                                        <span class="text-[10px] font-normal text-gray-500 lowercase">(duración: <?php echo e($gameDurationMinutes ?? 40); ?> min)</span>
                                     </label>
                                     <input type="time" name="time" id="manualGameTime" required onchange="updateCourtAvailability()" oninput="updateCourtAvailability()"
                                         class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm py-2 px-3">
@@ -480,11 +508,11 @@
                                 <select name="court_id" id="manualGameCourtId" required onchange="onManualCourtSelected()"
                                     class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm py-2 px-3">
                                     <option value="">-- Seleccionar Cancha --</option>
-                                    @if(isset($courts))
-                                        @foreach($courts as $court)
-                                            <option value="{{ $court->id }}" data-original-name="{{ $court->name }}">{{ $court->name }}</option>
-                                        @endforeach
-                                    @endif
+                                    <?php if(isset($courts)): ?>
+                                        <?php $__currentLoopData = $courts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $court): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <option value="<?php echo e($court->id); ?>" data-original-name="<?php echo e($court->name); ?>"><?php echo e($court->name); ?></option>
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                    <?php endif; ?>
                                 </select>
                                 <div id="courtConflictNotice" class="hidden mt-1.5 p-2 rounded-lg text-xs font-medium bg-amber-50 border border-amber-200 text-amber-800"></div>
                             </div>
@@ -496,13 +524,13 @@
                                     <select name="local_team_id" id="manualGameLocalTeam" required onchange="filterManualAwayTeams()"
                                         class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm py-2 px-3">
                                         <option value="">-- Seleccionar Local --</option>
-                                        @if(isset($teams))
-                                            @foreach($teams as $team)
-                                                <option value="{{ $team->id }}" data-category="{{ $team->category }}" data-strength="{{ $team->strength }}" data-group="{{ $team->group_name }}">
-                                                    {{ $team->name }} ({{ $team->group_name }})
+                                        <?php if(isset($teams)): ?>
+                                            <?php $__currentLoopData = $teams; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $team): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <option value="<?php echo e($team->id); ?>" data-category="<?php echo e($team->category); ?>" data-strength="<?php echo e($team->strength); ?>" data-group="<?php echo e($team->group_name); ?>">
+                                                    <?php echo e($team->name); ?> (<?php echo e($team->group_name); ?>)
                                                 </option>
-                                            @endforeach
-                                        @endif
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                        <?php endif; ?>
                                     </select>
                                 </div>
                                 <div>
@@ -510,22 +538,22 @@
                                     <select name="away_team_id" id="manualGameAwayTeam" required
                                         class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm py-2 px-3">
                                         <option value="">-- Seleccionar Visitante --</option>
-                                        @if(isset($teams))
-                                            @foreach($teams as $team)
-                                                <option value="{{ $team->id }}" data-category="{{ $team->category }}" data-strength="{{ $team->strength }}" data-group="{{ $team->group_name }}">
-                                                    {{ $team->name }} ({{ $team->group_name }})
+                                        <?php if(isset($teams)): ?>
+                                            <?php $__currentLoopData = $teams; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $team): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <option value="<?php echo e($team->id); ?>" data-category="<?php echo e($team->category); ?>" data-strength="<?php echo e($team->strength); ?>" data-group="<?php echo e($team->group_name); ?>">
+                                                    <?php echo e($team->name); ?> (<?php echo e($team->group_name); ?>)
                                                 </option>
-                                            @endforeach
-                                        @endif
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                        <?php endif; ?>
                                     </select>
                                 </div>
                             </div>
 
                             <!-- Resumen de Configuración Heredada -->
-                            @php
+                            <?php
                                 $tSettings = $tournament->settings ? $tournament->settings->settings : [];
                                 $hasKnockout = !empty($tSettings['knock_out']) || !empty($tSettings['knock_out_diff']);
-                            @endphp
+                            ?>
                             <div class="bg-gray-50 border border-gray-200 rounded-xl p-3.5 text-xs text-gray-600 space-y-2.5">
                                 <div class="font-bold text-gray-800 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -540,19 +568,19 @@
                                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-white p-2 rounded-lg border border-gray-200 text-center">
                                         <div>
                                             <span class="text-gray-400 block text-[10px]">Periodos</span>
-                                            <b class="text-gray-900 text-xs">{{ $tSettings['periods_per_game'] ?? 4 }}</b>
+                                            <b class="text-gray-900 text-xs"><?php echo e($tSettings['periods_per_game'] ?? 4); ?></b>
                                         </div>
                                         <div>
                                             <span class="text-gray-400 block text-[10px]">Min/Periodo</span>
-                                            <b class="text-gray-900 text-xs">{{ $tSettings['game_duration'] ?? 10 }} min</b>
+                                            <b class="text-gray-900 text-xs"><?php echo e($tSettings['game_duration'] ?? 10); ?> min</b>
                                         </div>
                                         <div>
                                             <span class="text-gray-400 block text-[10px]">Tiempos Fuera</span>
-                                            <b class="text-gray-900 text-xs">{{ $tSettings['timeouts_per_game'] ?? 5 }}</b>
+                                            <b class="text-gray-900 text-xs"><?php echo e($tSettings['timeouts_per_game'] ?? 5); ?></b>
                                         </div>
                                         <div>
                                             <span class="text-gray-400 block text-[10px]">Descanso</span>
-                                            <b class="text-gray-900 text-xs">{{ $tSettings['rest_between_periods'] ?? 0 }} min</b>
+                                            <b class="text-gray-900 text-xs"><?php echo e($tSettings['rest_between_periods'] ?? 0); ?> min</b>
                                         </div>
                                     </div>
                                 </div>
@@ -563,19 +591,19 @@
                                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-white p-2 rounded-lg border border-gray-200 text-center">
                                         <div>
                                             <span class="text-gray-400 block text-[10px]">Personales</span>
-                                            <b class="text-gray-900 text-xs">{{ $tSettings['limit_foul_personal'] ?? 5 }}</b>
+                                            <b class="text-gray-900 text-xs"><?php echo e($tSettings['limit_foul_personal'] ?? 5); ?></b>
                                         </div>
                                         <div>
                                             <span class="text-gray-400 block text-[10px]">Técnicas</span>
-                                            <b class="text-gray-900 text-xs">{{ $tSettings['limit_foul_technical'] ?? 2 }}</b>
+                                            <b class="text-gray-900 text-xs"><?php echo e($tSettings['limit_foul_technical'] ?? 2); ?></b>
                                         </div>
                                         <div>
                                             <span class="text-gray-400 block text-[10px]">Antideportivas</span>
-                                            <b class="text-gray-900 text-xs">{{ $tSettings['limit_foul_unsportsmanlike'] ?? 2 }}</b>
+                                            <b class="text-gray-900 text-xs"><?php echo e($tSettings['limit_foul_unsportsmanlike'] ?? 2); ?></b>
                                         </div>
                                         <div>
                                             <span class="text-gray-400 block text-[10px]">Descalificantes</span>
-                                            <b class="text-gray-900 text-xs">{{ $tSettings['limit_foul_disqualifying'] ?? 1 }}</b>
+                                            <b class="text-gray-900 text-xs"><?php echo e($tSettings['limit_foul_disqualifying'] ?? 1); ?></b>
                                         </div>
                                     </div>
                                 </div>
@@ -584,25 +612,25 @@
                                 <div class="bg-white p-2.5 rounded-lg border border-gray-200 flex flex-wrap items-center justify-between gap-1">
                                     <div class="flex items-center gap-1.5">
                                         <span class="text-gray-700 font-bold text-[11px]">Knock-out:</span>
-                                        @if($hasKnockout)
+                                        <?php if($hasKnockout): ?>
                                             <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-orange-100 text-orange-800">Incluido</span>
-                                        @else
+                                        <?php else: ?>
                                             <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-600">No incluido</span>
-                                        @endif
+                                        <?php endif; ?>
                                     </div>
-                                    @if($hasKnockout)
+                                    <?php if($hasKnockout): ?>
                                         <div class="text-[11px] text-gray-600 flex items-center gap-2">
-                                            @if(!empty($tSettings['knock_out']))
-                                                <span>Máx: <b class="text-gray-900">{{ $tSettings['knock_out'] }} pts</b></span>
-                                            @endif
-                                            @if(!empty($tSettings['knock_out']) && !empty($tSettings['knock_out_diff']))
+                                            <?php if(!empty($tSettings['knock_out'])): ?>
+                                                <span>Máx: <b class="text-gray-900"><?php echo e($tSettings['knock_out']); ?> pts</b></span>
+                                            <?php endif; ?>
+                                            <?php if(!empty($tSettings['knock_out']) && !empty($tSettings['knock_out_diff'])): ?>
                                                 <span class="text-gray-300">|</span>
-                                            @endif
-                                            @if(!empty($tSettings['knock_out_diff']))
-                                                <span>Dif: <b class="text-gray-900">{{ $tSettings['knock_out_diff'] }} pts</b></span>
-                                            @endif
+                                            <?php endif; ?>
+                                            <?php if(!empty($tSettings['knock_out_diff'])): ?>
+                                                <span>Dif: <b class="text-gray-900"><?php echo e($tSettings['knock_out_diff']); ?> pts</b></span>
+                                            <?php endif; ?>
                                         </div>
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
@@ -628,7 +656,7 @@
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all border border-gray-100">
                     <form id="setFinalScoreForm" onsubmit="submitSetFinalScore(event)">
-                        @csrf
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" id="finalScoreGameId" name="game_id">
                         
                         <div class="p-6 space-y-5">
@@ -731,7 +759,7 @@
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative w-full max-w-md transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all">
                     <form id="assignRefereeForm" onsubmit="submitAssignReferee(event)">
-                        @csrf
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" name="game_id" id="referee_game_id">
                         <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                             <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Asignar Árbitro</h3>
@@ -770,7 +798,7 @@
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative w-full max-w-md transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all">
                     <form id="quickRefereeForm" onsubmit="submitQuickRefereeForm(event)">
-                        @csrf
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" name="role" value="Arbitro">
                         
                         <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
@@ -779,24 +807,176 @@
                                 
                                 <div class="mt-4 space-y-4">
                                     <div>
-                                        <x-input-label for="q_referee_name" :value="__('Nombre Completo')" />
-                                        <x-text-input id="q_referee_name" class="block mt-1 w-full" type="text" name="name" required />
+                                        <?php if (isset($component)) { $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.input-label','data' => ['for' => 'q_referee_name','value' => __('Nombre Completo')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('input-label'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['for' => 'q_referee_name','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('Nombre Completo'))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $attributes = $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $component = $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+                                        <?php if (isset($component)) { $__componentOriginal18c21970322f9e5c938bc954620c12bb = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal18c21970322f9e5c938bc954620c12bb = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.text-input','data' => ['id' => 'q_referee_name','class' => 'block mt-1 w-full','type' => 'text','name' => 'name','required' => true]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('text-input'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['id' => 'q_referee_name','class' => 'block mt-1 w-full','type' => 'text','name' => 'name','required' => true]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $attributes = $__attributesOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__attributesOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $component = $__componentOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__componentOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?>
                                     </div>
                                     
                                     <div>
-                                        <x-input-label for="q_referee_email" :value="__('Usuario (Email)')" />
-                                        <x-text-input id="q_referee_email" class="block mt-1 w-full" type="text" name="email" required placeholder="Ej: arbitro.nuevo" />
+                                        <?php if (isset($component)) { $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.input-label','data' => ['for' => 'q_referee_email','value' => __('Usuario (Email)')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('input-label'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['for' => 'q_referee_email','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('Usuario (Email)'))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $attributes = $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $component = $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+                                        <?php if (isset($component)) { $__componentOriginal18c21970322f9e5c938bc954620c12bb = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal18c21970322f9e5c938bc954620c12bb = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.text-input','data' => ['id' => 'q_referee_email','class' => 'block mt-1 w-full','type' => 'text','name' => 'email','required' => true,'placeholder' => 'Ej: arbitro.nuevo']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('text-input'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['id' => 'q_referee_email','class' => 'block mt-1 w-full','type' => 'text','name' => 'email','required' => true,'placeholder' => 'Ej: arbitro.nuevo']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $attributes = $__attributesOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__attributesOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $component = $__componentOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__componentOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?>
                                         <p class="mt-1 text-xs text-gray-500">El dominio @cliente se agregará automáticamente.</p>
                                     </div>
 
                                     <div class="grid grid-cols-2 gap-4">
                                         <div>
-                                            <x-input-label for="q_referee_password" :value="__('Contraseña')" />
-                                            <x-text-input id="q_referee_password" class="block mt-1 w-full" type="password" name="password" required />
+                                            <?php if (isset($component)) { $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.input-label','data' => ['for' => 'q_referee_password','value' => __('Contraseña')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('input-label'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['for' => 'q_referee_password','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('Contraseña'))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $attributes = $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $component = $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+                                            <?php if (isset($component)) { $__componentOriginal18c21970322f9e5c938bc954620c12bb = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal18c21970322f9e5c938bc954620c12bb = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.text-input','data' => ['id' => 'q_referee_password','class' => 'block mt-1 w-full','type' => 'password','name' => 'password','required' => true]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('text-input'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['id' => 'q_referee_password','class' => 'block mt-1 w-full','type' => 'password','name' => 'password','required' => true]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $attributes = $__attributesOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__attributesOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $component = $__componentOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__componentOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?>
                                         </div>
                                         <div>
-                                            <x-input-label for="q_referee_password_confirmation" :value="__('Confirmar')" />
-                                            <x-text-input id="q_referee_password_confirmation" class="block mt-1 w-full" type="password" name="password_confirmation" required />
+                                            <?php if (isset($component)) { $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.input-label','data' => ['for' => 'q_referee_password_confirmation','value' => __('Confirmar')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('input-label'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['for' => 'q_referee_password_confirmation','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('Confirmar'))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $attributes = $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581)): ?>
+<?php $component = $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
+<?php unset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
+<?php endif; ?>
+                                            <?php if (isset($component)) { $__componentOriginal18c21970322f9e5c938bc954620c12bb = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal18c21970322f9e5c938bc954620c12bb = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.text-input','data' => ['id' => 'q_referee_password_confirmation','class' => 'block mt-1 w-full','type' => 'password','name' => 'password_confirmation','required' => true]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('text-input'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['id' => 'q_referee_password_confirmation','class' => 'block mt-1 w-full','type' => 'password','name' => 'password_confirmation','required' => true]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $attributes = $__attributesOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__attributesOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal18c21970322f9e5c938bc954620c12bb)): ?>
+<?php $component = $__componentOriginal18c21970322f9e5c938bc954620c12bb; ?>
+<?php unset($__componentOriginal18c21970322f9e5c938bc954620c12bb); ?>
+<?php endif; ?>
                                         </div>
                                     </div>
                                 </div>
@@ -823,7 +1003,7 @@
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative w-full max-w-4xl transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all">
                     <form id="playerSelectionForm" onsubmit="saveStartingPlayers(event)">
-                        @csrf
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" name="game_id" id="playerSelection_game_id">
                         <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                             <div class="sm:flex sm:items-start">
@@ -881,7 +1061,7 @@
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative w-full max-w-lg transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all">
                     <form id="cancelGameForm" onsubmit="submitCancel(event)">
-                        @csrf
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" name="game_id" id="cancel_game_id">
                         <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                             <div class="sm:flex sm:items-start">
@@ -948,7 +1128,7 @@
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative w-full max-w-sm transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all">
                     <form id="quickPlayerForm" onsubmit="submitQuickPlayer(event)">
-                        @csrf
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" name="team_id" id="qp_team_id">
                         <input type="hidden" name="side" id="qp_side">
                         <input type="hidden" name="status" value="active">
@@ -1011,7 +1191,7 @@
                     <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                         <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-4">Agregar Observación / Nota</h3>
                         <form id="commentForm" onsubmit="submitComment(event)">
-                            @csrf
+                            <?php echo csrf_field(); ?>
                             
                             <div class="mb-4">
                                 <label class="block text-sm font-medium text-gray-700">Referencia:</label>
@@ -1020,7 +1200,7 @@
                                 </select>
                                 
                                 <!-- SOLO ÁRBITROS, ADMIN Y SUPER ADMIN PUEDEN VER ESTO -->
-                                @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Arbitro'))
+                                <?php if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Arbitro')): ?>
                                     <div id="suspensionInputContainer" class="mt-2 hidden p-3 bg-red-50 rounded border border-red-100">
                                         <label class="flex items-center space-x-2 text-sm font-medium text-red-800">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -1033,7 +1213,7 @@
                                             <span class="text-xs text-gray-600">Ingresa un número mayor a 0 para activar.</span>
                                         </div>
                                     </div>
-                                @endif
+                                <?php endif; ?>
                             </div>
 
                             <div class="mb-4">
@@ -1150,7 +1330,7 @@
             submitBtn.classList.add('opacity-75');
 
             try {
-                const response = await fetch('{{ route("users.store") }}', {
+                const response = await fetch('<?php echo e(route("users.store")); ?>', {
                     method: 'POST',
                     body: formData,
                     headers: {
@@ -1762,7 +1942,7 @@
 
             try {
                 // Suponemos que existe una ruta para guardar jugadores (la misma que usas en el módulo de jugadores)
-                const response = await fetch('{{ route("players.store") }}', {
+                const response = await fetch('<?php echo e(route("players.store")); ?>', {
                     method: 'POST',
                     body: formData,
                     headers: {
@@ -1845,7 +2025,7 @@
             btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
 
             try {
-                const response = await fetch(`{{ route('tournaments.update-progression', $tournament) }}`, {
+                const response = await fetch(`<?php echo e(route('tournaments.update-progression', $tournament)); ?>`, {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/json',
@@ -1885,7 +2065,7 @@
         }
 
         // 1. CREAR BASE DE DATOS LOCAL DE EQUIPOS (Desde PHP)
-        const allTeamsData = @json($teams);
+        const allTeamsData = <?php echo json_encode($teams, 15, 512) ?>;
 
         // Variables globales
         let currentLocalId = null;
@@ -2024,7 +2204,7 @@
             btn.disabled = true;
 
             try {
-                const url = "{{ route('tournaments.swap-global', $tournament) }}";
+                const url = "<?php echo e(route('tournaments.swap-global', $tournament)); ?>";
 
                 const response = await fetch(url, {
                     method: 'POST',
@@ -2068,7 +2248,7 @@
         // ==========================================
         // FUNCIONES DE PARTIDOS MANUALES
         // ==========================================
-        const tournamentGameDuration = {{ $gameDurationMinutes ?? 40 }};
+        const tournamentGameDuration = <?php echo e($gameDurationMinutes ?? 40); ?>;
         let courtOccupancyCache = {};
         let currentOccupancyList = [];
 
@@ -2081,7 +2261,7 @@
             }
 
             try {
-                const url = `{{ route('tournaments.courtOccupancy', $tournament->id) }}?date=${date}`;
+                const url = `<?php echo e(route('tournaments.courtOccupancy', $tournament->id)); ?>?date=${date}`;
                 const res = await fetch(url, {
                     headers: {
                         'Accept': 'application/json',
@@ -2251,7 +2431,7 @@
             const formData = new FormData(form);
 
             try {
-                const response = await fetch("{{ route('tournaments.manualGame.store', $tournament->id) }}", {
+                const response = await fetch("<?php echo e(route('tournaments.manualGame.store', $tournament->id)); ?>", {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/json',
@@ -2286,7 +2466,7 @@
             }
 
             try {
-                const url = `/tournaments/{{ $tournament->id }}/games/${gameId}`;
+                const url = `/tournaments/<?php echo e($tournament->id); ?>/games/${gameId}`;
                 const response = await fetch(url, {
                     method: 'DELETE',
                     headers: {
@@ -2433,4 +2613,4 @@
                 btn.disabled = false;
             }
         }
-    </script>
+    </script><?php /**PATH C:\Users\luism\gemini-work\sistemaTorneos\resources\views/tournaments/schedule.blade.php ENDPATH**/ ?>

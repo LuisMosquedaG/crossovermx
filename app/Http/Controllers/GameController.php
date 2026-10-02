@@ -339,6 +339,86 @@ public function showLiveGame(Game $game)
     }
 
     /**
+     * Guarda directamente el marcador final de un partido sin pasar por el tracker en vivo.
+     */
+    public function setFinalScore(Request $request, Game $game)
+    {
+        $this->authorize('update', $game);
+
+        if ($game->isRoundClosed()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se puede modificar el marcador porque la ronda de este partido ya fue cerrada.'
+            ], 422);
+        }
+
+        $request->validate([
+            'local_team_score' => 'required|integer|min:0',
+            'away_team_score' => 'required|integer|min:0',
+        ], [
+            'local_team_score.required' => 'El marcador del equipo local es obligatorio.',
+            'local_team_score.integer' => 'El marcador local debe ser un número entero.',
+            'local_team_score.min' => 'El marcador local no puede ser negativo.',
+            'away_team_score.required' => 'El marcador del equipo visitante es obligatorio.',
+            'away_team_score.integer' => 'El marcador visitante debe ser un número entero.',
+            'away_team_score.min' => 'El marcador visitante no puede ser negativo.',
+        ]);
+
+        try {
+            DB::transaction(function () use ($request, $game) {
+                $game->local_team_score = (int) $request->local_team_score;
+                $game->away_team_score = (int) $request->away_team_score;
+                $game->status = 'finished';
+                $game->timer_status = 'finished';
+                $game->save();
+
+                // Si pertenece a un torneo, verificar estado de completitud
+                if ($game->tournament) {
+                    try {
+                        $game->tournament->checkCompletionStatus();
+                    } catch (\Exception $e) {
+                        \Log::error('Error al actualizar estado del torneo tras setFinalScore: ' . $e->getMessage());
+                    }
+                }
+
+                // Descuento de suspensiones si los equipos existen
+                if ($game->localTeam) {
+                    $this->decrementSuspensions($game->localTeam, $game);
+                }
+                if ($game->awayTeam) {
+                    $this->decrementSuspensions($game->awayTeam, $game);
+                }
+            });
+
+            // Determinar resultado
+            $resultText = 'Empate';
+            if ($game->local_team_score > $game->away_team_score) {
+                $resultText = 'Ganador: ' . ($game->localTeam->name ?? 'Equipo Local');
+            } elseif ($game->away_team_score > $game->local_team_score) {
+                $resultText = 'Ganador: ' . ($game->awayTeam->name ?? 'Equipo Visitante');
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "Marcador final guardado exitosamente. {$resultText} ({$game->local_team_score} - {$game->away_team_score}).",
+                'game' => [
+                    'id' => $game->id,
+                    'status' => $game->status,
+                    'local_team_score' => $game->local_team_score,
+                    'away_team_score' => $game->away_team_score,
+                    'result_text' => $resultText,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error en setFinalScore: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al guardar el marcador: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Avanza al siguiente periodo.
      * ACTUALIZADO: Detecta empates para lanzar Tiempo Extra.
      */

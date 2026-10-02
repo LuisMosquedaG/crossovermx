@@ -39,6 +39,9 @@ Route::get('/tournaments/{tournament}/teams/json', [TournamentController::class,
 Route::post('/tournaments/{tournament}/clone', [TournamentController::class, 'cloneTournament'])->name('tournaments.clone')->middleware(['auth', 'verified']);
 Route::post('/tournaments/{tournament}/add-late-team', [TournamentController::class, 'addLateTeam'])->name('tournaments.add-late-team')->middleware(['auth', 'verified']);
 Route::post('/tournaments/{tournament}/add-normal-late-team', [TournamentController::class, 'addNormalLateTeam'])->name('tournaments.add-normal-late-team')->middleware(['auth', 'verified']);
+Route::post('/tournaments/{tournament}/manual-game', [TournamentController::class, 'storeManualGame'])->name('tournaments.manualGame.store')->middleware(['auth', 'verified']);
+Route::delete('/tournaments/{tournament}/games/{game}', [TournamentController::class, 'destroyManualGame'])->name('tournaments.games.destroy')->middleware(['auth', 'verified']);
+Route::get('/tournaments/{tournament}/court-occupancy', [TournamentController::class, 'getCourtOccupancy'])->name('tournaments.courtOccupancy')->middleware(['auth', 'verified']);
 
 // --- Rutas para la gestión de partidos ---
 // CORRECCIÓN: Rutas movidas y actualizadas para usar GameController
@@ -50,6 +53,7 @@ Route::post('/games/record-action', [GameController::class, 'recordAction'])->na
 Route::post('/games/update-period', [GameController::class, 'updatePeriod'])->name('games.updatePeriod')->middleware(['auth', 'verified']);
 Route::post('/games/update-timer', [GameController::class, 'updateTimer'])->name('games.updateTimer')->middleware(['auth', 'verified']);
 Route::post('/games/finish-game', [GameController::class, 'finishGame'])->name('games.finishGame')->middleware(['auth', 'verified']);
+Route::post('/games/{game}/set-final-score', [GameController::class, 'setFinalScore'])->name('games.setFinalScore')->middleware(['auth', 'verified']);
 Route::post('/games/next-period', [GameController::class, 'nextPeriod'])->name('games.nextPeriod')->middleware(['auth', 'verified']);
 Route::post('/games/start-overtime', [GameController::class, 'startOvertime'])->name('games.startOvertime')->middleware(['auth', 'verified']);
 Route::get('/games/{game}/stats', [GameController::class, 'showStats'])->name('games.stats')->middleware(['auth', 'verified']);

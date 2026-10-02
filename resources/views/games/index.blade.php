@@ -94,6 +94,21 @@
                                                                  <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
                                                              </svg>
                                                          </button>
+
+                                                         <!-- Registrar Marcador Final Directo -->
+                                                         @if($game->isRoundClosed())
+                                                             <button type="button" disabled class="text-gray-300 cursor-not-allowed transition-colors p-0.5" title="Ronda cerrada: No se puede registrar marcador">
+                                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+                                                                 </svg>
+                                                             </button>
+                                                         @else
+                                                             <button onclick="openSetFinalScoreModal({{ $game->id }}, '{{ addslashes($game->localTeam->name) }}', '{{ addslashes($game->awayTeam->name) }}', {{ $game->local_team_score ?? 0 }}, {{ $game->away_team_score ?? 0 }})" class="text-emerald-600 hover:text-emerald-700 transition-colors" title="Registrar Marcador Final">
+                                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+                                                                 </svg>
+                                                             </button>
+                                                         @endif
                                                      @elseif($game->status === 'playing')
                                                          <!-- Si está jugando, va al Live -->
                                                          <a href="{{ route('games.live', $game->id) }}" class="text-orange-600 hover:text-orange-800" title="Operar Partido">
@@ -106,6 +121,22 @@
 
                                                  <!-- 4. Stats: Ver Estadísticas (Solo si finalizado) -->
                                                  @if($game->status === 'finished')
+                                                     <!-- Editar Marcador Final -->
+                                                     @if(!auth()->user()->hasRole('Coach'))
+                                                         @if($game->isRoundClosed())
+                                                             <button type="button" disabled class="text-gray-300 cursor-not-allowed transition-colors p-0.5" title="Ronda cerrada: No se puede modificar el marcador">
+                                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+                                                                 </svg>
+                                                             </button>
+                                                         @else
+                                                             <button onclick="openSetFinalScoreModal({{ $game->id }}, '{{ addslashes($game->localTeam->name) }}', '{{ addslashes($game->awayTeam->name) }}', {{ $game->local_team_score ?? 0 }}, {{ $game->away_team_score ?? 0 }})" class="text-emerald-600 hover:text-emerald-700 transition-colors" title="Modificar Marcador Final">
+                                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+                                                                 </svg>
+                                                             </button>
+                                                         @endif
+                                                     @endif
                                                      <a href="{{ route('games.stats', $game->id) }}" class="text-indigo-600 hover:text-indigo-900" title="Ver Estadísticas">
                                                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                              <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125z" />
@@ -526,7 +557,110 @@
         </div>
     </div>
 
-        <script>
+    <!-- Modal para Registrar Marcador Final Directo -->
+    <div id="setFinalScoreModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" onclick="closeSetFinalScoreModal()" aria-hidden="true"></div>
+        <div class="fixed inset-0 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4">
+                <div class="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all border border-gray-100">
+                    <form id="setFinalScoreForm" onsubmit="submitSetFinalScore(event)">
+                        @csrf
+                        <input type="hidden" id="finalScoreGameId" name="game_id">
+                        
+                        <div class="p-6 space-y-5">
+                            <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-6 h-6 text-orange-600">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+                                        </svg>
+                                        <span id="modalFinalScoreTitle">Registrar Marcador Final</span>
+                                    </h3>
+                                    <p class="text-xs text-gray-500 mt-0.5">Captura directa del resultado del encuentro</p>
+                                </div>
+                                <button type="button" onclick="closeSetFinalScoreModal()" class="text-gray-400 hover:text-gray-600 transition">
+                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Marcadores de Equipos -->
+                            <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                                <div class="grid grid-cols-7 gap-3 items-center">
+                                    <!-- Equipo Local -->
+                                    <div class="col-span-3 text-center">
+                                        <label for="modalLocalScore" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 truncate" id="modalLocalTeamLabel" title="Equipo Local">
+                                            Equipo Local
+                                        </label>
+                                        <input type="number" name="local_team_score" id="modalLocalScore" min="0" value="0" required
+                                            oninput="calculateMatchOutcome()"
+                                            class="block w-full text-center text-3xl font-black text-gray-900 rounded-xl border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 py-3">
+                                        <span class="text-[11px] text-gray-500 mt-1 block font-medium">Local</span>
+                                    </div>
+
+                                    <!-- VS Separador -->
+                                    <div class="col-span-1 flex flex-col items-center justify-center">
+                                        <span class="text-xs font-black text-gray-400 bg-white rounded-full px-2 py-1 shadow-sm border border-gray-200">VS</span>
+                                    </div>
+
+                                    <!-- Equipo Visitante -->
+                                    <div class="col-span-3 text-center">
+                                        <label for="modalAwayScore" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 truncate" id="modalAwayTeamLabel" title="Equipo Visitante">
+                                            Equipo Visitante
+                                        </label>
+                                        <input type="number" name="away_team_score" id="modalAwayScore" min="0" value="0" required
+                                            oninput="calculateMatchOutcome()"
+                                            class="block w-full text-center text-3xl font-black text-gray-900 rounded-xl border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 py-3">
+                                        <span class="text-[11px] text-gray-500 mt-1 block font-medium">Visitante</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Estado del Resultado (Ganador / Perdedor / Empate) -->
+                            <div id="finalScoreOutcomeCard" class="rounded-xl border p-4 transition-all duration-200">
+                                <div class="flex items-center gap-3">
+                                    <div id="finalScoreOutcomeIcon" class="w-10 h-10 rounded-full flex items-center justify-center text-xl shrink-0">
+                                        ⚖️
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-xs font-bold uppercase tracking-wider text-gray-500 mb-0.5" id="finalScoreOutcomeTitle">
+                                            Resultado del Partido
+                                        </div>
+                                        <div class="text-sm font-bold text-gray-900 truncate" id="finalScoreOutcomeDesc">
+                                            Empate (0 - 0)
+                                        </div>
+                                        <div class="text-[11px] text-gray-500 mt-0.5" id="finalScoreOutcomeSub">
+                                            Ambos equipos sumarán los puntos asignados por empate.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Nota informativa -->
+                            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800 flex items-start gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-600 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>Al guardar, el partido cambiará automáticamente su estado a <strong>Finalizado</strong> y los puntos ganados/perdidos y canastas se reflejarán de inmediato en la tabla de posiciones.</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 px-6 py-3.5 flex flex-row-reverse gap-3 rounded-b-2xl border-t border-gray-100">
+                            <button type="submit" id="btnSubmitFinalScore" class="inline-flex justify-center rounded-lg bg-orange-600 px-4 py-2 text-sm font-bold text-white shadow hover:bg-orange-700 transition duration-150 ease-in-out">
+                                Guardar Marcador
+                            </button>
+                            <button type="button" onclick="closeSetFinalScoreModal()" class="inline-flex justify-center rounded-lg bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                                Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
         // --- LÓGICA MODAL PARTIDO (Create/Edit) ---
         function openCreateModal() {
             resetForm();
@@ -955,6 +1089,130 @@
                 submitBtn.innerText = originalBtnText;
                 submitBtn.disabled = false;
                 submitBtn.classList.remove('opacity-75');
+            }
+        }
+
+        let currentFinalScoreGameId = null;
+        let currentFinalScoreLocalName = '';
+        let currentFinalScoreAwayName = '';
+
+        function openSetFinalScoreModal(gameId, localName, awayName, localScore = 0, awayScore = 0) {
+            currentFinalScoreGameId = gameId;
+            currentFinalScoreLocalName = localName;
+            currentFinalScoreAwayName = awayName;
+
+            document.getElementById('finalScoreGameId').value = gameId;
+            document.getElementById('modalLocalTeamLabel').innerText = localName;
+            document.getElementById('modalLocalTeamLabel').title = localName;
+            document.getElementById('modalAwayTeamLabel').innerText = awayName;
+            document.getElementById('modalAwayTeamLabel').title = awayName;
+
+            document.getElementById('modalLocalScore').value = localScore ?? 0;
+            document.getElementById('modalAwayScore').value = awayScore ?? 0;
+
+            const titleEl = document.getElementById('modalFinalScoreTitle');
+            if (titleEl) {
+                titleEl.innerText = (localScore > 0 || awayScore > 0) ? 'Modificar Marcador Final' : 'Registrar Marcador Final';
+            }
+
+            calculateMatchOutcome();
+
+            const modal = document.getElementById('setFinalScoreModal');
+            modal.classList.remove('hidden');
+        }
+
+        function closeSetFinalScoreModal() {
+            const modal = document.getElementById('setFinalScoreModal');
+            modal.classList.add('hidden');
+        }
+
+        function calculateMatchOutcome() {
+            const localScore = parseInt(document.getElementById('modalLocalScore').value, 10) || 0;
+            const awayScore = parseInt(document.getElementById('modalAwayScore').value, 10) || 0;
+
+            const card = document.getElementById('finalScoreOutcomeCard');
+            const icon = document.getElementById('finalScoreOutcomeIcon');
+            const title = document.getElementById('finalScoreOutcomeTitle');
+            const desc = document.getElementById('finalScoreOutcomeDesc');
+            const sub = document.getElementById('finalScoreOutcomeSub');
+
+            const diff = Math.abs(localScore - awayScore);
+
+            if (localScore > awayScore) {
+                card.className = 'rounded-xl border border-emerald-200 bg-emerald-50 p-4 transition-all duration-200';
+                icon.className = 'w-10 h-10 rounded-full flex items-center justify-center text-xl shrink-0 bg-emerald-100 text-emerald-700';
+                icon.innerHTML = '🏆';
+                title.innerText = 'Victoria Local';
+                title.className = 'text-xs font-bold uppercase tracking-wider text-emerald-800 mb-0.5';
+                desc.innerHTML = `<span class="text-emerald-900 font-extrabold">${currentFinalScoreLocalName}</span> gana por <span class="text-emerald-700 font-black">+${diff} pts</span>`;
+                sub.innerHTML = `Perdedor: <span class="font-medium text-gray-700">${currentFinalScoreAwayName}</span>`;
+            } else if (awayScore > localScore) {
+                card.className = 'rounded-xl border border-emerald-200 bg-emerald-50 p-4 transition-all duration-200';
+                icon.className = 'w-10 h-10 rounded-full flex items-center justify-center text-xl shrink-0 bg-emerald-100 text-emerald-700';
+                icon.innerHTML = '🏆';
+                title.innerText = 'Victoria Visitante';
+                title.className = 'text-xs font-bold uppercase tracking-wider text-emerald-800 mb-0.5';
+                desc.innerHTML = `<span class="text-emerald-900 font-extrabold">${currentFinalScoreAwayName}</span> gana por <span class="text-emerald-700 font-black">+${diff} pts</span>`;
+                sub.innerHTML = `Perdedor: <span class="font-medium text-gray-700">${currentFinalScoreLocalName}</span>`;
+            } else {
+                card.className = 'rounded-xl border border-amber-200 bg-amber-50 p-4 transition-all duration-200';
+                icon.className = 'w-10 h-10 rounded-full flex items-center justify-center text-xl shrink-0 bg-amber-100 text-amber-700';
+                icon.innerHTML = '⚖️';
+                title.innerText = 'Empate';
+                title.className = 'text-xs font-bold uppercase tracking-wider text-amber-800 mb-0.5';
+                desc.innerHTML = `Empate a <span class="font-black text-amber-900">${localScore}</span> puntos`;
+                sub.innerHTML = `${currentFinalScoreLocalName} y ${currentFinalScoreAwayName} se reparten puntos de empate.`;
+            }
+        }
+
+        async function submitSetFinalScore(event) {
+            event.preventDefault();
+            const gameId = document.getElementById('finalScoreGameId').value;
+            const localScore = document.getElementById('modalLocalScore').value;
+            const awayScore = document.getElementById('modalAwayScore').value;
+
+            if (!gameId) {
+                alert('ID de partido no válido.');
+                return;
+            }
+
+            const btn = document.getElementById('btnSubmitFinalScore');
+            const originalText = btn.innerText;
+            btn.innerText = 'Guardando marcador...';
+            btn.disabled = true;
+
+            try {
+                const url = `/games/${gameId}/set-final-score`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        local_team_score: localScore,
+                        away_team_score: awayScore
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    closeSetFinalScoreModal();
+                    alert(data.message || 'Marcador final guardado exitosamente.');
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Error al guardar el marcador final.');
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error al guardar marcador final:', error);
+                alert('Error de conexión al guardar el marcador final.');
+                btn.innerText = originalText;
+                btn.disabled = false;
             }
         }
     </script>

@@ -289,6 +289,7 @@ class CalendarGeneratorService
                                 'status' => 'pending',
                                 'group_name' => $groupName, 
                                 'category_group' => $groupName, 
+                                'round_number' => $config['next_round_number'] ?? 1,
                                 'created_at' => now(),
                                 'updated_at' => now(),
                             ];
