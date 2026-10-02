@@ -789,10 +789,80 @@ public function store(Request $request)
             $tournament->save();
         }
 
+        // Notificar a los entrenadores por Telegram si tienen cuenta vinculada
+        $telegramNotice = null;
+        try {
+            $telegramService = app(\App\Services\TelegramService::class);
+            if ($telegramService->isConfigured()) {
+                $tgResults = $telegramService->notifyGameScheduled($game);
+                $notifiedCoaches = [];
+                if (!empty($tgResults['local']['sent']) && !empty($tgResults['local']['coach'])) {
+                    $notifiedCoaches[] = $tgResults['local']['coach'];
+                }
+                if (!empty($tgResults['away']['sent']) && !empty($tgResults['away']['coach'])) {
+                    $notifiedCoaches[] = $tgResults['away']['coach'];
+                }
+                if (!empty($notifiedCoaches)) {
+                    $telegramNotice = 'Aviso enviado por Telegram a: ' . implode(', ', array_unique($notifiedCoaches));
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::error('Error enviando aviso de Telegram en storeManualGame: ' . $e->getMessage());
+        }
+
+        $responseMessage = "Partido agregado exitosamente al rol de juegos (Vuelta {$activeRound}).";
+        if ($telegramNotice) {
+            $responseMessage .= " 📲 {$telegramNotice}";
+        }
+
         return response()->json([
             'success' => true,
-            'message' => "Partido agregado exitosamente al rol de juegos (Vuelta {$activeRound}).",
+            'message' => $responseMessage,
             'game' => $game
+        ]);
+    }
+
+    /**
+     * Envía o reenvía la notificación de partido por Telegram a los coaches de ambos equipos.
+     */
+    public function notifyGameTelegram(Request $request, Game $game, \App\Services\TelegramService $telegramService)
+    {
+        if ($game->tournament) {
+            $this->authorize('update', $game->tournament);
+        }
+
+        if (!$telegramService->isConfigured()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El servicio de Telegram no está configurado (falta TELEGRAM_BOT_TOKEN en .env).'
+            ], 422);
+        }
+
+        $results = $telegramService->notifyGameScheduled($game);
+
+        $sentCount = 0;
+        $messages = [];
+
+        if (!empty($results['local']['sent'])) {
+            $sentCount++;
+            $messages[] = "Local ({$results['local']['coach']}): Notificado";
+        } else {
+            $messages[] = "Local: " . ($results['local']['reason'] ?? 'No enviado');
+        }
+
+        if (!empty($results['away']['sent'])) {
+            $sentCount++;
+            $messages[] = "Visitante ({$results['away']['coach']}): Notificado";
+        } else {
+            $messages[] = "Visitante: " . ($results['away']['reason'] ?? 'No enviado');
+        }
+
+        return response()->json([
+            'success' => $sentCount > 0,
+            'message' => $sentCount > 0 
+                ? "Notificación enviada por Telegram (" . implode(' | ', $messages) . ")"
+                : "No se enviaron notificaciones: " . implode(' | ', $messages),
+            'results' => $results
         ]);
     }
 

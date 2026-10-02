@@ -19,6 +19,9 @@ class User extends Authenticatable
         'password',
         'role_id',
         'client_id',
+        'telegram_chat_id',
+        'telegram_username',
+        'telegram_link_token',
     ];
     // Relación con el Cliente (opcional pero útil)
     public function client()

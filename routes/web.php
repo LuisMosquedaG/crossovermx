@@ -12,6 +12,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\TermsController;
 use App\Http\Controllers\StrengthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\TelegramController;
 
 Route::post('/aceptar-terminos', [TermsController::class, 'accept'])->name('terms.accept');
 
@@ -118,6 +119,13 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::post('/aceptar-terminos', [TermsController::class, 'accept'])->name('terms.accept');
+// --- Rutas de Notificaciones por Telegram ---
+Route::middleware(['auth'])->group(function () {
+    Route::get('/telegram/link', [TelegramController::class, 'link'])->name('telegram.link');
+    Route::post('/telegram/unlink', [TelegramController::class, 'unlink'])->name('telegram.unlink');
+    Route::post('/telegram/test', [TelegramController::class, 'testNotification'])->name('telegram.test');
+});
+Route::post('/telegram/webhook', [TelegramController::class, 'webhook'])->name('telegram.webhook');
+Route::post('/games/{game}/notify-telegram', [TournamentController::class, 'notifyGameTelegram'])->name('games.notifyTelegram')->middleware(['auth', 'verified']);
 
 require __DIR__.'/auth.php';
