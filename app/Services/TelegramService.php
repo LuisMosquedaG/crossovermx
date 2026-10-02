@@ -199,6 +199,123 @@ class TelegramService
     }
 
     /**
+     * Notifica a los entrenadores sobre el resultado y marcador final de un partido.
+     */
+    public function notifyGameFinished(Game $game): array
+    {
+        $game->loadMissing(['tournament', 'localTeam.coach', 'awayTeam.coach']);
+
+        $tournamentName = $game->tournament->name ?? 'Torneo';
+        $groupName = $game->group_name ?? ($game->category_group ?? null);
+
+        $localTeam = $game->localTeam;
+        $awayTeam = $game->awayTeam;
+        $localCoach = $localTeam->coach ?? null;
+        $awayCoach = $awayTeam->coach ?? null;
+
+        $localScore = (int) ($game->local_team_score ?? 0);
+        $awayScore = (int) ($game->away_team_score ?? 0);
+
+        $results = [
+            'local' => ['sent' => false, 'reason' => null],
+            'away' => ['sent' => false, 'reason' => null],
+        ];
+
+        // Caso especial: Ambos equipos tienen el mismo entrenador
+        if ($localCoach && $awayCoach && $localCoach->id === $awayCoach->id && !empty($localCoach->telegram_chat_id)) {
+            $winnerStr = '';
+            if ($localScore > $awayScore) {
+                $winnerStr = "🏆 *Ganador:* {$this->escapeMarkdown($localTeam->name)}";
+            } elseif ($awayScore > $localScore) {
+                $winnerStr = "🏆 *Ganador:* {$this->escapeMarkdown($awayTeam->name)}";
+            } else {
+                $winnerStr = "🤝 *Resultado:* Empate";
+            }
+
+            $msg = "🏀 *¡Partido Finalizado - Marcador Final!*\n\n"
+                 . "🏆 *Torneo:* {$this->escapeMarkdown($tournamentName)}\n"
+                 . ($groupName ? "🏷️ *Categoría/Grupo:* {$this->escapeMarkdown($groupName)}\n" : "")
+                 . "👥 *Encuentro:* {$this->escapeMarkdown($localTeam->name)} vs {$this->escapeMarkdown($awayTeam->name)}\n\n"
+                 . "📊 *Marcador:* {$localScore} - {$awayScore}\n"
+                 . "{$winnerStr}\n\n"
+                 . "¡Excelente trabajo con ambos equipos! 📋";
+
+            $res = $this->sendMessage($localCoach->telegram_chat_id, $msg);
+            $results['local'] = ['sent' => ($res['ok'] ?? false), 'reason' => ($res['description'] ?? 'Enviado')];
+            $results['away'] = $results['local'];
+            return $results;
+        }
+
+        // Notificar Coach Local
+        if ($localCoach && !empty($localCoach->telegram_chat_id)) {
+            $outcome = '';
+            if ($localScore > $awayScore) {
+                $outcome = "🎉 *¡Victoria de tu equipo!* 🥇\nGran partido y excelente resultado en la duela.";
+            } elseif ($localScore < $awayScore) {
+                $outcome = "💪 *Resultado adverso.* ¡A seguir trabajando para el próximo encuentro!";
+            } else {
+                $outcome = "🤝 *Empate.* Gran esfuerzo de ambos equipos en la duela.";
+            }
+
+            $msgLocal = "🏀 *¡Partido Finalizado - Marcador Final!*\n\n"
+                      . "🏆 *Torneo:* {$this->escapeMarkdown($tournamentName)}\n"
+                      . ($groupName ? "🏷️ *Categoría/Grupo:* {$this->escapeMarkdown($groupName)}\n" : "")
+                      . "👥 *Tu equipo:* {$this->escapeMarkdown($localTeam->name ?? 'Local')} (*{$localScore} pts*)\n"
+                      . "🆚 *Rival:* {$this->escapeMarkdown($awayTeam->name ?? 'Visitante')} (*{$awayScore} pts*)\n\n"
+                      . "📊 *Marcador:* {$localScore} - {$awayScore}\n"
+                      . "{$outcome}";
+
+            $res = $this->sendMessage($localCoach->telegram_chat_id, $msgLocal);
+            $results['local'] = [
+                'sent' => ($res['ok'] ?? false),
+                'coach' => $localCoach->name,
+                'reason' => ($res['description'] ?? 'Enviado')
+            ];
+        } else {
+            $results['local'] = [
+                'sent' => false,
+                'coach' => $localCoach->name ?? null,
+                'reason' => $localCoach ? 'Coach sin Telegram vinculado' : 'Equipo sin coach asignado'
+            ];
+        }
+
+        // Notificar Coach Visitante
+        if ($awayCoach && !empty($awayCoach->telegram_chat_id)) {
+            $outcome = '';
+            if ($awayScore > $localScore) {
+                $outcome = "🎉 *¡Victoria de tu equipo!* 🥇\nGran partido y excelente resultado en la duela.";
+            } elseif ($awayScore < $localScore) {
+                $outcome = "💪 *Resultado adverso.* ¡A seguir trabajando para el próximo encuentro!";
+            } else {
+                $outcome = "🤝 *Empate.* Gran esfuerzo de ambos equipos en la duela.";
+            }
+
+            $msgAway = "🏀 *¡Partido Finalizado - Marcador Final!*\n\n"
+                     . "🏆 *Torneo:* {$this->escapeMarkdown($tournamentName)}\n"
+                     . ($groupName ? "🏷️ *Categoría/Grupo:* {$this->escapeMarkdown($groupName)}\n" : "")
+                     . "👥 *Tu equipo:* {$this->escapeMarkdown($awayTeam->name ?? 'Visitante')} (*{$awayScore} pts*)\n"
+                     . "🆚 *Rival:* {$this->escapeMarkdown($localTeam->name ?? 'Local')} (*{$localScore} pts*)\n\n"
+                     . "📊 *Marcador:* {$awayScore} - {$localScore}\n"
+                     . "{$outcome}";
+
+            $res = $this->sendMessage($awayCoach->telegram_chat_id, $msgAway);
+            $results['away'] = [
+                'sent' => ($res['ok'] ?? false),
+                'coach' => $awayCoach->name,
+                'reason' => ($res['description'] ?? 'Enviado')
+            ];
+        } else {
+            $results['away'] = [
+                'sent' => false,
+                'coach' => $awayCoach->name ?? null,
+                'reason' => $awayCoach ? 'Coach sin Telegram vinculado' : 'Equipo sin coach asignado'
+            ];
+        }
+
+        return $results;
+    }
+
+    /**
      * Registra la URL del webhook en los servidores de Telegram.
      */
     public function setWebhook(string $url): array

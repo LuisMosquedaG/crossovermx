@@ -171,6 +171,13 @@ public function showLiveGame(Game $game)
                     }
                 }
             });
+
+            if ($knockOutOccurred) {
+                $finishedGame = Game::find($gameId);
+                if ($finishedGame) {
+                    $this->notifyTelegramGameFinished($finishedGame);
+                }
+            }
         } else {
             // Si no fue punto, devolvemos los scores actuales (necesario para que el JS no rompa)
             $game = Game::find($gameId);
@@ -307,6 +314,9 @@ public function showLiveGame(Game $game)
                 $this->decrementSuspensions($awayTeam, $game);
             });
 
+            // Notificar marcador final a los entrenadores por Telegram
+            $this->notifyTelegramGameFinished($game);
+
             // --- REDIRECCIÓN INTELIGENTE ---
             if ($game->tournament_id) {
                 $targetUrl = route('tournaments.schedule', $game->tournament_id);
@@ -389,6 +399,9 @@ public function showLiveGame(Game $game)
                     $this->decrementSuspensions($game->awayTeam, $game);
                 }
             });
+
+            // Notificar marcador final a los entrenadores por Telegram
+            $this->notifyTelegramGameFinished($game);
 
             // Determinar resultado
             $resultText = 'Empate';
@@ -478,6 +491,9 @@ public function showLiveGame(Game $game)
                 // --------------------------------------------------
                 
                 \Log::info('JUEGO FINALIZADO CORRECTAMENTE', ['game_id' => $game->id, 'periodo' => $currentPeriodInDb]);
+                
+                // Notificar marcador final a los entrenadores por Telegram
+                $this->notifyTelegramGameFinished($game);
                 
             } else {
                 // PASA AL SIGUIENTE PERIODO NORMAL
@@ -1386,6 +1402,21 @@ public function showLiveGame(Game $game)
 
         $game->delete();
         return redirect()->route('games.index')->with('success', 'Partido eliminado.');
+    }
+
+    /**
+     * Envía notificación de marcador final a los entrenadores por Telegram.
+     */
+    protected function notifyTelegramGameFinished(Game $game): void
+    {
+        try {
+            $telegramService = app(\App\Services\TelegramService::class);
+            if ($telegramService->isConfigured()) {
+                $telegramService->notifyGameFinished($game);
+            }
+        } catch (\Throwable $e) {
+            \Log::error('Error enviando notificación de marcador final por Telegram (partido ' . $game->id . '): ' . $e->getMessage());
+        }
     }
 
 }
