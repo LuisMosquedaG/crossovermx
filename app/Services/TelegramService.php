@@ -250,11 +250,11 @@ class TelegramService
         if ($localCoach && !empty($localCoach->telegram_chat_id)) {
             $outcome = '';
             if ($localScore > $awayScore) {
-                $outcome = "🎉 *¡Victoria de tu equipo!* 🥇\nGran partido y excelente resultado en la duela.";
+                $outcome = "🎉 *¡Victoria de tu equipo!* 🥇\nGran partido y excelente resultado en la cancha.";
             } elseif ($localScore < $awayScore) {
                 $outcome = "💪 *Resultado adverso.* ¡A seguir trabajando para el próximo encuentro!";
             } else {
-                $outcome = "🤝 *Empate.* Gran esfuerzo de ambos equipos en la duela.";
+                $outcome = "🤝 *Empate.* Gran esfuerzo de ambos equipos en la cancha.";
             }
 
             $msgLocal = "🏀 *¡Partido Finalizado - Marcador Final!*\n\n"
@@ -283,11 +283,11 @@ class TelegramService
         if ($awayCoach && !empty($awayCoach->telegram_chat_id)) {
             $outcome = '';
             if ($awayScore > $localScore) {
-                $outcome = "🎉 *¡Victoria de tu equipo!* 🥇\nGran partido y excelente resultado en la duela.";
+                $outcome = "🎉 *¡Victoria de tu equipo!* 🥇\nGran partido y excelente resultado en la cancha.";
             } elseif ($awayScore < $localScore) {
                 $outcome = "💪 *Resultado adverso.* ¡A seguir trabajando para el próximo encuentro!";
             } else {
-                $outcome = "🤝 *Empate.* Gran esfuerzo de ambos equipos en la duela.";
+                $outcome = "🤝 *Empate.* Gran esfuerzo de ambos equipos en la cancha.";
             }
 
             $msgAway = "🏀 *¡Partido Finalizado - Marcador Final!*\n\n"

@@ -17,21 +17,118 @@
                     </div>
                 @endif
 
-                <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                    <!-- IZQUIERDA: MENSAJE DE BIENVENIDA -->
-                    <div>
+                <div class="relative z-10 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
+                    <!-- 1. IZQUIERDA: MENSAJE DE BIENVENIDA -->
+                    <div class="shrink-0">
                         <span class="inline-block px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-bold uppercase tracking-widest mb-2 border border-orange-200">
                             🏀 Panel de Entrenador
                         </span>
-                        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+                        <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900">
                             ¡Bienvenido, Coach {{ auth()->user()->name }}!
                         </h1>
-                        <p class="text-gray-500 text-sm mt-1">
+                        <p class="text-gray-500 text-xs md:text-sm mt-1 max-w-sm">
                             Estadísticas en tiempo real de tus equipos y rendimiento individual de jugadores.
                         </p>
                     </div>
-                    
-                    <!-- DERECHA: RESUMEN DE EQUIPOS Y JUGADORES (MÁS PEQUEÑO) -->
+
+                    <!-- 2. CENTRO: WIDGET TELEGRAM -->
+                    <div class="flex-1 w-full xl:max-w-md my-auto">
+                        <!-- MENSAJES DE ESTADO TELEGRAM -->
+                        @if(session('message'))
+                            <div class="mb-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs flex items-center gap-2">
+                                <span>✅</span>
+                                <span>{{ session('message') }}</span>
+                            </div>
+                        @endif
+
+                        @if(session('error'))
+                            <div class="mb-2 p-2.5 bg-red-50 border border-red-200 rounded-xl text-red-800 text-xs flex items-center gap-2">
+                                <span>⚠️</span>
+                                <span>{{ session('error') }}</span>
+                            </div>
+                        @endif
+
+                        @php
+                            $user = auth()->user();
+                            $isTelegramLinked = !empty($user->telegram_chat_id);
+                        @endphp
+
+                        @if($isTelegramLinked)
+                            <div class="bg-sky-50/70 border border-sky-200/80 rounded-2xl p-3 px-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-8 h-8 rounded-xl bg-[#0088cc] text-white flex items-center justify-center shrink-0 shadow-xs">
+                                        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-1.5">
+                                            <h4 class="font-bold text-gray-900 text-xs">Notificaciones de Telegram</h4>
+                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-100 text-emerald-800">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                Conectado
+                                            </span>
+                                        </div>
+                                        <p class="text-[11px] text-gray-500 mt-0.5">
+                                            Avisos de partidos y marcadores 
+                                            @if($user->telegram_username)
+                                                en <b>{{ '@' . $user->telegram_username }}</b>.
+                                            @else
+                                                en tu Telegram.
+                                            @endif
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <form method="POST" action="{{ route('telegram.test') }}" class="inline">
+                                        @csrf
+                                        <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-sky-50 text-sky-700 border border-sky-300 text-xs font-semibold rounded-xl shadow-2xs transition">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                            </svg>
+                                            Probar
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ route('telegram.unlink') }}" onsubmit="return confirm('¿Seguro que deseas desvincular tu cuenta de Telegram?');" class="inline">
+                                        @csrf
+                                        <button type="submit" class="px-2 py-1 text-xs text-gray-400 hover:text-red-600 transition" title="Desvincular Telegram">
+                                            Desvincular
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        @else
+                            <div class="bg-gradient-to-r from-sky-50 via-white to-blue-50 border border-sky-200 rounded-2xl p-3 px-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-9 h-9 rounded-xl bg-[#0088cc] text-white flex items-center justify-center shrink-0 shadow-xs">
+                                        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-1.5">
+                                            <h4 class="font-bold text-gray-900 text-xs tracking-tight">¡Avisos de partidos en Telegram!</h4>
+                                            <span class="bg-amber-100 text-amber-800 font-extrabold text-[9px] uppercase px-1.5 py-0.5 rounded-full border border-amber-200">Recomendado</span>
+                                        </div>
+                                        <p class="text-[11px] text-gray-500 mt-0.5">
+                                            Rival, fecha, horario, cancha y marcador final en tu celular.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="shrink-0 w-full sm:w-auto">
+                                    <a href="{{ route('telegram.link') }}" target="_blank"
+                                        class="inline-flex items-center justify-center gap-1.5 w-full sm:w-auto px-3.5 py-2 bg-[#0088cc] hover:bg-[#0077b5] text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs hover:shadow transition transform active:scale-95">
+                                        <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+                                        </svg>
+                                        Vincular
+                                    </a>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+
+                    <!-- 3. DERECHA: RESUMEN DE EQUIPOS Y JUGADORES (MÁS PEQUEÑO) -->
                     <div class="flex items-center gap-4 shrink-0">
                         <div class="flex items-center gap-2 bg-gray-50/80 backdrop-blur-sm p-2 px-3 rounded-xl border border-gray-200 shadow-none text-xs">
                             <div class="text-center px-2.5 border-r border-gray-200">
@@ -48,105 +145,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- MENSAJES DE ESTADO TELEGRAM -->
-            @if(session('message'))
-                <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-sm flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <span>✅</span>
-                        <span>{{ session('message') }}</span>
-                    </div>
-                </div>
-            @endif
-
-            @if(session('error'))
-                <div class="p-4 bg-red-50 border border-red-200 rounded-2xl text-red-800 text-sm flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <span>⚠️</span>
-                        <span>{{ session('error') }}</span>
-                    </div>
-                </div>
-            @endif
-
-            <!-- WIDGET DE VINCULACIÓN CON TELEGRAM -->
-            @php
-                $user = auth()->user();
-                $isTelegramLinked = !empty($user->telegram_chat_id);
-            @endphp
-
-            @if($isTelegramLinked)
-                <div class="bg-gradient-to-r from-sky-50 via-white to-blue-50 border border-sky-200/80 rounded-2xl p-4 md:p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div class="flex items-center gap-3.5">
-                        <div class="w-11 h-11 rounded-2xl bg-[#0088cc] text-white flex items-center justify-center shrink-0 shadow-sm">
-                            <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <h4 class="font-bold text-gray-900 text-sm">Notificaciones de Telegram Activas</h4>
-                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    Conectado
-                                </span>
-                            </div>
-                            <p class="text-xs text-gray-500 mt-0.5">
-                                Recibes avisos automáticos de partidos, horarios y canchas 
-                                @if($user->telegram_username)
-                                    en <b>{{ '@' . $user->telegram_username }}</b>.
-                                @else
-                                    en tu Telegram.
-                                @endif
-                            </p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
-                        <form method="POST" action="{{ route('telegram.test') }}" class="inline">
-                            @csrf
-                            <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-sky-50 text-sky-700 border border-sky-300 text-xs font-semibold rounded-xl shadow-sm transition">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                                </svg>
-                                Probar Alerta
-                            </button>
-                        </form>
-                        <form method="POST" action="{{ route('telegram.unlink') }}" onsubmit="return confirm('¿Seguro que deseas desvincular tu cuenta de Telegram? Dejarás de recibir notificaciones de partidos.');" class="inline">
-                            @csrf
-                            <button type="submit" class="px-2.5 py-1.5 text-xs text-gray-400 hover:text-red-600 transition" title="Desvincular Telegram">
-                                Desvincular
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            @else
-                <div class="bg-gradient-to-r from-sky-500 via-sky-600 to-blue-600 rounded-2xl p-5 text-white shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0 border border-white/30">
-                            <svg class="w-7 h-7 fill-white" viewBox="0 0 24 24">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <h4 class="font-extrabold text-base tracking-tight">¡Recibe avisos de tus partidos al instante en Telegram!</h4>
-                                <span class="bg-amber-400 text-amber-950 font-black text-[10px] uppercase px-2 py-0.5 rounded-full">Recomendado</span>
-                            </div>
-                            <p class="text-xs text-sky-100 mt-1 max-w-xl">
-                                Vincula tu cuenta en 1 clic. Cada vez que programen un partido de tus equipos te llegará un mensaje con el rival, fecha, horario y cancha asignada.
-                            </p>
-                        </div>
-                    </div>
-                    <div class="shrink-0 w-full md:w-auto">
-                        <a href="{{ route('telegram.link') }}" target="_blank"
-                            class="inline-flex items-center justify-center gap-2 w-full md:w-auto px-5 py-3 bg-white hover:bg-sky-50 text-sky-700 font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-95">
-                            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
-                            </svg>
-                            📲 Vincular con Telegram
-                        </a>
-                    </div>
-                </div>
-            @endif
 
             <!-- TARJETAS DE DESTACADOS (4 COLUMNAS - ALTURA REDUCIDA A LA MITAD) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
