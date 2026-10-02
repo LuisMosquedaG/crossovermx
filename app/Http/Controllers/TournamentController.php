@@ -578,15 +578,6 @@ public function store(Request $request)
 
             return $team;
         });
-        // Canchas para asignación manual de partidos
-        $courtsQuery = Court::orderBy('name');
-        if ($tournament->client_id) {
-            $courtsQuery->where('client_id', $tournament->client_id);
-        } elseif (auth()->check() && auth()->user()->client_id) {
-            $courtsQuery->where('client_id', auth()->user()->client_id);
-        }
-        $courts = $courtsQuery->get();
-
         // Duración estimada del partido en minutos según configuración del torneo
         $tSettings = $tournament->settings ? $tournament->settings->settings : [];
         $tPeriods = (int)($tSettings['periods_per_game'] ?? 4);
@@ -594,6 +585,20 @@ public function store(Request $request)
         $tRest = (int)($tSettings['rest_between_periods'] ?? 0);
         $gameDurationMinutes = ($tPeriods * $tDuration) + (($tPeriods > 1) ? ($tPeriods - 1) * $tRest : 0);
         if ($gameDurationMinutes <= 0) $gameDurationMinutes = 40;
+
+        // Canchas asignadas al torneo para asignación manual de partidos
+        $courtsQuery = Court::orderBy('name');
+        if ($tournament->client_id) {
+            $courtsQuery->where('client_id', $tournament->client_id);
+        } elseif (auth()->check() && auth()->user()->client_id) {
+            $courtsQuery->where('client_id', auth()->user()->client_id);
+        }
+
+        if (!empty($tSettings['courts']) && is_array($tSettings['courts'])) {
+            $courtsQuery->whereIn('id', $tSettings['courts']);
+        }
+
+        $courts = $courtsQuery->get();
 
         return view('tournaments.schedule', compact('games', 'tournament', 'groups', 'categories', 'strengths', 'teams', 'courts', 'gameDurationMinutes'));
     }
@@ -696,6 +701,17 @@ public function store(Request $request)
                 'success' => false,
                 'message' => 'Solo se pueden agregar partidos manualmente a torneos con configuración de Calendario Manual.'
             ], 422);
+        }
+
+        // Validar que la cancha pertenezca a las asignadas al torneo
+        if (!empty($tournamentSettings['courts']) && is_array($tournamentSettings['courts'])) {
+            $allowedCourtIds = array_map('intval', $tournamentSettings['courts']);
+            if (!in_array((int)$request->court_id, $allowedCourtIds, true)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La cancha seleccionada no forma parte de las canchas asignadas a este torneo.'
+                ], 422);
+            }
         }
 
         // 1. Calcular duración del partido a registrar
