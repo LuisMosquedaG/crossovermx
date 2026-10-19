@@ -34,7 +34,7 @@ Route::delete('/tournaments/{tournament}/calendar', [TournamentController::class
 Route::get('/tournaments/{tournament}/standings', [TournamentController::class, 'showStandings'])->name('tournaments.standings')->middleware(['auth', 'verified']);
 Route::post('/tournaments/{tournament}/generate-second-round', [TournamentController::class, 'generateSecondRound'])->name('tournaments.secondRound')->middleware(['auth', 'verified']);
 Route::post('/tournaments/{tournament}/generate-elimination', [TournamentController::class, 'generateElimination'])->name('tournaments.elimination')->middleware(['auth', 'verified']);
-Route::post('/tournaments/{tournament}/update-progression', [TournamentController::class, 'updateProgression'])->name('tournaments.update-progression');
+Route::post('/tournaments/{tournament}/update-progression', [TournamentController::class, 'updateProgression'])->name('tournaments.update-progression')->middleware(['auth', 'verified']);
 Route::post('/tournaments/{tournament}/swap-global', [TournamentController::class, 'swapTeamsGlobal'])->name('tournaments.swap-global')->middleware(['auth', 'verified']);
 Route::get('/tournaments/{tournament}/teams/json', [TournamentController::class, 'getTeamsByTournamentJson'])->name('tournaments.teamsJson')->middleware(['auth', 'verified']);
 Route::post('/tournaments/{tournament}/clone', [TournamentController::class, 'cloneTournament'])->name('tournaments.clone')->middleware(['auth', 'verified']);
@@ -64,10 +64,9 @@ Route::post('/games/{game}/cancel', [GameController::class, 'cancelGame'])->name
 Route::post('/games/{game}/assign-referee', [GameController::class, 'assignReferee'])->name('games.assignReferee')->middleware(['auth', 'verified']);
 Route::get('/games/{game}/comments', [GameController::class, 'getComments'])->name('games.comments')->middleware(['auth', 'verified']);
 Route::post('/games/{game}/comments', [GameController::class, 'storeComment'])->name('games.storeComment')->middleware(['auth', 'verified']);
-Route::post('/games/{game}/auto-finish-suspended', [GameController::class, 'autoFinishSuspended'])->name('games.auto-finish');
-Route::get('/games/{game}/status', [GameController::class, 'getGameStatus'])->name('games.status');
-Route::post('/games/undo-last-action', [GameController::class, 'undoLastAction']);
-Route::post('/games/start-overtime', [GameController::class, 'startOvertime'])->name('games.startOvertime')->middleware(['auth', 'verified']);
+Route::post('/games/{game}/auto-finish-suspended', [GameController::class, 'autoFinishSuspended'])->name('games.auto-finish')->middleware(['auth', 'verified']);
+Route::get('/games/{game}/status', [GameController::class, 'getGameStatus'])->name('games.status')->middleware(['auth', 'verified']);
+Route::post('/games/undo-last-action', [GameController::class, 'undoLastAction'])->name('games.undoLastAction')->middleware(['auth', 'verified']);
 Route::post('/games/add-compensation-time', [GameController::class, 'addCompensationTime'])->name('games.addCompensationTime')->middleware(['auth', 'verified']);
 Route::resource('games', GameController::class)->middleware(['auth', 'verified']);
 
@@ -76,12 +75,12 @@ Route::get('/tournaments/{tournament}/rules', [TournamentController::class, 'get
 Route::post('/tournaments/{tournament}/rules', [TournamentController::class, 'updateRules'])->name('tournaments.updateRules')->middleware(['auth', 'verified']);
 
 // --- Rutas para la gestión de equipos ---
-Route::get('/teams/{team}/schedules', [TeamController::class, 'getSchedules'])->name('teams.getSchedules');
-Route::post('/teams/{team}/schedules', [TeamController::class, 'updateSchedules'])->name('teams.schedules');
+Route::get('/teams/{team}/schedules', [TeamController::class, 'getSchedules'])->name('teams.getSchedules')->middleware(['auth', 'verified']);
+Route::post('/teams/{team}/schedules', [TeamController::class, 'updateSchedules'])->name('teams.schedules')->middleware(['auth', 'verified']);
 Route::resource('teams', TeamController::class)->middleware(['auth', 'verified']);
 Route::post('/teams/{team}/accept-contract', [TeamController::class, 'acceptContract'])->name('teams.acceptContract')->middleware(['auth', 'verified']);
 Route::get('/teams/{team}/stats', [TeamController::class, 'stats'])->name('teams.stats')->middleware(['auth', 'verified']);
-Route::post('/teams/strengths/store', [TeamController::class, 'storeStrength'])->name('teams.strengths.store');
+Route::post('/teams/strengths/store', [TeamController::class, 'storeStrength'])->name('teams.strengths.store')->middleware(['auth', 'verified']);
 
 // CORRECCIÓN: Rutas de suspensión movidas lógicamente a la gestión de juegos/partidos, apuntando a GameController
 Route::post('/tournaments/suspend-player', [GameController::class, 'suspendPlayer'])->name('tournaments.suspend-player')->middleware(['auth', 'verified']);
@@ -93,11 +92,11 @@ Route::get('/teams/{team}/players/json', [PlayerController::class, 'getPlayersBy
 
 // --- Rutas para la gestión de canchas ---
 Route::resource('courts', CourtController::class)->middleware(['auth', 'verified']);
-Route::get('/courts/{court}/schedules', [CourtController::class, 'getSchedules'])->name('courts.getSchedules');
-Route::post('/courts/{court}/schedules', [CourtController::class, 'updateSchedules'])->name('courts.schedules');
+Route::get('/courts/{court}/schedules', [CourtController::class, 'getSchedules'])->name('courts.getSchedules')->middleware(['auth', 'verified']);
+Route::post('/courts/{court}/schedules', [CourtController::class, 'updateSchedules'])->name('courts.schedules')->middleware(['auth', 'verified']);
 
 // Panel de Control (Solo accesible por Master Admin)
-Route::resource('clients', ClientController::class)->names('clients');
+Route::resource('clients', ClientController::class)->names('clients')->middleware(['auth', 'verified']);
 
 // --- Rutas de Usuarios (Gestión) ---
 // IMPORTANTE: Definimos rutas específicas ANTES del resource para que tengan prioridad

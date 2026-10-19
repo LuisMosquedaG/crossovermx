@@ -24,21 +24,24 @@ class PlayerController extends Controller
             // ELIMINAMOS la búsqueda por 'rfc' y 'curp' usando LIKE
             // porque los datos están encriptados en la BD.
             // Mantenemos búsqueda por nombre, número, equipo, etc.
-            $query->where('name', 'like', "%{$search}%")
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
                   ->orWhere('number', 'like', "%{$search}%")
                   ->orWhere('position', 'like', "%{$search}%")
                   ->orWhere('status', 'like', "%{$search}%")
-                  ->orWhereHas('team', function($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
+                  ->orWhereHas('team', function ($tQuery) use ($search) {
+                      $tQuery->where('name', 'like', "%{$search}%");
                   });
+            });
         }
 
         $players = $query->orderBy('name')->paginate(15)->appends(['search' => $search]);
         
-        $teams = Team::orderBy('name')->get();
+        $teamsQuery = Team::orderBy('name');
         if (auth()->check() && auth()->user()->client_id) {
-            $teams = $teams->where('client_id', auth()->user()->client_id);
+            $teamsQuery->where('client_id', auth()->user()->client_id);
         }
+        $teams = $teamsQuery->get();
 
         return view('players.index', compact('players', 'teams', 'search'));
     }

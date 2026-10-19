@@ -28,6 +28,10 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        if (Auth::user()->hasRole('Master Admin')) {
+            return redirect()->intended(route('clients.index', absolute: false));
+        }
+
         if (Auth::user()->hasRole('Arbitro')) {
             return redirect()->intended(route('tournaments.index', absolute: false));
         }

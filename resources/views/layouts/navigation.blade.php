@@ -9,7 +9,17 @@
         
         <!-- 1. IZQUIERDA: LOGO (Actúa como Dashboard/Inicio) -->
         <div class="shrink-0 flex items-center">
-            <a href="{{ auth()->user()->hasRole('Arbitro') ? route('tournaments.index') : route('dashboard') }}" class="flex items-center gap-2 group pl-2 pr-4 py-1 rounded-full hover:bg-orange-50 transition-colors" title="Inicio">
+            @php
+                $logoRoute = route('dashboard');
+                if (auth()->check()) {
+                    if (auth()->user()->hasRole('Master Admin')) {
+                        $logoRoute = route('clients.index');
+                    } elseif (auth()->user()->hasRole('Arbitro')) {
+                        $logoRoute = route('tournaments.index');
+                    }
+                }
+            @endphp
+            <a href="{{ $logoRoute }}" class="flex items-center gap-2 group pl-2 pr-4 py-1 rounded-full hover:bg-orange-50 transition-colors" title="Inicio">
                 <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-8 w-auto transition-transform group-hover:scale-105">
                 <span class="hidden md:block font-bold text-xl tracking-wide uppercase" style="color: #1e293b;">
                     Crossover<span style="color: #ff6b00;">MX</span>

@@ -18,6 +18,9 @@ class DashboardController extends Controller
     public function index()
     {
         if (auth()->check()) {
+            if (auth()->user()->hasRole('Master Admin')) {
+                return redirect()->route('clients.index');
+            }
             if (auth()->user()->hasRole('Arbitro')) {
                 return redirect()->route('tournaments.index');
             }

@@ -30,9 +30,11 @@ public function __construct()
 
         // Lógica de búsqueda
         if ($search) {
-            $clientsQuery->where('name', 'like', "%{$search}%")
-                         ->orWhere('contact_name', 'like', "%{$search}%")
-                         ->orWhere('email', 'like', "%{$search}%");
+            $clientsQuery->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('contact_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
         }
 
         $clients = $clientsQuery->paginate(10)->appends(['search' => $search]);

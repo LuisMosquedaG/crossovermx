@@ -25,9 +25,11 @@ class CourtController extends Controller
 
         // Si hay búsqueda, filtramos por nombre, ubicación o superficie
         if ($search) {
-            $query->where('name', 'like', "%{$search}%")
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
                   ->orWhere('location', 'like', "%{$search}%")
                   ->orWhere('surface_type', 'like', "%{$search}%");
+            });
         }
 
         // Paginamos los resultados (20 por página) y mantenemos el parámetro de búsqueda
