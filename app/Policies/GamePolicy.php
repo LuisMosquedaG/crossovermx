@@ -87,15 +87,15 @@ class GamePolicy
      */
     public function assignReferee(User $user, Game $game)
     {
-        // 1. Super Admin y Admin pueden asignar
-        if ($user->hasRole('Super Admin') || $user->hasRole('Admin')) return true;
-        
-        // 2. Verificación dual de cliente (Torneo vs Manual)
         $gameClientId = $game->tournament_id 
             ? ($game->tournament->client_id ?? null) 
             : $game->client_id;
 
-        return $user->client_id === $gameClientId;
+        if (!$gameClientId || $user->client_id !== $gameClientId) {
+            return false;
+        }
+
+        return $user->hasRole('Super Admin') || $user->hasRole('Admin');
     }
 
     /**
@@ -103,15 +103,15 @@ class GamePolicy
      */
     public function suspend(User $user, Game $game)
     {
-        // 1. Super Admin y Admin pueden decretar suspensiones
-        if ($user->hasRole('Super Admin') || $user->hasRole('Admin')) return true;
-        
-        // 2. Verificación dual de cliente (Torneo vs Manual)
         $gameClientId = $game->tournament_id 
             ? ($game->tournament->client_id ?? null) 
             : $game->client_id;
             
-        return $user->client_id === $gameClientId;
+        if (!$gameClientId || $user->client_id !== $gameClientId) {
+            return false;
+        }
+
+        return $user->hasRole('Super Admin') || $user->hasRole('Admin');
     }
     
 }

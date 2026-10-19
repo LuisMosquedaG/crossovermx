@@ -71,9 +71,10 @@ class DashboardController extends Controller
         $topScorersByTournament = [];
         foreach ($tournaments as $tournament) {
             $scorers = GameAction::query()
+                ->join('games', 'game_actions.game_id', '=', 'games.id')
                 ->join('players', 'game_actions.player_id', '=', 'players.id')
-                ->join('teams', 'players.team_id', '=', 'teams.id')
-                ->where('teams.tournament_id', $tournament->id)
+                ->leftJoin('teams', 'players.team_id', '=', 'teams.id')
+                ->where('games.tournament_id', $tournament->id)
                 ->where('game_actions.action_type', 'point_scored')
                 ->select(
                     'players.id',
@@ -98,12 +99,18 @@ class DashboardController extends Controller
 
         // 4. Record scorer in a single game
         $topSingleGamePlayer = GameAction::query()
+            ->join('games', 'game_actions.game_id', '=', 'games.id')
+            ->leftJoin('tournaments', 'games.tournament_id', '=', 'tournaments.id')
             ->join('players', 'game_actions.player_id', '=', 'players.id')
-            ->join('teams', 'players.team_id', '=', 'teams.id')
-            ->leftJoin('games', 'game_actions.game_id', '=', 'games.id')
-            ->leftJoin('tournaments', 'teams.tournament_id', '=', 'tournaments.id')
+            ->leftJoin('teams', 'players.team_id', '=', 'teams.id')
             ->where('game_actions.action_type', 'point_scored')
-            ->when($clientId, fn($q) => $q->where('teams.client_id', $clientId))
+            ->when($clientId, function($q) use ($clientId) {
+                $q->where(function($subQ) use ($clientId) {
+                    $subQ->where('games.client_id', $clientId)
+                         ->orWhere('tournaments.client_id', $clientId)
+                         ->orWhere('teams.client_id', $clientId);
+                });
+            })
             ->select(
                 'players.id',
                 'players.name',
@@ -251,10 +258,10 @@ class DashboardController extends Controller
         $topSingleGamePlayer = GameAction::query()
             ->whereIn('game_actions.player_id', $coachPlayerIds)
             ->where('game_actions.action_type', 'point_scored')
+            ->join('games', 'game_actions.game_id', '=', 'games.id')
+            ->leftJoin('tournaments', 'games.tournament_id', '=', 'tournaments.id')
             ->join('players', 'game_actions.player_id', '=', 'players.id')
-            ->join('teams', 'players.team_id', '=', 'teams.id')
-            ->leftJoin('games', 'game_actions.game_id', '=', 'games.id')
-            ->leftJoin('tournaments', 'teams.tournament_id', '=', 'tournaments.id')
+            ->leftJoin('teams', 'players.team_id', '=', 'teams.id')
             ->select(
                 'players.id',
                 'players.name',

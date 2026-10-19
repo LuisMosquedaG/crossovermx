@@ -38,21 +38,20 @@ class TournamentPolicy
 
     public function update(User $user, Tournament $tournament)
     {
-        // Super Admin y Admin pueden editar cualquier torneo
-        if ($user->hasRole('Super Admin') || $user->hasRole('Admin')) {
-            return true;
+        if ($user->client_id !== $tournament->client_id) {
+            return false;
         }
-        
-        return $user->client_id === $tournament->client_id;
+
+        return $user->hasRole('Super Admin') || $user->hasRole('Admin');
     }
 
     public function delete(User $user, Tournament $tournament)
     {
-        if ($user->hasRole('Super Admin') || $user->hasRole('Admin')) {
-            return true;
+        if ($user->client_id !== $tournament->client_id) {
+            return false;
         }
 
-        return $user->client_id === $tournament->client_id;
+        return $user->hasRole('Super Admin') || $user->hasRole('Admin');
     }
 
     public function manageStandings(User $user, Tournament $tournament)

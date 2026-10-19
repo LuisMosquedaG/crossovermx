@@ -83,7 +83,7 @@ public function showLiveGame(Game $game)
         }
 
         // 2. Autorizamos la acción (ahora $game existe)
-        $this->authorize('view', $game);
+        $this->authorize('update', $game);
 
         // 3. Validamos los datos
         $request->validate([
@@ -208,7 +208,7 @@ public function showLiveGame(Game $game)
         }
 
         // 2. Autorizamos (ahora $game existe)
-        $this->authorize('view', $game);
+        $this->authorize('update', $game);
 
         // 3. Validamos
         $request->validate([
@@ -240,7 +240,7 @@ public function showLiveGame(Game $game)
         }
 
         // 2. Autorizamos
-        $this->authorize('view', $game);
+        $this->authorize('update', $game);
 
         // 3. Validamos
         $request->validate([
@@ -443,7 +443,7 @@ public function showLiveGame(Game $game)
             $game = Game::lockForUpdate()->findOrFail($request->game_id);
 
             // 2. Autorizamos
-            $this->authorize('view', $game);
+            $this->authorize('update', $game);
 
             // 3. Validamos
             $request->validate([
@@ -529,7 +529,7 @@ public function showLiveGame(Game $game)
     {
         try {
             $game = Game::lockForUpdate()->findOrFail($request->game_id);
-            $this->authorize('view', $game);
+            $this->authorize('update', $game);
 
             $request->validate([
                 'game_id' => 'required|exists:games,id',
@@ -575,7 +575,7 @@ public function showLiveGame(Game $game)
     {
         try {
             $game = Game::lockForUpdate()->findOrFail($request->game_id);
-            $this->authorize('view', $game);
+            $this->authorize('update', $game);
 
             $request->validate([
                 'game_id' => 'required|exists:games,id',
@@ -1187,7 +1187,7 @@ public function showLiveGame(Game $game)
             return response()->json(['success' => false, 'message' => 'El partido ya ha finalizado. No se pueden deshacer acciones.'], 400);
         }
 
-        $this->authorize('view', $game);
+        $this->authorize('update', $game);
 
         // 1. Buscar la última acción
         $lastAction = \App\Models\GameAction::where('game_id', $game->id)

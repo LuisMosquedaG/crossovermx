@@ -253,11 +253,17 @@ class CalendarGeneratorService
                 // Si ya logramos programar la ronda en el intento anterior, salimos
                 if ($roundScheduled) break;
 
+                // Tomamos una instantánea del estado antes de probar este modo
+                $slotsSnapshot = $slots;
+                $scheduledGamesSnapshot = $scheduledGames;
+                $teamGameDatesSnapshot = $teamGameDates;
+
                 // Reiniciamos el índice de slots para cada intento
                 reset($slots);
                 
-                // Array temporal para marcar qué slots ocupamos en este intento fallido (para no repetir errores)
+                // Array temporal para marcar qué slots ocupamos en este intento de ronda
                 $tempAssignedIndices = [];
+                $allGamesInRoundAssigned = true;
 
                 foreach ($roundPairs as $pair) {
                     $gameAssigned = false;
@@ -302,9 +308,8 @@ class CalendarGeneratorService
                             $teamGameDates[$pair['home']][] = $dateStr;
                             $teamGameDates[$pair['away']][] = $dateStr;
 
-                            // Marcamos este slot como usado y lo removemos de la lista general
+                            // Marcamos este slot como usado en esta ronda
                             $tempAssignedIndices[] = $index;
-                            unset($slots[$index]);
                             
                             $gameAssigned = true;
                             break; // Pasamos al siguiente partido
@@ -313,34 +318,28 @@ class CalendarGeneratorService
 
                     // Si un partido no se pudo asignar en ningun slot disponible
                     if (!$gameAssigned) {
-                        // Rompemos el bucle de partidos, este intento (estricto/flexible) falló para la ronda completa
-                        $roundScheduled = false;
-                        
-                        // IMPORTANTE: Revertimos los cambios en $slots si fallamos a mitad de ronda
-                        // (Devolvemos los slots que usamos temporalmente)
-                        foreach ($tempAssignedIndices as $usedIndex) {
-                            // Como unset rompe el índice, reconstruimos el array si es necesario o simplemente manejamos la lógica
-                            // Para simplificar en esta corrección, asumiremos que si falla, el siguiente intento (flexible) lo intentará de nuevo.
-                            // Lo ideal sería devolver los juegos al array $slots, pero dado que reindexamos al final,
-                            // simplemente saldremos y el siguiente modo lo intentará con la lista original de slots (que pasamos por referencia si fuera objeto, pero es array).
-                            // NOTA: Como $slots es un array y lo estamos modificando con unset, si fallamos a mitad, hemos perdido esos slots.
-                            // Solución rápida: No hacer unset hasta confirmar que TODA la ronda está lista.
-                        }
-                        
-                        // Estrategia de "Rollback" manual para arrays:
-                        // Como esto se complica, usaremos un enfoque más seguro:
-                        // Solo hacemos unset de $slots al final del todo.
-                        
-                        break 2; // Rompe el bucle de partidos y el de modos
+                        $allGamesInRoundAssigned = false;
+                        break; // Rompemos solo el bucle de partidos para permitir intentar el siguiente modo (flexible)
                     }
                 }
 
-                // Si llegamos aquí, todos los partidos de la ronda fueron asignados
-                $roundScheduled = true;
-                
-                // Ahora sí, eliminamos definitivamente los slots usados del array principal
-                // Reindexamos $slots para limpiar huecos vacíos del unset anterior
-                $slots = array_values($slots);
+                if ($allGamesInRoundAssigned) {
+                    // Si todos los partidos de la ronda fueron asignados con éxito:
+                    $roundScheduled = true;
+
+                    // Eliminamos definitivamente los slots usados de $slots
+                    foreach ($tempAssignedIndices as $usedIndex) {
+                        unset($slots[$usedIndex]);
+                    }
+                    // Reindexamos $slots para limpiar huecos vacíos
+                    $slots = array_values($slots);
+                    break; // Salimos del bucle de modos
+                } else {
+                    // Si falló este modo (ej. estricto), restauramos las instantáneas para que el siguiente modo (flexible) empiece limpio
+                    $slots = $slotsSnapshot;
+                    $scheduledGames = $scheduledGamesSnapshot;
+                    $teamGameDates = $teamGameDatesSnapshot;
+                }
             }
 
             // Si después de intentar modo estricto y flexible fallamos, retornamos vacío

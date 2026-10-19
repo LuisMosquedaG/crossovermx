@@ -64,14 +64,42 @@ class PlayerController extends Controller
                 'position' => 'nullable|string|max:50',
                 'gender' => 'nullable|string|in:hombre,mujer',
                 'team_id' => 'required|exists:teams,id',
-                'rfc' => 'nullable|string|max:13|unique:players,rfc',
+                'rfc' => [
+                    'nullable',
+                    'string',
+                    'max:13',
+                    function ($attribute, $value, $fail) {
+                        if (empty($value)) return;
+                        $cleanRfc = strtoupper(trim($value));
+                        $clientId = auth()->user()?->client_id;
+                        $players = Player::when($clientId, fn($q) => $q->where('client_id', $clientId))
+                            ->whereNotNull('rfc')
+                            ->get(['id', 'rfc']);
+                        foreach ($players as $p) {
+                            if ($p->rfc && strtoupper(trim($p->rfc)) === $cleanRfc) {
+                                $fail('El RFC ya está registrado para otro jugador.');
+                                break;
+                            }
+                        }
+                    }
+                ],
                 'curp' => [
                     'nullable',
                     'string',
                     'max:18',
-                    Rule::unique('players')->where(function ($query) use ($request) {
-                        return $query->where('team_id', $request->team_id);
-                    })
+                    function ($attribute, $value, $fail) use ($request) {
+                        if (empty($value)) return;
+                        $cleanCurp = strtoupper(trim($value));
+                        $teamPlayers = Player::where('team_id', $request->team_id)
+                            ->whereNotNull('curp')
+                            ->get(['id', 'curp']);
+                        foreach ($teamPlayers as $tp) {
+                            if ($tp->curp && strtoupper(trim($tp->curp)) === $cleanCurp) {
+                                $fail('Este jugador ya está inscrito en este equipo.');
+                                break;
+                            }
+                        }
+                    }
                 ],
                 'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'blood_type' => 'nullable|string|max:5',
@@ -138,14 +166,44 @@ class PlayerController extends Controller
             'position' => 'nullable|string|max:50',
             'gender' => 'nullable|string|in:hombre,mujer',
             'team_id' => 'required|exists:teams,id',
-            'rfc' => 'nullable|string|max:13|unique:players,rfc,' . $player->id,
+            'rfc' => [
+                'nullable',
+                'string',
+                'max:13',
+                function ($attribute, $value, $fail) use ($player) {
+                    if (empty($value)) return;
+                    $cleanRfc = strtoupper(trim($value));
+                    $clientId = auth()->user()?->client_id;
+                    $players = Player::when($clientId, fn($q) => $q->where('client_id', $clientId))
+                        ->where('id', '!=', $player->id)
+                        ->whereNotNull('rfc')
+                        ->get(['id', 'rfc']);
+                    foreach ($players as $p) {
+                        if ($p->rfc && strtoupper(trim($p->rfc)) === $cleanRfc) {
+                            $fail('El RFC ya está registrado para otro jugador.');
+                            break;
+                        }
+                    }
+                }
+            ],
             'curp' => [
                 'nullable',
                 'string',
                 'max:18',
-                Rule::unique('players')->where(function ($query) use ($request) {
-                    return $query->where('team_id', $request->team_id);
-                })->ignore($player->id)
+                function ($attribute, $value, $fail) use ($request, $player) {
+                    if (empty($value)) return;
+                    $cleanCurp = strtoupper(trim($value));
+                    $teamPlayers = Player::where('team_id', $request->team_id)
+                        ->where('id', '!=', $player->id)
+                        ->whereNotNull('curp')
+                        ->get(['id', 'curp']);
+                    foreach ($teamPlayers as $tp) {
+                        if ($tp->curp && strtoupper(trim($tp->curp)) === $cleanCurp) {
+                            $fail('Este jugador ya está inscrito en este equipo.');
+                            break;
+                        }
+                    }
+                }
             ],
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'blood_type' => 'nullable|string|max:5',
