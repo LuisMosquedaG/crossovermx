@@ -242,21 +242,31 @@ public function store(Request $request)
     }
 
     public function destroy(Tournament $tournament)
-        {
-            $this->authorize('delete', $tournament); // <--- AGREGAR
-            if ($tournament->teams()->exists()) {
-                return redirect()->back()
-                    ->with('error', 'No se puede eliminar el torneo porque tiene equipos asignados.');
-            }
+    {
+        $this->authorize('delete', $tournament);
 
-            // Si no tiene equipos, procedemos a eliminar
-            // Nota: Si tienes 'onDelete cascade' en tu base de datos, esto borrará automáticamente
-            // los equipos y jugadores, pero al no entrar aquí si hay equipos, estamos seguros.
-            $tournament->delete();
-
+        if ($tournament->games()->exists()) {
             return redirect()->back()
-                ->with('message', 'Torneo eliminado exitosamente.');
+                ->with('error', 'No se puede eliminar el torneo porque ya tiene partidos registrados.');
         }
+
+        // Si es un torneo pendiente, liberamos los equipos asignados antes de eliminarlo
+        if ($tournament->status === 'pending') {
+            $tournament->teams()->update([
+                'tournament_id' => null,
+                'status' => 'pending',
+                'contract_accepted_at' => null
+            ]);
+        } elseif ($tournament->teams()->exists()) {
+            return redirect()->back()
+                ->with('error', 'No se puede eliminar el torneo porque tiene equipos asignados.');
+        }
+
+        $tournament->delete();
+
+        return redirect()->back()
+            ->with('message', 'Torneo eliminado exitosamente.');
+    }
 
     public function getTeamsByTournamentJson(Tournament $tournament)
     {
@@ -2579,6 +2589,7 @@ public function store(Request $request)
             // Garantizar que no sobrepase los 255 caracteres
             $newTournament->name = substr($newName, 0, 255);
             $newTournament->status = 'pending';
+            $newTournament->is_playoffs = false; // El nuevo torneo siempre inicia en fase regular
             $newTournament->save();
 
             // Duplicar configuraciones del torneo (TournamentSetting: días, canchas, duración, faltas, etc.)
@@ -2595,13 +2606,8 @@ public function store(Request $request)
             $originalTeams = $tournament->teams;
 
             foreach ($originalTeams as $team) {
-                // Solo equipos que estuvieron activos en el torneo original
-                if ($team->status !== 'active') {
-                    continue;
-                }
-
-                // Si por alguna razón el equipo ya está activo en otro torneo en curso (distinto al finalizado), no se mueve
-                if ($team->tournament && $team->tournament->id !== $tournament->id && $team->tournament->status === 'active') {
+                // Si el equipo ya está asignado a otro torneo en curso (activo o pendiente, distinto al que estamos duplicando), no se mueve
+                if ($team->tournament_id && $team->tournament_id !== $tournament->id && $team->tournament && in_array($team->tournament->status, ['active', 'in_progress', 'pending'])) {
                     continue;
                 }
 
@@ -2609,8 +2615,14 @@ public function store(Request $request)
                 $team->tournament_id = $newTournament->id;
                 $team->status = 'pending';
                 $team->contract_accepted_at = null; // Requiere nueva firma de contrato para el nuevo torneo
-                $team->suspension_games = 0; // Reinicio de suspensiones para la nueva temporada
+                $team->suspension_games = 0; // Reinicio de suspensiones de equipo para la nueva temporada
                 $team->save();
+
+                // Reiniciar suspensiones de jugadores del equipo para el nuevo torneo
+                $team->players()->where('status', 'suspended')->update([
+                    'status' => 'active',
+                    'suspension_games' => 0
+                ]);
             }
 
             \Illuminate\Support\Facades\DB::commit();

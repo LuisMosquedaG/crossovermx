@@ -1026,7 +1026,7 @@
             console.log('No se encontraron configuraciones previas:', e);
         }
 
-        populateCreateForm(existingSettings);
+        populateCreateForm(existingSettings, tournament);
         setCreateActions();
         document.getElementById('calendarModal').classList.remove('hidden');
     }
@@ -1051,13 +1051,30 @@
         document.getElementById('calendarModalActions').innerHTML = '';
     }
 
-    function populateCreateForm(settings = null) {
+    function populateCreateForm(settings = null, tournament = null) {
         const courtsList = allCourts || [];
 
         // Clases de estilo
         const inputClass = "block w-full rounded-md border-gray-300 border py-2 px-3 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm";
         const labelClass = "block text-sm font-medium text-gray-700 mb-1"; 
         const checkboxClass = "h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-0 focus:outline-none";
+
+        let datesBanner = '';
+        if (tournament && tournament.start_date) {
+            const startDateStr = String(tournament.start_date).substring(0, 10);
+            const endDateStr = tournament.end_date ? String(tournament.end_date).substring(0, 10) : 'Sin fecha fin';
+            datesBanner = `
+                <div class="col-span-1 lg:col-span-3 bg-blue-50 border border-blue-200 rounded-lg p-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-blue-900">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <span>Fechas programadas del torneo: <strong class="font-bold">${startDateStr} al ${endDateStr}</strong></span>
+                    </div>
+                    <span class="text-blue-600 font-medium text-[11px]">(Para modificarlas, cierra este modal y usa el botón "Editar")</span>
+                </div>
+            `;
+        }
 
         const selectedCourts = settings && settings.courts ? settings.courts.map(c => String(c)) : [];
         const courtCheckboxes = courtsList.map(court => {
@@ -1109,6 +1126,7 @@
 
         const content = `
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                ${datesBanner}
                 
                 <!-- COLUMNA 1 -->
                 <div class="space-y-4">
