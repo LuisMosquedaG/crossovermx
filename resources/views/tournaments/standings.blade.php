@@ -1776,20 +1776,23 @@ TARJETA CAMPEÓN
                                     <table class="min-w-full divide-y divide-gray-200">
                                         <thead class="bg-gray-50">
                                             <tr>
-                                                <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">#</th>
+                                                <th scope="col" class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">#</th>
                                                 <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Equipo</th>
-                                                <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">PJ</th>
-                                                <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">G</th>
-                                                <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">E</th>
-                                                <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">P</th>
-                                                <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-900 uppercase bg-emerald-50">PTS</th>
+                                                <th scope="col" class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">PJ</th>
+                                                <th scope="col" class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">G</th>
+                                                <th scope="col" class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">E</th>
+                                                <th scope="col" class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">P</th>
+                                                <th scope="col" class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase" title="Puntos a Favor">PF</th>
+                                                <th scope="col" class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase" title="Puntos en Contra">PC</th>
+                                                <th scope="col" class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase" title="Diferencia de Puntos">DIF</th>
+                                                <th scope="col" class="px-4 py-3 text-center text-xs font-bold text-gray-900 uppercase bg-emerald-50">PTS</th>
                                             </tr>
                                         </thead>
                                         <tbody class="bg-white divide-y divide-gray-200">
                                             @php $pos = 1; @endphp
                                             @foreach($data['standings'] as $tid => $stats)
                                             <tr>
-                                                <td scope="row" class="px-4 py-3 whitespace-nowrap text-center text-sm font-medium text-gray-900">{{ $pos++ }}</td>
+                                                <td scope="row" class="px-3 py-3 whitespace-nowrap text-center text-sm font-medium text-gray-900">{{ $pos++ }}</td>
                                                 <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                                                     <div class="flex items-center">
                                                         @if(isset($data['teams'][$tid]))
@@ -1808,11 +1811,16 @@ TARJETA CAMPEÓN
                                                         @endif
                                                     </div>
                                                 </td>
-                                                <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-gray-500">{{ $stats['played'] ?? 0 }}</td>
-                                                <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-green-600 font-bold">{{ $stats['won'] ?? 0 }}</td>
-                                                <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-yellow-600 font-bold">{{ $stats['drawn'] ?? 0 }}</td>
-                                                <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-red-600 font-bold">{{ $stats['lost'] ?? 0 }}</td>
-                                                <td class="px-4 py-3 whitespace-nowrap text-center text-sm font-bold bg-emerald-50">{{ $stats['points'] ?? 0 }}</td>
+                                                <td class="px-3 py-3 whitespace-nowrap text-center text-sm text-gray-500">{{ $stats['played'] ?? 0 }}</td>
+                                                <td class="px-3 py-3 whitespace-nowrap text-center text-sm text-green-600 font-bold">{{ $stats['won'] ?? 0 }}</td>
+                                                <td class="px-3 py-3 whitespace-nowrap text-center text-sm text-yellow-600 font-bold">{{ $stats['drawn'] ?? 0 }}</td>
+                                                <td class="px-3 py-3 whitespace-nowrap text-center text-sm text-red-600 font-bold">{{ $stats['lost'] ?? 0 }}</td>
+                                                <td class="px-3 py-3 whitespace-nowrap text-center text-sm text-gray-700 font-semibold">{{ $stats['points_for'] ?? 0 }}</td>
+                                                <td class="px-3 py-3 whitespace-nowrap text-center text-sm text-gray-500 font-semibold">{{ $stats['points_against'] ?? 0 }}</td>
+                                                <td class="px-3 py-3 whitespace-nowrap text-center text-sm font-bold {{ ($stats['points_diff'] ?? 0) > 0 ? 'text-emerald-600' : (($stats['points_diff'] ?? 0) < 0 ? 'text-rose-600' : 'text-gray-500') }}">
+                                                    {{ ($stats['points_diff'] ?? 0) > 0 ? '+' . $stats['points_diff'] : ($stats['points_diff'] ?? 0) }}
+                                                </td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-center text-sm font-bold bg-emerald-50 text-emerald-900">{{ $stats['points'] ?? 0 }}</td>
                                             </tr>
                                             @endforeach
                                         </tbody>

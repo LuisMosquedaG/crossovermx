@@ -1071,29 +1071,71 @@ public function store(Request $request)
                     $groupGames = $allGroupGames->where('status', 'finished');
                     foreach ($teamsInGroup as $team) {
                         $standings[$team->id] = [
-                            'team_id' => $team->id, 'played' => 0, 'won' => 0, 'drawn' => 0, 'lost' => 0, 'points' => 0
+                            'team_id' => $team->id,
+                            'played' => 0,
+                            'won' => 0,
+                            'drawn' => 0,
+                            'lost' => 0,
+                            'points_for' => 0,
+                            'points_against' => 0,
+                            'points_diff' => 0,
+                            'points' => 0
                         ];
                     }
                     foreach ($groupGames as $game) {
                         $localId = $game->local_team_id;
                         $awayId = $game->away_team_id;
                         if (!isset($standings[$localId]) || !isset($standings[$awayId])) continue;
+
+                        $localScore = (int) $game->local_team_score;
+                        $awayScore = (int) $game->away_team_score;
+
                         $standings[$localId]['played']++;
                         $standings[$awayId]['played']++;
-                        if ($game->local_team_score > $game->away_team_score) {
-                            $standings[$localId]['won']++; $standings[$localId]['points'] += 2; $standings[$awayId]['lost']++;
-                        } elseif ($game->local_team_score < $game->away_team_score) {
-                            $standings[$awayId]['won']++; $standings[$awayId]['points'] += 2; $standings[$localId]['lost']++;
+
+                        $standings[$localId]['points_for'] += $localScore;
+                        $standings[$localId]['points_against'] += $awayScore;
+                        $standings[$awayId]['points_for'] += $awayScore;
+                        $standings[$awayId]['points_against'] += $localScore;
+
+                        if ($localScore > $awayScore) {
+                            $standings[$localId]['won']++;
+                            $standings[$localId]['points'] += 2;
+                            $standings[$awayId]['lost']++;
+                        } elseif ($localScore < $awayScore) {
+                            $standings[$awayId]['won']++;
+                            $standings[$awayId]['points'] += 2;
+                            $standings[$localId]['lost']++;
                         } else {
-                            if ($game->local_team_score === 0 && $game->away_team_score === 0) {
-                                $standings[$localId]['lost']++; $standings[$awayId]['lost']++;
+                            if ($localScore === 0 && $awayScore === 0) {
+                                $standings[$localId]['lost']++;
+                                $standings[$awayId]['lost']++;
                             } else {
-                                $standings[$localId]['drawn']++; $standings[$localId]['points'] += 1;
-                                $standings[$awayId]['drawn']++; $standings[$awayId]['points'] += 1; //
+                                $standings[$localId]['drawn']++;
+                                $standings[$localId]['points'] += 1;
+                                $standings[$awayId]['drawn']++;
+                                $standings[$awayId]['points'] += 1;
                             }
                         }
                     }
-                    uasort($standings, function($a, $b) { return $b['points'] <=> $a['points']; });
+
+                    foreach ($standings as &$st) {
+                        $st['points_diff'] = $st['points_for'] - $st['points_against'];
+                    }
+                    unset($st);
+
+                    uasort($standings, function($a, $b) {
+                        if ($b['points'] !== $a['points']) {
+                            return $b['points'] <=> $a['points'];
+                        }
+                        if ($b['points_diff'] !== $a['points_diff']) {
+                            return $b['points_diff'] <=> $a['points_diff'];
+                        }
+                        if ($b['points_for'] !== $a['points_for']) {
+                            return $b['points_for'] <=> $a['points_for'];
+                        }
+                        return $a['points_against'] <=> $b['points_against'];
+                    });
                 }
 
                 $standingsData[$groupName] = [
@@ -1250,28 +1292,48 @@ public function store(Request $request)
                         foreach ($teamsInGroup as $team) {
                             $standings[$team->id] = [
                                 'team' => $team,
-                                'points' => 0
+                                'points' => 0,
+                                'points_for' => 0,
+                                'points_against' => 0,
+                                'points_diff' => 0,
                             ];
                         }
                         foreach ($groupGamesFinished as $game) {
                             $localId = $game->local_team_id;
                             $awayId = $game->away_team_id;
                             if (!isset($standings[$localId]) || !isset($standings[$awayId])) continue;
-                            if ($game->local_team_score > $game->away_team_score) {
+
+                            $localScore = (int) $game->local_team_score;
+                            $awayScore = (int) $game->away_team_score;
+
+                            $standings[$localId]['points_for'] += $localScore;
+                            $standings[$localId]['points_against'] += $awayScore;
+                            $standings[$awayId]['points_for'] += $awayScore;
+                            $standings[$awayId]['points_against'] += $localScore;
+
+                            if ($localScore > $awayScore) {
                                 $standings[$localId]['points'] += 2;
-                            } elseif ($game->local_team_score < $game->away_team_score) {
+                            } elseif ($localScore < $awayScore) {
                                 $standings[$awayId]['points'] += 2;
                             } else {
-                                if ($game->local_team_score > 0 || $game->away_team_score > 0) {
+                                if ($localScore > 0 || $awayScore > 0) {
                                     $standings[$localId]['points'] += 1;
                                     $standings[$awayId]['points'] += 1;
                                 }
                             }
                         }
                         
+                        foreach ($standings as &$st) {
+                            $st['points_diff'] = $st['points_for'] - $st['points_against'];
+                        }
+                        unset($st);
+
                         $groupStandings = array_values($standings);
                         usort($groupStandings, function($a, $b) {
-                            return $b['points'] <=> $a['points'];
+                            if ($b['points'] !== $a['points']) return $b['points'] <=> $a['points'];
+                            if ($b['points_diff'] !== $a['points_diff']) return $b['points_diff'] <=> $a['points_diff'];
+                            if ($b['points_for'] !== $a['points_for']) return $b['points_for'] <=> $a['points_for'];
+                            return $a['points_against'] <=> $b['points_against'];
                         });
 
                         foreach (array_slice($groupStandings, 0, 5) as $item) {
@@ -1506,21 +1568,39 @@ public function store(Request $request)
                         $groupGames = $allGroupGames->where('status', 'finished');
                         foreach ($teamsInGroup as $team) {
                             $standings[$team->id] = [
-                                'team_id' => $team->id, 'played' => 0, 'won' => 0, 'drawn' => 0, 'lost' => 0, 'points' => 0
+                                'team_id' => $team->id,
+                                'played' => 0,
+                                'won' => 0,
+                                'drawn' => 0,
+                                'lost' => 0,
+                                'points_for' => 0,
+                                'points_against' => 0,
+                                'points_diff' => 0,
+                                'points' => 0
                             ];
                         }
                         foreach ($groupGames as $game) {
                             $localId = $game->local_team_id;
                             $awayId = $game->away_team_id;
                             if (!isset($standings[$localId]) || !isset($standings[$awayId])) continue;
+
+                            $localScore = (int) $game->local_team_score;
+                            $awayScore = (int) $game->away_team_score;
+
                             $standings[$localId]['played']++;
                             $standings[$awayId]['played']++;
-                            if ($game->local_team_score > $game->away_team_score) {
+
+                            $standings[$localId]['points_for'] += $localScore;
+                            $standings[$localId]['points_against'] += $awayScore;
+                            $standings[$awayId]['points_for'] += $awayScore;
+                            $standings[$awayId]['points_against'] += $localScore;
+
+                            if ($localScore > $game->away_team_score) {
                                 $standings[$localId]['won']++; $standings[$localId]['points'] += 2; $standings[$awayId]['lost']++;
-                            } elseif ($game->local_team_score < $game->away_team_score) {
+                            } elseif ($localScore < $game->away_team_score) {
                                 $standings[$awayId]['won']++; $standings[$awayId]['points'] += 2; $standings[$localId]['lost']++;
                             } else {
-                                if ($game->local_team_score === 0 && $game->away_team_score === 0) {
+                                if ($localScore === 0 && $awayScore === 0) {
                                     $standings[$localId]['lost']++; $standings[$awayId]['lost']++;
                                 } else {
                                     $standings[$localId]['drawn']++; $standings[$localId]['points'] += 1;
@@ -1528,7 +1608,24 @@ public function store(Request $request)
                                 }
                             }
                         }
-                        uasort($standings, function($a, $b) { return $b['points'] <=> $a['points']; });
+
+                        foreach ($standings as &$st) {
+                            $st['points_diff'] = $st['points_for'] - $st['points_against'];
+                        }
+                        unset($st);
+
+                        uasort($standings, function($a, $b) {
+                            if ($b['points'] !== $a['points']) {
+                                return $b['points'] <=> $a['points'];
+                            }
+                            if ($b['points_diff'] !== $a['points_diff']) {
+                                return $b['points_diff'] <=> $a['points_diff'];
+                            }
+                            if ($b['points_for'] !== $a['points_for']) {
+                                return $b['points_for'] <=> $a['points_for'];
+                            }
+                            return $a['points_against'] <=> $b['points_against'];
+                        });
                     }
 
                     $standingsData[$groupName] = [
@@ -1872,7 +1969,13 @@ public function store(Request $request)
         // Inicializar posiciones para todos los equipos del grupo con 0 puntos
         if ($specificTeamIds) {
             foreach ($specificTeamIds as $tId) {
-                $standings[$tId] = ['team_id' => $tId, 'points' => 0];
+                $standings[$tId] = [
+                    'team_id' => $tId,
+                    'points' => 0,
+                    'points_for' => 0,
+                    'points_against' => 0,
+                    'points_diff' => 0,
+                ];
             }
         }
 
@@ -1880,22 +1983,44 @@ public function store(Request $request)
             $localId = $game->local_team_id;
             $awayId = $game->away_team_id;
 
-            if (!isset($standings[$localId])) $standings[$localId] = ['team_id' => $localId, 'points' => 0];
-            if (!isset($standings[$awayId])) $standings[$awayId] = ['team_id' => $awayId, 'points' => 0];
+            if (!isset($standings[$localId])) {
+                $standings[$localId] = ['team_id' => $localId, 'points' => 0, 'points_for' => 0, 'points_against' => 0, 'points_diff' => 0];
+            }
+            if (!isset($standings[$awayId])) {
+                $standings[$awayId] = ['team_id' => $awayId, 'points' => 0, 'points_for' => 0, 'points_against' => 0, 'points_diff' => 0];
+            }
 
-            if ($game->local_team_score > $game->away_team_score) {
+            $localScore = (int) $game->local_team_score;
+            $awayScore = (int) $game->away_team_score;
+
+            $standings[$localId]['points_for'] += $localScore;
+            $standings[$localId]['points_against'] += $awayScore;
+            $standings[$awayId]['points_for'] += $awayScore;
+            $standings[$awayId]['points_against'] += $localScore;
+
+            if ($localScore > $awayScore) {
                 $standings[$localId]['points'] += 2;
-            } elseif ($game->local_team_score < $game->away_team_score) {
+            } elseif ($localScore < $awayScore) {
                 $standings[$awayId]['points'] += 2;
             } else {
-                if ($game->local_team_score > 0) { // Empate real
+                if ($localScore > 0 || $awayScore > 0) { // Empate real
                     $standings[$localId]['points'] += 1;
                     $standings[$awayId]['points'] += 1;
                 }
             }
         }
 
-        uasort($standings, function($a, $b) { return $b['points'] <=> $a['points']; });
+        foreach ($standings as &$st) {
+            $st['points_diff'] = $st['points_for'] - $st['points_against'];
+        }
+        unset($st);
+
+        uasort($standings, function($a, $b) {
+            if ($b['points'] !== $a['points']) return $b['points'] <=> $a['points'];
+            if ($b['points_diff'] !== $a['points_diff']) return $b['points_diff'] <=> $a['points_diff'];
+            if ($b['points_for'] !== $a['points_for']) return $b['points_for'] <=> $a['points_for'];
+            return $a['points_against'] <=> $b['points_against'];
+        });
 
         $qualifiedTeams = array_slice($standings, 0, $teamsCount, true);
         

@@ -1220,12 +1220,15 @@
                                     <table class="min-w-full divide-y divide-gray-100">
                                         <thead class="bg-gray-50/70">
                                             <tr>
-                                                <th scope="col" class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">#</th>
+                                                <th scope="col" class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase">#</th>
                                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Equipo</th>
-                                                <th scope="col" class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">PJ</th>
-                                                <th scope="col" class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">G</th>
-                                                <th scope="col" class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">E</th>
-                                                <th scope="col" class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">P</th>
+                                                <th scope="col" class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase">PJ</th>
+                                                <th scope="col" class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase">G</th>
+                                                <th scope="col" class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase">E</th>
+                                                <th scope="col" class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase">P</th>
+                                                <th scope="col" class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase" title="Puntos a Favor">PF</th>
+                                                <th scope="col" class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase" title="Puntos en Contra">PC</th>
+                                                <th scope="col" class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase" title="Diferencia de Puntos">DIF</th>
                                                 <th scope="col" class="px-4 py-3 text-center text-xs font-bold text-emerald-800 uppercase bg-emerald-50">PTS</th>
                                             </tr>
                                         </thead>
@@ -1233,7 +1236,7 @@
                                             @php $pos = 1; @endphp
                                             @foreach($data['standings'] as $tid => $stats)
                                                 <tr class="hover:bg-gray-50/50 transition">
-                                                    <td class="px-4 py-3.5 whitespace-nowrap text-center text-sm font-medium text-gray-500">{{ $pos++ }}</td>
+                                                    <td class="px-3 py-3.5 whitespace-nowrap text-center text-sm font-medium text-gray-500">{{ $pos++ }}</td>
                                                     <td class="px-4 py-3.5 whitespace-nowrap text-sm font-bold text-gray-900">
                                                         <div class="flex items-center">
                                                             @if(isset($data['teams'][$tid]))
@@ -1250,10 +1253,15 @@
                                                             @endif
                                                         </div>
                                                     </td>
-                                                    <td class="px-4 py-3.5 whitespace-nowrap text-center text-sm text-gray-500">{{ $stats['played'] ?? 0 }}</td>
-                                                    <td class="px-4 py-3.5 whitespace-nowrap text-center text-sm text-green-600 font-bold">{{ $stats['won'] ?? 0 }}</td>
-                                                    <td class="px-4 py-3.5 whitespace-nowrap text-center text-sm text-yellow-600 font-bold">{{ $stats['drawn'] ?? 0 }}</td>
-                                                    <td class="px-4 py-3.5 whitespace-nowrap text-center text-sm text-red-600 font-bold">{{ $stats['lost'] ?? 0 }}</td>
+                                                    <td class="px-3 py-3.5 whitespace-nowrap text-center text-sm text-gray-500">{{ $stats['played'] ?? 0 }}</td>
+                                                    <td class="px-3 py-3.5 whitespace-nowrap text-center text-sm text-green-600 font-bold">{{ $stats['won'] ?? 0 }}</td>
+                                                    <td class="px-3 py-3.5 whitespace-nowrap text-center text-sm text-yellow-600 font-bold">{{ $stats['drawn'] ?? 0 }}</td>
+                                                    <td class="px-3 py-3.5 whitespace-nowrap text-center text-sm text-red-600 font-bold">{{ $stats['lost'] ?? 0 }}</td>
+                                                    <td class="px-3 py-3.5 whitespace-nowrap text-center text-sm text-gray-700 font-semibold">{{ $stats['points_for'] ?? 0 }}</td>
+                                                    <td class="px-3 py-3.5 whitespace-nowrap text-center text-sm text-gray-500 font-semibold">{{ $stats['points_against'] ?? 0 }}</td>
+                                                    <td class="px-3 py-3.5 whitespace-nowrap text-center text-sm font-bold {{ ($stats['points_diff'] ?? 0) > 0 ? 'text-emerald-600' : (($stats['points_diff'] ?? 0) < 0 ? 'text-rose-600' : 'text-gray-500') }}">
+                                                        {{ ($stats['points_diff'] ?? 0) > 0 ? '+' . $stats['points_diff'] : ($stats['points_diff'] ?? 0) }}
+                                                    </td>
                                                     <td class="px-4 py-3.5 whitespace-nowrap text-center text-sm font-bold bg-emerald-50 text-emerald-800">{{ $stats['points'] ?? 0 }}</td>
                                                 </tr>
                                             @endforeach
