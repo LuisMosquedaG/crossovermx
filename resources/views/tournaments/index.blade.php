@@ -134,67 +134,71 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                                             <div class="flex items-center justify-center space-x-3">
 
-                                                <!-- NUEVO BOTÓN VER EQUIPOS REGISTRADOS -->
+                                                <!-- BOTÓN VER EQUIPOS REGISTRADOS -->
                                                 <button onclick="showTeamsListModal({{ $tournament->id }}, '{{ addslashes($tournament->name) }}', '{{ $tournament->status }}')" class="text-orange-600 hover:text-orange-900" title="Ver Equipos Registrados">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
                                                     </svg>
                                                 </button>
 
-                                                <!-- NUEVO BOTÓN REGLAMENTO -->
+                                                <!-- BOTÓN REGLAMENTO -->
                                                 <button onclick="openRulesModal({{ $tournament->id }}, '{{ addslashes($tournament->name) }}')" class="text-gray-600 hover:text-gray-900" title="Ver Reglamento">
-                                                    <!-- Icono de Documento/Libro -->
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
                                                     </svg>
                                                 </button>
-                                                
-                                                <!-- 1. Botón de Editar (Solo Admin y SOLO si está Pendiente) -->
-                                                @if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach') && $tournament->status === 'pending')
-                                                    <button onclick="openEditModal({{ $tournament->toJson() }})" class="text-indigo-600 hover:text-indigo-900" title="Editar">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                                                        </svg>
-                                                    </button>
-                                                @endif
 
-                                                <!-- 2. Botón de Calendario (Solo Admin) -->
-                                                @if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach'))
-                                                    @if($tournament->games()->exists() || $tournament->settings()->exists())
-                                                        <button onclick="openViewCalendarModal({{ $tournament->id }}, '{{ $tournament->status }}')" class="text-blue-600 hover:text-blue-900" title="Ver Configuración del Calendario">
+                                                @if($tournament->status === 'pending')
+                                                    <!-- ESTADO PENDIENTE: El torneo aún no genera su calendario -->
+
+                                                    <!-- 1. Botón Editar (Solo Admin) -->
+                                                    @if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach'))
+                                                        <button onclick="openEditModal({{ $tournament->toJson() }})" class="text-indigo-600 hover:text-indigo-900" title="Editar">
                                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                                             </svg>
                                                         </button>
-                                                    @else
+                                                    @endif
+
+                                                    <!-- 2. Botón Generar Calendario (Solo Admin) -->
+                                                    @if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach'))
                                                         <button onclick="openCreateCalendarModal({{ $tournament->toJson() }})" class="text-green-600 hover:text-green-900" title="Generar Calendario">
                                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
                                                             </svg>
                                                         </button>
                                                     @endif
-                                                @endif
 
-                                                <!-- 3. Botón Tabla de Posiciones (Solo si hay calendario) -->
-                                                @if($tournament->games()->exists() || $tournament->settings()->exists())
+                                                @else
+                                                    <!-- ESTADO ACTIVO / TERMINADO: El calendario ya está generado -->
+
+                                                    <!-- 1. Botón Ver Configuración del Calendario (Solo Admin) -->
+                                                    @if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach'))
+                                                        <button onclick="openViewCalendarModal({{ $tournament->id }}, '{{ $tournament->status }}')" class="text-blue-600 hover:text-blue-900" title="Ver Configuración del Calendario">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                            </svg>
+                                                        </button>
+                                                    @endif
+
+                                                    <!-- 2. Botón Tabla de Posiciones -->
                                                     <a href="{{ route('tournaments.standings', $tournament) }}" class="text-emerald-600 hover:text-emerald-900" title="Tabla de Posiciones">
                                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125z" />
                                                         </svg>
                                                     </a>
-                                                @endif
 
-                                                <!-- 4. Botón Ver Partidos (Visible para todos, si hay calendario) -->
-                                                @if($tournament->games()->exists() || $tournament->settings()->exists())
+                                                    <!-- 3. Botón Ver Partidos -->
                                                     <a href="{{ route('tournaments.schedule', $tournament->id) }}" class="text-purple-600 hover:text-purple-900" title="Ver Partidos">
                                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                                                         </svg>
                                                     </a>
+
                                                 @endif
 
-                                                <!-- 5. Botón Eliminar Torneo (Solo Admin) -->
+                                                <!-- Botón Eliminar Torneo (Solo Admin) -->
                                                 @if(!auth()->user()->hasRole('Arbitro') && !auth()->user()->hasRole('Coach'))
                                                     <form action="{{ route('tournaments.destroy', $tournament) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este torneo?');" class="inline">
                                                         @csrf
@@ -1001,7 +1005,7 @@
     }
 }
 
-    function openCreateCalendarModal(tournament) {
+    async function openCreateCalendarModal(tournament) {
         resetCalendarModal();
         document.getElementById('calendarModalTitle').innerText = `Generar Calendario: ${tournament.name}`;
         document.getElementById('calendar_tournament_id').value = tournament.id;
@@ -1011,7 +1015,18 @@
         modalPanel.classList.remove('max-w-2xl');
         modalPanel.classList.add('max-w-4xl');
 
-        populateCreateForm();
+        // Si el torneo viene de duplicar o ya tiene configuraciones guardadas, las cargamos por default
+        let existingSettings = null;
+        try {
+            const response = await fetch(`/tournaments/${tournament.id}/settings`);
+            if (response.ok) {
+                existingSettings = await response.json();
+            }
+        } catch (e) {
+            console.log('No se encontraron configuraciones previas:', e);
+        }
+
+        populateCreateForm(existingSettings);
         setCreateActions();
         document.getElementById('calendarModal').classList.remove('hidden');
     }
@@ -1036,29 +1051,61 @@
         document.getElementById('calendarModalActions').innerHTML = '';
     }
 
-    function populateCreateForm() {
+    function populateCreateForm(settings = null) {
         const courtsList = allCourts || [];
 
         // Clases de estilo
-        // CAMBIO: Eliminado 'mt-2' de labelClass para evitar alineaciones inconsistentes
         const inputClass = "block w-full rounded-md border-gray-300 border py-2 px-3 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm";
         const labelClass = "block text-sm font-medium text-gray-700 mb-1"; 
-        
         const checkboxClass = "h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-0 focus:outline-none";
 
-        const courtCheckboxes = courtsList.map(court => `
-            <div class="flex items-center mb-2">
-                <input type="checkbox" name="courts[]" value="${court.id}" id="court_${court.id}" class="${checkboxClass}">
-                <label for="court_${court.id}" class="ml-2 block text-sm text-gray-900">${court.name}</label>
-            </div>
-        `).join('');
+        const selectedCourts = settings && settings.courts ? settings.courts.map(c => String(c)) : [];
+        const courtCheckboxes = courtsList.map(court => {
+            const isChecked = selectedCourts.includes(String(court.id)) ? 'checked' : '';
+            return `
+                <div class="flex items-center mb-2">
+                    <input type="checkbox" name="courts[]" value="${court.id}" id="court_${court.id}" class="${checkboxClass}" ${isChecked}>
+                    <label for="court_${court.id}" class="ml-2 block text-sm text-gray-900">${court.name}</label>
+                </div>
+            `;
+        }).join('');
 
-        const renderDay = (val, label) => `
-            <label class="flex items-center">
-                <input type="checkbox" name="days[]" value="${val}" class="${checkboxClass}">
-                <span class="ml-2 text-sm text-gray-700">${label.substring(0, 3)}</span>
-            </label>
-        `;
+        const selectedDays = settings && settings.days ? settings.days.map(d => String(d)) : [];
+        const renderDay = (val, label) => {
+            const isChecked = selectedDays.includes(String(val)) ? 'checked' : '';
+            return `
+                <label class="flex items-center">
+                    <input type="checkbox" name="days[]" value="${val}" class="${checkboxClass}" ${isChecked}>
+                    <span class="ml-2 text-sm text-gray-700">${label.substring(0, 3)}</span>
+                </label>
+            `;
+        };
+
+        const isManual = settings ? !!settings.is_manual : false;
+        const tType = settings?.tournament_type || 'round_robin';
+        const startTime = settings?.start_time || '09:00';
+        const endTime = settings?.end_time || '18:00';
+
+        const restRules = settings?.rest_rules || [];
+        const noSameDayChecked = restRules.includes('no_same_day') ? 'checked' : '';
+        const noSameWeekChecked = restRules.includes('no_same_week') ? 'checked' : '';
+
+        const interleaveChecked = (settings && settings.interleave_categories !== undefined)
+            ? (settings.interleave_categories ? 'checked' : '')
+            : 'checked';
+
+        const periods = settings?.periods_per_game ?? 4;
+        const gameDuration = settings?.game_duration ?? 10;
+        const restBetweenPeriods = settings?.rest_between_periods ?? 2;
+        const restBetweenGames = settings?.rest_between_games ?? 10;
+        const timeoutsPerGame = settings?.timeouts_per_game ?? 5;
+        const knockOut = settings?.knock_out ?? '';
+        const knockOutDiff = settings?.knock_out_diff ?? '';
+
+        const foulTechnical = settings?.limit_foul_technical ?? 2;
+        const foulUnsportsmanlike = settings?.limit_foul_unsportsmanlike ?? 2;
+        const foulPersonal = settings?.limit_foul_personal ?? 5;
+        const foulDisqualifying = settings?.limit_foul_disqualifying ?? 1;
 
         const content = `
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -1067,12 +1114,12 @@
                 <div class="space-y-4">
                     <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide border-b pb-1">General</h3>
                     
-                    <!-- NUEVO SWITCH: CALENDARIO MANUAL -->
+                    <!-- SWITCH: CALENDARIO MANUAL -->
                     <div class="bg-orange-50 border border-orange-200 rounded-lg p-3">
                         <label class="flex items-center justify-between cursor-pointer">
                             <span class="text-sm font-bold text-orange-950">Calendario Manual</span>
                             <div class="relative inline-flex items-center">
-                                <input type="checkbox" name="is_manual" value="1" id="isManualCalendar" onchange="toggleManualCalendar(this.checked)" class="sr-only peer">
+                                <input type="checkbox" name="is_manual" value="1" id="isManualCalendar" onchange="toggleManualCalendar(this.checked)" class="sr-only peer" ${isManual ? 'checked' : ''}>
                                 <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
                             </div>
                         </label>
@@ -1082,20 +1129,20 @@
                     <div id="formatContainer">
                         <label class="${labelClass}">Formato de Competencia</label>
                         <select name="tournament_type" id="tournamentTypeSelect" class="${inputClass}">
-                            <option value="round_robin">Todos contra todos + Playoffs</option>
-                            <option value="elimination">Eliminatoria Directa</option>
-                            <option value="double_elimination">Doble Eliminatoria</option>
+                            <option value="round_robin" ${tType === 'round_robin' ? 'selected' : ''}>Todos contra todos + Playoffs</option>
+                            <option value="elimination" ${tType === 'elimination' || tType === 'single_elimination' ? 'selected' : ''}>Eliminatoria Directa</option>
+                            <option value="double_elimination" ${tType === 'double_elimination' ? 'selected' : ''}>Doble Eliminatoria</option>
                         </select>
                     </div>
 
                     <div id="timeRangeContainer" class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="${labelClass}">Hora Inicio</label>
-                            <input type="time" name="start_time" value="09:00" class="${inputClass}">
+                            <input type="time" name="start_time" value="${startTime}" class="${inputClass}">
                         </div>
                         <div>
                             <label class="${labelClass}">Hora Fin</label>
-                            <input type="time" name="end_time" value="18:00" class="${inputClass}">
+                            <input type="time" name="end_time" value="${endTime}" class="${inputClass}">
                         </div>
                     </div>
 
@@ -1103,11 +1150,11 @@
                         <label class="${labelClass}">Reglas de Descanso</label>
                         <div class="space-y-2 bg-gray-50 p-3 rounded border border-gray-200">
                             <label class="flex items-center">
-                                <input type="checkbox" name="rest_rules[]" value="no_same_day" class="${checkboxClass}">
+                                <input type="checkbox" name="rest_rules[]" value="no_same_day" class="${checkboxClass}" ${noSameDayChecked}>
                                 <span class="ml-2 text-sm text-gray-700">No jugar 2 veces al día</span>
                             </label>
                             <label class="flex items-center">
-                                <input type="checkbox" name="rest_rules[]" value="no_same_week" class="${checkboxClass}">
+                                <input type="checkbox" name="rest_rules[]" value="no_same_week" class="${checkboxClass}" ${noSameWeekChecked}>
                                 <span class="ml-2 text-sm text-gray-700">No jugar 2 veces a la semana</span>
                             </label>
                         </div>
@@ -1120,7 +1167,7 @@
                             <label class="flex items-start cursor-pointer group">
                                 <div class="flex items-center h-5">
                                     <input type="hidden" name="interleave_categories" value="0">
-                                    <input type="checkbox" name="interleave_categories" value="1" id="interleaveCategories" checked class="${checkboxClass}">
+                                    <input type="checkbox" name="interleave_categories" value="1" id="interleaveCategories" ${interleaveChecked} class="${checkboxClass}">
                                 </div>
                                 <div class="ml-3">
                                     <span class="block text-sm font-medium text-gray-900 group-hover:text-orange-600 transition-colors">
@@ -1137,40 +1184,40 @@
                 </div>
 
                 <!-- COLUMNA 2 -->
-                <div class="space-y-4"> <!-- Aumentado a space-y-4 -->
+                <div class="space-y-4">
                     <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide border-b pb-1">Tiempos y Faltas</h3>
                     
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="${labelClass}">Periodos</label>
-                            <input type="number" name="periods_per_game" value="4" class="${inputClass}">
+                            <input type="number" name="periods_per_game" value="${periods}" class="${inputClass}">
                         </div>
                         <div>
                             <label class="${labelClass}">Min/Periodo</label>
-                            <input type="number" name="game_duration" value="10" class="${inputClass}">
+                            <input type="number" name="game_duration" value="${gameDuration}" class="${inputClass}">
                         </div>
                         <div>
                             <label class="${labelClass}">Desc/Periodos</label>
-                            <input type="number" name="rest_between_periods" value="2" class="${inputClass}">
+                            <input type="number" name="rest_between_periods" value="${restBetweenPeriods}" class="${inputClass}">
                         </div>
                         <div>
                             <label class="${labelClass}">Desc/Partidos</label>
-                            <input type="number" name="rest_between_games" value="10" class="${inputClass}">
+                            <input type="number" name="rest_between_games" value="${restBetweenGames}" class="${inputClass}">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-3 gap-2">
                         <div>
                             <label class="${labelClass}">Tiempos Fuera</label>
-                            <input type="number" name="timeouts_per_game" value="5" class="${inputClass}">
+                            <input type="number" name="timeouts_per_game" value="${timeoutsPerGame}" class="${inputClass}">
                         </div>
                         <div>
                             <label class="${labelClass}">Knock-out (Max Ptos)</label>
-                            <input type="number" name="knock_out" placeholder="Desactivado" class="${inputClass}">
+                            <input type="number" name="knock_out" value="${knockOut}" placeholder="Desactivado" class="${inputClass}">
                         </div>
                         <div>
                             <label class="${labelClass}">Knock-out (Diferencia)</label>
-                            <input type="number" name="knock_out_diff" placeholder="Desactivado" class="${inputClass}">
+                            <input type="number" name="knock_out_diff" value="${knockOutDiff}" placeholder="Desactivado" class="${inputClass}">
                         </div>
                     </div>
 
@@ -1179,26 +1226,26 @@
                         <div class="grid grid-cols-2 gap-3 bg-gray-50 p-3 rounded border border-gray-200">
                             <div>
                                 <label class="block text-xs text-gray-500 mb-1">Falta Técnica</label>
-                                <input type="number" name="limit_foul_technical" value="2" class="${inputClass}">
+                                <input type="number" name="limit_foul_technical" value="${foulTechnical}" class="${inputClass}">
                             </div>
                             <div>
                                 <label class="block text-xs text-gray-500 mb-1">Antideportiva</label>
-                                <input type="number" name="limit_foul_unsportsmanlike" value="2" class="${inputClass}">
+                                <input type="number" name="limit_foul_unsportsmanlike" value="${foulUnsportsmanlike}" class="${inputClass}">
                             </div>
                             <div>
                                 <label class="block text-xs text-gray-500 mb-1">Personal</label>
-                                <input type="number" name="limit_foul_personal" value="5" class="${inputClass}">
+                                <input type="number" name="limit_foul_personal" value="${foulPersonal}" class="${inputClass}">
                             </div>
                             <div>
                                 <label class="block text-xs text-gray-500 mb-1">Descalificatoria</label>
-                                <input type="number" name="limit_foul_disqualifying" value="1" class="${inputClass}">
+                                <input type="number" name="limit_foul_disqualifying" value="${foulDisqualifying}" class="${inputClass}">
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- COLUMNA 3 -->
-                <div class="space-y-4"> <!-- Aumentado a space-y-4 -->
+                <div class="space-y-4">
                     <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide border-b pb-1">Logística</h3>
                     
                     <div id="daysContainer">
@@ -1230,6 +1277,7 @@
         `;
         
         document.getElementById('calendarFormContent').innerHTML = content;
+        toggleManualCalendar(isManual);
     }
 
     function toggleManualCalendar(isManual) {
@@ -1837,23 +1885,28 @@
         noStatsMsg.classList.add('hidden');
         
         try {
-            const response = await fetch(`/teams/${team.id}/stats`);
+            const url = currentActiveTournamentId 
+                ? `/teams/${team.id}/stats?tournament_id=${currentActiveTournamentId}` 
+                : `/teams/${team.id}/stats`;
+            const response = await fetch(url);
             const statsData = await response.json();
             
-            if (Array.isArray(statsData)) {
-                if (statsData.length === 0) {
-                    noStatsMsg.classList.remove('hidden');
-                }
-                statsData.forEach(item => {
-                    const points1 = item.stats.points1 ?? 0;
-                    const points2 = item.stats.points2 ?? 0;
-                    const points3 = item.stats.points3 ?? 0;
-                    const totalPoints = (points1 * 1) + (points2 * 2) + (points3 * 3);
-                    const fouls = item.stats.fouls ?? 0;
+            const list = Array.isArray(statsData) ? statsData : (statsData.stats || []);
+            
+            if (list.length === 0) {
+                noStatsMsg.classList.remove('hidden');
+            } else {
+                list.forEach(item => {
+                    const points1 = item.stats?.points1 ?? 0;
+                    const points2 = item.stats?.points2 ?? 0;
+                    const points3 = item.stats?.points3 ?? 0;
+                    const totalPoints = item.stats?.total_points ?? ((points1 * 1) + (points2 * 2) + (points3 * 3));
+                    const fouls = item.stats?.fouls ?? 0;
+                    const numText = item.number ? `(#${item.number})` : '';
                     
                     const row = `
                         <tr>
-                            <td class="px-3 py-2 font-medium text-gray-900">${item.name} (#${item.number})</td>
+                            <td class="px-3 py-2 font-medium text-gray-900">${item.name} ${numText}</td>
                             <td class="px-3 py-2 text-center text-gray-600">${points1}</td>
                             <td class="px-3 py-2 text-center text-gray-600">${points2}</td>
                             <td class="px-3 py-2 text-center text-gray-600">${points3}</td>
@@ -1863,24 +1916,6 @@
                     `;
                     tableBody.innerHTML += row;
                 });
-            } else {
-                if (Object.keys(statsData).length === 0) {
-                    noStatsMsg.classList.remove('hidden');
-                }
-                for (const [playerId, stats] of Object.entries(statsData)) {
-                    const totalPoints = (stats.points1 * 1) + (stats.points2 * 2) + (stats.points3 * 3);
-                    const row = `
-                        <tr>
-                            <td class="px-3 py-2 font-medium text-gray-900">${stats.name} (#${stats.number})</td>
-                            <td class="px-3 py-2 text-center text-gray-600">${stats.points1}</td>
-                            <td class="px-3 py-2 text-center text-gray-600">${stats.points2}</td>
-                            <td class="px-3 py-2 text-center text-gray-600">${stats.points3}</td>
-                            <td class="px-3 py-2 text-center font-bold bg-gray-50 text-gray-900">${totalPoints}</td>
-                            <td class="px-3 py-2 text-center text-orange-600">${stats.fouls}</td>
-                        </tr>
-                    `;
-                    tableBody.innerHTML += row;
-                }
             }
             document.getElementById('teamStatsModal').classList.remove('hidden');
         } catch(error) {

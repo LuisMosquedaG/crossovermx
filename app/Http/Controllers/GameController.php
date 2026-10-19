@@ -127,8 +127,8 @@ public function showLiveGame(Game $game)
 
                     // --- NUEVO: DETECTAR KNOCK-OUT (MAX PUNTOS / DIFERENCIA DE PUNTOS) ---
                     $gameSettings = $game->settings ?? [];
-                    $knockOutLimit = $gameSettings['knock_out'] ?? ($game->tournament->settings->settings['knock_out'] ?? null);
-                    $knockOutDiff = $gameSettings['knock_out_diff'] ?? ($game->tournament->settings->settings['knock_out_diff'] ?? null);
+                    $knockOutLimit = $gameSettings['knock_out'] ?? ($game->tournament?->settings?->settings['knock_out'] ?? null);
+                    $knockOutDiff = $gameSettings['knock_out_diff'] ?? ($game->tournament?->settings?->settings['knock_out_diff'] ?? null);
                     
                     $isKnockOut = false;
                     
@@ -249,10 +249,11 @@ public function showLiveGame(Game $game)
             'seconds' => 'required|integer|min:0'
         ]);
 
-        // --- NUEVO: Obtenemos la configuración del torneo ---
-        $tournamentSettings = $game->tournament->settings->settings ?? [];
-        // Usamos 'game_duration' de la config, por defecto 10 si no existe
-        $configuredMinutes = $tournamentSettings['game_duration'] ?? 10; 
+        // --- NUEVO: Obtenemos la configuración del juego / torneo ---
+        $gameSettings = $game->settings ?? [];
+        $tournamentSettings = $game->tournament?->settings?->settings ?? [];
+        // Priorizamos la duración configurada en el juego, luego la del torneo, o 10 por defecto
+        $configuredMinutes = $gameSettings['game_duration'] ?? ($tournamentSettings['game_duration'] ?? 10); 
         // -----------------------------------------------
 
         // 4. Actualizamos lógica
@@ -459,8 +460,8 @@ public function showLiveGame(Game $game)
             $gameSettings = $game->settings ?? [];
 
             // 2. Definimos los valores por defecto (si el juego no tiene config, usamos la del torneo)
-            $totalPeriods = $gameSettings['periods_per_game'] ?? ($game->tournament->settings->settings['periods_per_game'] ?? 4);
-            $configuredMinutes = $gameSettings['game_duration'] ?? ($game->tournament->settings->settings['game_duration'] ?? 10);
+            $totalPeriods = $gameSettings['periods_per_game'] ?? ($game->tournament?->settings?->settings['periods_per_game'] ?? 4);
+            $configuredMinutes = $gameSettings['game_duration'] ?? ($game->tournament?->settings?->settings['game_duration'] ?? 10);
             // -----------------------------------------------------------------------
 
             // --- LÓGICA DE FINALIZACIÓN O TIEMPO EXTRA ---
@@ -811,7 +812,13 @@ public function showLiveGame(Game $game)
             $game->status = 'finished'; 
             $game->save();
 
-            $game->tournament->checkCompletionStatus();
+            if ($game->tournament) {
+                try {
+                    $game->tournament->checkCompletionStatus();
+                } catch (\Exception $e) {
+                    \Log::error('Error al actualizar estado del torneo tras cancelar juego: ' . $e->getMessage());
+                }
+            }
 
             // LÓGICA DE DESCUENTO DE SUSPENSIONES
             $localTeam = $game->localTeam;
@@ -832,6 +839,9 @@ public function showLiveGame(Game $game)
     private function findNextAvailableSlot(Game $game)
     {
         $tournament = $game->load('tournament.settings')->tournament;
+        if (!$tournament) {
+            throw new \Exception('El partido no pertenece a un torneo para reagendación automática.');
+        }
         $settings = $tournament->settings->settings ?? [];
         
         if (empty($settings)) throw new \Exception('El torneo no tiene configuración de calendario.');
@@ -949,11 +959,11 @@ public function showLiveGame(Game $game)
 
     public function autoFinishSuspended(Request $request, $gameId)
     {
+        $game = ($gameId instanceof Game) ? $gameId : Game::with(['localTeam', 'awayTeam', 'tournament'])->findOrFail($gameId);
         $this->authorize('update', $game);
-        // --- PUNTO B: ENVOLVER EN TRANSACCIÓN ---
-        DB::transaction(function () use ($gameId) {
-            $game = Game::with(['localTeam', 'awayTeam'])->findOrFail($gameId);
 
+        // --- PUNTO B: ENVOLVER EN TRANSACCIÓN ---
+        DB::transaction(function () use ($game) {
             if ($game->status !== 'pending') {
                 throw new \Exception('Este partido ya inició o terminó.');
             }
@@ -982,7 +992,13 @@ public function showLiveGame(Game $game)
             $game->status = 'finished';
             $game->save();
 
-            $game->tournament->checkCompletionStatus();
+            if ($game->tournament) {
+                try {
+                    $game->tournament->checkCompletionStatus();
+                } catch (\Exception $e) {
+                    \Log::error('Error al actualizar estado del torneo en autoFinishSuspended: ' . $e->getMessage());
+                }
+            }
 
             $this->decrementSuspensions($localTeam, $game);
             $this->decrementSuspensions($awayTeam, $game);
@@ -992,7 +1008,7 @@ public function showLiveGame(Game $game)
     }
     public function getGameStatus(Game $game)
     {
-        $settings = $game->settings ?? ($game->tournament->settings->settings ?? []);
+        $settings = $game->settings ?? ($game->tournament?->settings?->settings ?? []);
         $configuredMinutes = $settings['game_duration'] ?? 10;
 
         return response()->json([

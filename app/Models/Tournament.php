@@ -35,6 +35,29 @@ class Tournament extends Model
         return $this->hasMany(Team::class);
     }
 
+    /**
+     * Accesor para $tournament->teams.
+     * Si el torneo ya tiene partidos (activo o finalizado), garantiza que se recuperen todos los equipos
+     * que participaron en sus partidos, incluso si los equipos fueron liberados para jugar en otro torneo.
+     */
+    public function getTeamsAttribute()
+    {
+        if ($this->games()->exists()) {
+            $gameTeamIds = Game::where('tournament_id', $this->id)
+                ->pluck('local_team_id')
+                ->merge(Game::where('tournament_id', $this->id)->pluck('away_team_id'))
+                ->filter()
+                ->unique();
+
+            return Team::where(function($q) use ($gameTeamIds) {
+                $q->whereIn('id', $gameTeamIds)
+                  ->orWhere('tournament_id', $this->id);
+            })->get();
+        }
+
+        return $this->getRelationValue('teams') ?? $this->teams()->get();
+    }
+
     public function games()
     {
         return $this->hasMany(Game::class);

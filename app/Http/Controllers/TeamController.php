@@ -299,91 +299,55 @@ public function update(Request $request, Team $team)
     unset($data['image']); // Eliminar de data para evitar errores en update
 
     $currentTournament = $team->tournament;
-    if ($currentTournament && $currentTournament->status === 'finished') {
-        // Si el torneo actual está terminado y el usuario asigna uno nuevo diferente
-        if ($request->filled('tournament_id') && $request->tournament_id != $team->tournament_id) {
-            // 1. Replicamos el equipo en el nuevo torneo
-            $newTeam = $team->replicate();
-            $newTeam->tournament_id = $request->tournament_id;
-            
-            $newTournamentObj = Tournament::find($request->tournament_id);
-            if ($newTournamentObj) {
-                $newTeam->client_id = $newTournamentObj->client_id;
-            }
-            
-            $newTeam->status = 'pending';
-            $newTeam->contract_accepted_at = null; // Nueva firma requerida
-            
-            if ($request->hasFile('image')) {
-                $imagePath = $request->file('image')->store('teams', 'public');
-                $newTeam->image_path = $imagePath;
-            }
-            
-            $newTeam->save();
 
-            // 2. Replicamos los jugadores
-            $players = \App\Models\Player::where('team_id', $team->id)->get();
-            foreach ($players as $player) {
-                $newPlayer = $player->replicate();
-                $newPlayer->team_id = $newTeam->id;
-                $newPlayer->save();
-            }
-
-            // Recalcular el nuevo torneo
-            $nuevoTorneo = $newTeam->tournament;
-            if ($nuevoTorneo) {
-                $this->recalcularDatosTorneo($nuevoTorneo);
-            }
+    // Regla 3.2: Los equipos solo pueden estar activos en un torneo a la vez.
+    // Si el torneo actual no ha finalizado, no se puede cambiar a otro torneo.
+    if ($request->filled('tournament_id') && $request->tournament_id != $team->tournament_id) {
+        if ($currentTournament && in_array($currentTournament->status, ['active', 'in_progress', 'paused'])) {
+            return response()->json([
+                'message' => 'El equipo no puede cambiar de torneo mientras su torneo actual esté activo. Debe finalizar el torneo primero para liberarlo.'
+            ], 400);
         }
 
-        // El equipo original se queda en el torneo terminado.
-        // Si hay cambios en los datos (nombre, entrenador, etc.), los actualizamos,
-        // pero FORZAMOS que su torneo siga siendo el terminado (no se borra ni se altera).
-        $data['tournament_id'] = $team->tournament_id;
-        $data['client_id'] = $team->client_id;
-        
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('teams', 'public');
-            $data['image_path'] = $imagePath;
-        }
-        
-        $team->update($data);
+        // Si el equipo se transfiere a un nuevo torneo (estando liberado),
+        // reinicia su estatus para requerir nueva aceptación de contrato en el nuevo torneo (Regla 3.1 y 3.2)
+        $data['status'] = 'pending';
+        $data['contract_accepted_at'] = null;
+        $data['suspension_games'] = 0;
+    }
 
+    if ($request->hasFile('image')) {
+        if ($team->image_path) {
+            Storage::disk('public')->delete($team->image_path);
+        }
+        $imagePath = $request->file('image')->store('teams', 'public');
+        $data['image_path'] = $imagePath;
+    }
+
+    // Actualizar client_id y tournament_id
+    if ($request->filled('tournament_id')) {
+        $tournament = Tournament::find($request->tournament_id);
+        if ($tournament) {
+            $data['client_id'] = $tournament->client_id;
+        }
     } else {
-        // Lógica normal para equipos que no están en torneos terminados
-        if ($request->hasFile('image')) {
-            if ($team->image_path) {
-                Storage::disk('public')->delete($team->image_path);
-            }
-            $imagePath = $request->file('image')->store('teams', 'public');
-            $data['image_path'] = $imagePath;
-        }
+        $data['tournament_id'] = null;
+        $data['client_id'] = auth()->user()->client_id ?? $team->client_id;
+    }
 
-        // Actualizar client_id y tournament_id
-        if ($request->filled('tournament_id')) {
-            $tournament = Tournament::find($request->tournament_id);
-            if ($tournament) {
-                $data['client_id'] = $tournament->client_id;
-            }
-        } else {
-            $data['tournament_id'] = null;
-            $data['client_id'] = auth()->user()->client_id;
-        }
+    // Actualizar equipo sin duplicar registros de equipos ni jugadores
+    $team->update($data);
 
-        // Actualizar equipo
-        $team->update($data);
+    // Recalcular torneos
+    $nuevoTorneo = $team->fresh()->tournament;
+    if ($nuevoTorneo) {
+        $this->recalcularDatosTorneo($nuevoTorneo);
+    }
 
-        // Recalcular torneos
-        $nuevoTorneo = $team->fresh()->tournament;
-        if ($nuevoTorneo) {
-            $this->recalcularDatosTorneo($nuevoTorneo);
-        }
-
-        if ($viejoTorneoId != $nuevoTorneoId) {
-            $viejoTorneo = Tournament::find($viejoTorneoId);
-            if ($viejoTorneo) {
-                $this->recalcularDatosTorneo($viejoTorneo);
-            }
+    if ($viejoTorneoId && $viejoTorneoId != $nuevoTorneoId) {
+        $viejoTorneo = Tournament::find($viejoTorneoId);
+        if ($viejoTorneo) {
+            $this->recalcularDatosTorneo($viejoTorneo);
         }
     }
 
@@ -415,15 +379,68 @@ public function update(Request $request, Team $team)
         return redirect()->back()->with('message', 'Equipo eliminado exitosamente.');
     }
 
-    public function stats(Team $team)
+    public function stats(Request $request, Team $team)
     {
-        // Obtenemos todos los partidos finalizados (tanto de torneo como independientes)
-        $games = \App\Models\Game::where(function($query) use ($team) {
+        // 1. Obtener todos los torneos en los que ha jugado el equipo o que tiene asignado
+        $tournamentIdsFromGames = \App\Models\Game::where(function($query) use ($team) {
             $query->where('local_team_id', $team->id)
                   ->orWhere('away_team_id', $team->id);
-        })->where('status', 'finished')
-          ->with('actions')->get();
+        })->whereNotNull('tournament_id')->pluck('tournament_id');
 
+        $allTournamentIds = $tournamentIdsFromGames;
+        if ($team->tournament_id) {
+            $allTournamentIds = $allTournamentIds->push($team->tournament_id);
+        }
+        $allTournamentIds = $allTournamentIds->unique()->filter()->values();
+
+        $tournaments = \App\Models\Tournament::whereIn('id', $allTournamentIds)
+            ->orderByDesc('id')
+            ->get();
+
+        // 2. Determinar el torneo activo por defecto (Regla 4)
+        $activeTournament = null;
+        if ($team->tournament && in_array($team->tournament->status, ['active', 'in_progress', 'pending'])) {
+            $activeTournament = $team->tournament;
+        } else {
+            $activeTournament = $tournaments->firstWhere(fn($t) => in_array($t->status, ['active', 'in_progress']));
+            if (!$activeTournament && $team->tournament) {
+                $activeTournament = $team->tournament;
+            } elseif (!$activeTournament && $tournaments->isNotEmpty()) {
+                $activeTournament = $tournaments->first();
+            }
+        }
+
+        // 3. Determinar torneo seleccionado
+        $requestedTournamentId = $request->query('tournament_id');
+        if ($requestedTournamentId !== null) {
+            if ($requestedTournamentId === 'all' || $requestedTournamentId === '') {
+                $selectedTournamentId = 'all';
+            } else {
+                $selectedTournamentId = (int)$requestedTournamentId;
+            }
+        } else {
+            if ($activeTournament) {
+                $selectedTournamentId = $activeTournament->id;
+            } elseif ($tournaments->isNotEmpty()) {
+                $selectedTournamentId = $tournaments->first()->id;
+            } else {
+                $selectedTournamentId = 'all';
+            }
+        }
+
+        // 4. Filtrar partidos terminados según el torneo seleccionado
+        $gamesQuery = \App\Models\Game::where(function($query) use ($team) {
+            $query->where('local_team_id', $team->id)
+                  ->orWhere('away_team_id', $team->id);
+        })->where('status', 'finished');
+
+        if ($selectedTournamentId !== 'all' && $selectedTournamentId !== null) {
+            $gamesQuery->where('tournament_id', $selectedTournamentId);
+        }
+
+        $games = $gamesQuery->with('actions')->get();
+
+        // 5. Acumular estadísticas por jugador
         $accumulatedStats = [];
 
         foreach ($games as $game) {
@@ -436,7 +453,7 @@ public function update(Request $request, Team $team)
 
                 if (!isset($accumulatedStats[$playerId])) {
                     $accumulatedStats[$playerId] = [
-                        'points1' => 0, 'points2' => 0, 'points3' => 0, 'fouls' => 0
+                        'points1' => 0, 'points2' => 0, 'points3' => 0, 'total_points' => 0, 'fouls' => 0
                     ];
                 }
 
@@ -450,24 +467,74 @@ public function update(Request $request, Team $team)
                 }
             }
         }
-        
-        $playerIds = array_keys($accumulatedStats);
-        $players = \App\Models\Player::find($playerIds);
 
-        $finalStats = []; 
-        
-        foreach ($accumulatedStats as $pid => $s) {
-            $p = $players->find($pid); 
-            
-            $finalStats[] = [
-                'id' => $pid,
-                'name' => $p ? $p->name : 'Desconocido',
-                'number' => $p ? $p->number : '-', 
-                'stats' => $s
+        foreach ($accumulatedStats as $pid => &$s) {
+            $s['total_points'] = ($s['points1'] * 1) + ($s['points2'] * 2) + ($s['points3'] * 3);
+        }
+        unset($s);
+
+        // 6. Obtener jugadores del equipo + jugadores históricos que tengan acciones
+        $hasAnyStats = !empty($accumulatedStats);
+        $finalStats = [];
+
+        $rosterPlayers = \App\Models\Player::where('team_id', $team->id)->get();
+        $historicalPlayerIds = array_diff(array_keys($accumulatedStats), $rosterPlayers->pluck('id')->toArray());
+        $historicalPlayers = !empty($historicalPlayerIds) ? \App\Models\Player::whereIn('id', $historicalPlayerIds)->get() : collect();
+        $allPlayers = $rosterPlayers->concat($historicalPlayers);
+
+        foreach ($allPlayers as $player) {
+            $s = $accumulatedStats[$player->id] ?? [
+                'points1' => 0, 'points2' => 0, 'points3' => 0, 'total_points' => 0, 'fouls' => 0
             ];
+
+            if ($hasAnyStats || ($s['total_points'] > 0 || $s['fouls'] > 0)) {
+                $finalStats[] = [
+                    'id' => $player->id,
+                    'name' => $player->name,
+                    'number' => $player->number ?? '-',
+                    'stats' => $s
+                ];
+            }
         }
 
-        return response()->json($finalStats);
+        usort($finalStats, function($a, $b) {
+            if ($b['stats']['total_points'] !== $a['stats']['total_points']) {
+                return $b['stats']['total_points'] <=> $a['stats']['total_points'];
+            }
+            return strcmp($a['name'], $b['name']);
+        });
+
+        $statusLabels = [
+            'pending' => 'Pendiente',
+            'active' => 'Activo',
+            'in_progress' => 'Activo',
+            'finished' => 'Terminado',
+            'paused' => 'Pausado',
+            'cancelled' => 'Cancelado',
+        ];
+
+        $tournamentsData = $tournaments->map(function($t) use ($activeTournament, $statusLabels) {
+            return [
+                'id' => $t->id,
+                'name' => $t->name,
+                'status' => $t->status,
+                'status_label' => $statusLabels[$t->status] ?? ucfirst($t->status),
+                'is_active' => in_array($t->status, ['active', 'in_progress']),
+                'is_default' => $activeTournament && $activeTournament->id == $t->id,
+            ];
+        })->values();
+
+        return response()->json([
+            'team' => [
+                'id' => $team->id,
+                'name' => $team->name,
+                'current_tournament_id' => $team->tournament_id,
+            ],
+            'tournaments' => $tournamentsData,
+            'selected_tournament_id' => $selectedTournamentId,
+            'has_activity' => $hasAnyStats,
+            'stats' => $finalStats
+        ]);
     }
     /**
      * NUEVO: Método para que el Coach acepte el contrato

@@ -50,7 +50,7 @@ class LiveGameService
         // CORRECCIÓN PUNTO 3: Prioridad a la configuración individual del juego manual
         // Si el juego tiene settings propios (partido manual), úsalos.
         // Si es null, usa la configuración del torneo padre.
-        $settings = $game->settings ?? ($game->tournament->settings->settings ?? []);
+        $settings = $game->settings ?? ($game->tournament?->settings?->settings ?? []);
         
         // Configuración por defecto si aún no existe nada (fallback final)
         $config = [

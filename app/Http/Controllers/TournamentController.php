@@ -271,15 +271,27 @@ public function store(Request $request)
             }
         }
 
+        // Usamos el accesor $tournament->teams para incluir tanto equipos actuales como históricos
+        $teams = $tournament->teams;
+
         if (auth()->user()->hasRole('Coach')) {
-            $hasTeam = Team::where('tournament_id', $tournament->id)->where('coach_id', auth()->id())->exists();
+            $hasTeam = $teams->where('coach_id', auth()->id())->isNotEmpty();
             if (!$hasTeam) {
                 abort(403, 'Acción no autorizada.');
             }
         }
 
-        $teams = $tournament->teams()->get();
-        return response()->json($teams);
+        // Si el torneo ya está finalizado, para fines del histórico los equipos que participaron
+        // deben mostrarse como 'active' (tal como compitieron en el torneo original)
+        if ($tournament->status === 'finished') {
+            $teams = $teams->map(function($team) {
+                $teamClone = clone $team;
+                $teamClone->status = 'active';
+                return $teamClone;
+            });
+        }
+
+        return response()->json($teams->values());
     }
     
     public function generateCalendar(Request $request, CalendarGeneratorService $calendarService)
@@ -510,24 +522,24 @@ public function store(Request $request)
             ->sort()
             ->values();
 
-        $categories = Team::where('tournament_id', $tournament->id)
-            ->whereNotNull('category')
-            ->distinct()
+        // --- AQUÍ ESTÁ LA CLAVE: PREPARAR EQUIPOS CON EL GROUP_NAME CORRECTO ---
+        $teamsCollection = $tournament->teams->sortBy('name')->values();
+
+        $categories = $teamsCollection
             ->pluck('category')
+            ->filter()
+            ->unique()
             ->sort()
             ->values();
 
-        $strengths = Team::where('tournament_id', $tournament->id)
-            ->whereNotNull('strength')
-            ->distinct()
+        $strengths = $teamsCollection
             ->pluck('strength')
+            ->filter()
+            ->unique()
             ->sort()
             ->values();
 
         $games = $gamesQuery->orderBy('date_time')->paginate(15)->appends($request->all());
-        
-        // --- AQUÍ ESTÁ LA CLAVE: PREPARAR EQUIPOS CON EL GROUP_NAME CORRECTO ---
-        $teamsCollection = $tournament->teams()->orderBy('name')->get();
         
         // 1. Obtenemos todos los juegos del torneo para crear un mapa ID -> Grupo
         // Esto asume que un equipo juega siempre en el mismo grupo en este torneo
@@ -2549,10 +2561,18 @@ public function store(Request $request)
      */
     public function cloneTournament(Request $request, Tournament $tournament)
     {
+        // 1. Solo funciona cuando el torneo está en estado "Terminado"
+        if ($tournament->status !== 'finished') {
+            return response()->json([
+                'success' => false,
+                'message' => 'La duplicación de torneo solo está permitida cuando el torneo se encuentra en estado Terminado.'
+            ], 400);
+        }
+
         try {
             \Illuminate\Support\Facades\DB::beginTransaction();
 
-            // 1. Clonar el Torneo
+            // 2. Duplicar el Torneo y todas las reglas de calendario
             $newTournament = $tournament->replicate();
             $newName = $tournament->name . ' - Copia';
             
@@ -2561,7 +2581,7 @@ public function store(Request $request)
             $newTournament->status = 'pending';
             $newTournament->save();
 
-            // 2. Clonar configuraciones del torneo (TournamentSetting)
+            // Duplicar configuraciones del torneo (TournamentSetting: días, canchas, duración, faltas, etc.)
             $settings = TournamentSetting::where('tournament_id', $tournament->id)->get();
             foreach ($settings as $setting) {
                 $newSetting = $setting->replicate();
@@ -2569,27 +2589,35 @@ public function store(Request $request)
                 $newSetting->save();
             }
 
-            // 3. Clonar los equipos y sus jugadores
-            $teams = Team::where('tournament_id', $tournament->id)->get();
-            foreach ($teams as $team) {
-                $newTeam = $team->replicate();
-                $newTeam->tournament_id = $newTournament->id;
-                $newTeam->save();
+            // 3. Seleccionar los equipos que estuvieron activos en el torneo original con sus jugadores
+            // 3.1: Los equipos y jugadores NO se duplican o crean nuevos en la base de datos
+            // 3.2: Los equipos solo pueden estar activos en un torneo a la vez. Al estar finalizado el original, quedan liberados.
+            $originalTeams = $tournament->teams;
 
-                // Clonar jugadores de este equipo
-                $players = \App\Models\Player::where('team_id', $team->id)->get();
-                foreach ($players as $player) {
-                    $newPlayer = $player->replicate();
-                    $newPlayer->team_id = $newTeam->id;
-                    $newPlayer->save();
+            foreach ($originalTeams as $team) {
+                // Solo equipos que estuvieron activos en el torneo original
+                if ($team->status !== 'active') {
+                    continue;
                 }
+
+                // Si por alguna razón el equipo ya está activo en otro torneo en curso (distinto al finalizado), no se mueve
+                if ($team->tournament && $team->tournament->id !== $tournament->id && $team->tournament->status === 'active') {
+                    continue;
+                }
+
+                // Asignar el equipo al nuevo torneo (sin duplicar ni alterar su plantilla de jugadores)
+                $team->tournament_id = $newTournament->id;
+                $team->status = 'pending';
+                $team->contract_accepted_at = null; // Requiere nueva firma de contrato para el nuevo torneo
+                $team->suspension_games = 0; // Reinicio de suspensiones para la nueva temporada
+                $team->save();
             }
 
             \Illuminate\Support\Facades\DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Torneo clonado exitosamente en estado pendiente.',
+                'message' => 'Torneo duplicado exitosamente en estado pendiente con sus reglas y equipos activos vinculados.',
                 'tournament' => $newTournament
             ]);
 
@@ -2597,7 +2625,7 @@ public function store(Request $request)
             \Illuminate\Support\Facades\DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Error al clonar el torneo: ' . $e->getMessage()
+                'message' => 'Error al duplicar el torneo: ' . $e->getMessage()
             ], 500);
         }
     }

@@ -1028,9 +1028,20 @@
                 <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                     <div class="sm:flex sm:items-start">
                         <div class="w-full">
-                            <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-4 text-center" id="statsModalTitle">
+                            <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-3 text-center" id="statsModalTitle">
                                 Estadísticas Acumuladas
                             </h3>
+                            <!-- Selector de Torneo (Campo tipo lista) -->
+                            <div class="mb-4 flex flex-col sm:flex-row items-center justify-center gap-2">
+                                <label for="statsTournamentSelect" class="text-xs font-semibold uppercase tracking-wider text-gray-700 whitespace-nowrap">
+                                    Torneo:
+                                </label>
+                                <div class="w-full sm:w-80">
+                                    <select id="statsTournamentSelect" onchange="onStatsTournamentChange(this.value)" class="block w-full rounded-md border-gray-300 border py-1.5 px-3 bg-white shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm text-gray-800">
+                                        <!-- Se llenará con JS -->
+                                    </select>
+                                </div>
+                            </div>
                             <!-- INICIO CAMBIO: Tabla de estadísticas con scroll -->
                             <div class="overflow-x-auto border border-gray-200 rounded-lg">
                                 <table class="min-w-full text-sm text-left">
@@ -1727,72 +1738,125 @@
     }
 
     // ========================
-    // LÓGICA DE ESTADÍSTICAS (ACTUALIZADA)
+    // LÓGICA DE ESTADÍSTICAS POR TORNEO (ACTUALIZADA)
     // ========================
-    
+    let currentStatsTeam = null;
+
     async function openStatsModal(team) {
+        currentStatsTeam = team;
         document.getElementById('statsModalTitle').innerText = `Estadísticas: ${team.name}`;
+        document.getElementById('teamStatsModal').classList.remove('hidden');
+        await loadTeamStats(team.id);
+    }
+
+    function onStatsTournamentChange(tournamentId) {
+        if (currentStatsTeam) {
+            loadTeamStats(currentStatsTeam.id, tournamentId);
+        }
+    }
+
+    async function loadTeamStats(teamId, tournamentId = null) {
         const tableBody = document.getElementById('teamStatsTableBody');
         const noStatsMsg = document.getElementById('noStatsMessage');
-        
-        tableBody.innerHTML = '';
+        const selectElement = document.getElementById('statsTournamentSelect');
+
+        tableBody.innerHTML = '<tr><td colspan="6" class="px-3 py-6 text-center text-gray-400">Cargando estadísticas...</td></tr>';
         noStatsMsg.classList.add('hidden');
 
         try {
-            const response = await fetch(`/teams/${team.id}/stats`);
-            const statsData = await response.json();
+            const url = tournamentId !== null 
+                ? `/teams/${teamId}/stats?tournament_id=${tournamentId}` 
+                : `/teams/${teamId}/stats`;
+            
+            const response = await fetch(url);
+            const data = await response.json();
 
-            if (Array.isArray(statsData)) {
-                if (statsData.length === 0) {
-                    noStatsMsg.classList.remove('hidden');
-                } else {
-                    statsData.forEach(item => {
-                        const points1 = item.stats.points1 ?? 0;
-                        const points2 = item.stats.points2 ?? 0;
-                        const points3 = item.stats.points3 ?? 0;
-                        const totalPoints = points1 + (points2 * 2) + (points3 * 3);
-                        const fouls = item.stats.fouls ?? 0;
-                        const displayNumber = item.number ? item.number : 'N/A';
+            // Soportar tanto formato objeto nuevo { tournaments, selected_tournament_id, stats } como array legacy
+            const tournaments = data.tournaments || [];
+            const selectedTournamentId = data.selected_tournament_id;
+            const statsList = Array.isArray(data) ? data : (data.stats || []);
 
-                        const row = `
-                            <tr class="border-b hover:bg-gray-50">
-                                <td class="px-3 py-2 font-medium">${item.name} (${displayNumber})</td>
-                                <td class="px-3 py-2 text-center text-gray-600">${points1}</td>
-                                <td class="px-3 py-2 text-center text-gray-600">${points2}</td>
-                                <td class="px-3 py-2 text-center text-gray-600">${points3}</td>
-                                <td class="px-3 py-2 text-center font-bold text-purple-700">${totalPoints}</td>
-                                <td class="px-3 py-2 text-center text-orange-600">${fouls}</td>
-                            </tr>
-                        `;
-                        tableBody.innerHTML += row;
-                    });
-                }
-            } else {
-                if (Object.keys(statsData).length === 0) {
-                    noStatsMsg.classList.remove('hidden');
-                } else {
-                    for (const [playerId, stats] of Object.entries(statsData)) {
-                        const totalPoints = (stats.points1 * 1) + (stats.points2 * 2) + (stats.points3 * 3);
-                        const row = `
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-3 py-2 font-medium">Jugador ID: ${playerId}</td>
-                                <td class="px-3 py-2 text-center text-gray-600">${stats.points1}</td>
-                                <td class="px-3 py-2 text-center text-gray-600">${stats.points2}</td>
-                                <td class="px-3 py-2 text-center text-gray-600">${stats.points3}</td>
-                                <td class="px-3 py-2 text-center font-bold text-purple-700">${totalPoints}</td>
-                                <td class="px-3 py-2 text-center text-orange-600">${stats.fouls}</td>
-                            </tr>
-                        `;
-                        tableBody.innerHTML += row;
+            // Renderizar opciones en el selector de torneos (campo tipo lista)
+            if (selectElement) {
+                const currentTeamAttribute = selectElement.getAttribute('data-team-id');
+                const isSameTeam = (currentTeamAttribute === String(teamId));
+
+                if (!isSameTeam || selectElement.options.length === 0) {
+                    selectElement.setAttribute('data-team-id', String(teamId));
+                    selectElement.innerHTML = '';
+
+                    if (tournaments.length === 0) {
+                        const opt = document.createElement('option');
+                        opt.value = '';
+                        opt.textContent = 'Sin torneos registrados';
+                        selectElement.appendChild(opt);
+                    } else {
+                        tournaments.forEach(t => {
+                            const opt = document.createElement('option');
+                            opt.value = t.id;
+                            let statusText = t.status_label;
+                            if (!statusText) {
+                                const s = (t.status || '').toLowerCase();
+                                if (s === 'pending') {
+                                    statusText = 'Pendiente';
+                                } else if (s === 'active' || s === 'in_progress' || t.is_active) {
+                                    statusText = 'Activo';
+                                } else if (s === 'finished') {
+                                    statusText = 'Terminado';
+                                } else {
+                                    statusText = t.status || 'Terminado';
+                                }
+                            }
+                            opt.textContent = `${t.name} (${statusText})`;
+                            selectElement.appendChild(opt);
+                        });
+
+                        // Opción: Todos los Torneos (Histórico Total)
+                        const allOpt = document.createElement('option');
+                        allOpt.value = 'all';
+                        allOpt.textContent = 'Todos los Torneos (Histórico Total)';
+                        selectElement.appendChild(allOpt);
                     }
                 }
+
+                // Sincronizar el valor seleccionado en el select
+                if (selectedTournamentId !== undefined && selectedTournamentId !== null) {
+                    selectElement.value = String(selectedTournamentId);
+                }
             }
-            
-            document.getElementById('teamStatsModal').classList.remove('hidden');
+
+            // Renderizar tabla de estadísticas
+            tableBody.innerHTML = '';
+            if (statsList.length === 0) {
+                noStatsMsg.classList.remove('hidden');
+            } else {
+                statsList.forEach(item => {
+                    const points1 = item.stats?.points1 ?? 0;
+                    const points2 = item.stats?.points2 ?? 0;
+                    const points3 = item.stats?.points3 ?? 0;
+                    const totalPoints = item.stats?.total_points ?? (points1 + (points2 * 2) + (points3 * 3));
+                    const fouls = item.stats?.fouls ?? 0;
+                    const displayNumber = (item.number && item.number !== '-') ? `#${item.number}` : '';
+
+                    const row = `
+                        <tr class="border-b hover:bg-gray-50 transition-colors">
+                            <td class="px-3 py-2 font-medium text-gray-900">
+                                ${item.name} <span class="text-xs text-gray-500 font-normal">${displayNumber}</span>
+                            </td>
+                            <td class="px-3 py-2 text-center text-gray-600">${points1}</td>
+                            <td class="px-3 py-2 text-center text-gray-600">${points2}</td>
+                            <td class="px-3 py-2 text-center text-gray-600">${points3}</td>
+                            <td class="px-3 py-2 text-center font-bold text-purple-700 bg-purple-50">${totalPoints}</td>
+                            <td class="px-3 py-2 text-center text-orange-600 font-medium">${fouls}</td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            }
 
         } catch (error) {
             console.error('Error al cargar estadísticas:', error);
-            alert('No se pudieron cargar las estadísticas.');
+            tableBody.innerHTML = '<tr><td colspan="6" class="px-3 py-4 text-center text-red-500">Error al cargar estadísticas.</td></tr>';
         }
     }
 
