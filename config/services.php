@@ -40,4 +40,15 @@ return [
         'bot_username' => env('TELEGRAM_BOT_USERNAME'),
     ],
 
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL', 'gemini-3.8-flash'),
+    ],
+
+    'openrouter' => [
+        'api_key' => env('OPENROUTER_API_KEY'),
+        'model' => env('OPENROUTER_MODEL', 'google/gemma-4-31b-it:free'),
+    ],
+
 ];
+

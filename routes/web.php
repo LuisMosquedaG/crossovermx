@@ -55,6 +55,7 @@ Route::post('/games/update-period', [GameController::class, 'updatePeriod'])->na
 Route::post('/games/update-timer', [GameController::class, 'updateTimer'])->name('games.updateTimer')->middleware(['auth', 'verified']);
 Route::post('/games/finish-game', [GameController::class, 'finishGame'])->name('games.finishGame')->middleware(['auth', 'verified']);
 Route::post('/games/{game}/set-final-score', [GameController::class, 'setFinalScore'])->name('games.setFinalScore')->middleware(['auth', 'verified']);
+Route::post('/games/{game}/scan-scoresheet', [GameController::class, 'scanScoresheet'])->name('games.scanScoresheet')->middleware(['auth', 'verified']);
 Route::post('/games/next-period', [GameController::class, 'nextPeriod'])->name('games.nextPeriod')->middleware(['auth', 'verified']);
 Route::post('/games/start-overtime', [GameController::class, 'startOvertime'])->name('games.startOvertime')->middleware(['auth', 'verified']);
 Route::get('/games/{game}/stats', [GameController::class, 'showStats'])->name('games.stats')->middleware(['auth', 'verified']);

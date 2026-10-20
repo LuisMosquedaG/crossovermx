@@ -8,8 +8,8 @@ use Illuminate\Http\Request;
 use App\Models\Player;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use App\Services\LiveGameService;
+use App\Services\ScoresheetScannerService;
 
 class GameController extends Controller
 {
@@ -350,7 +350,66 @@ public function showLiveGame(Game $game)
     }
 
     /**
+     * Escanea una hoja de anotación física (foto o PDF) con IA Gemini y extrae puntos y faltas por jugador.
+     */
+    public function scanScoresheet(Request $request, Game $game, ScoresheetScannerService $scannerService)
+    {
+        // Ampliar tiempo límite de ejecución para procesamiento multimodal con IA
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(180);
+        }
+        @ini_set('max_execution_time', '180');
+
+        $this->authorize('update', $game);
+
+        if ($game->isRoundClosed()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se puede escanear el acta porque la ronda de este partido ya fue cerrada.'
+            ], 422);
+        }
+
+        $request->validate([
+            'scoresheet' => 'required|file|mimes:jpg,jpeg,png,webp,pdf,heic|max:15360',
+        ], [
+            'scoresheet.required' => 'Debes adjuntar una imagen o documento PDF de la hoja de anotación.',
+            'scoresheet.file' => 'El archivo proporcionado no es válido.',
+            'scoresheet.mimes' => 'El formato debe ser JPG, PNG, WEBP, PDF o HEIC.',
+            'scoresheet.max' => 'El archivo no debe exceder los 15MB.',
+        ]);
+
+        try {
+            $file = $request->file('scoresheet');
+
+            // Guardar archivo en disco público (storage/app/public/scoresheets)
+            $storedPath = $file->store('scoresheets', 'public');
+
+            // Procesar con Gemini Vision
+            $scanResult = $scannerService->scan($file, $game);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Hoja de anotación analizada exitosamente.',
+                'scoresheet_path' => $storedPath,
+                'scoresheet_url' => asset('storage/' . $storedPath),
+                'local_team_score' => $scanResult['local_team_score'],
+                'away_team_score' => $scanResult['away_team_score'],
+                'confidence_notes' => $scanResult['confidence_notes'],
+                'local_players' => $scanResult['local_players'],
+                'away_players' => $scanResult['away_players'],
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error en scanScoresheet: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al analizar la hoja de anotación: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Guarda directamente el marcador final de un partido sin pasar por el tracker en vivo.
+     * Soporta estadísticas individuales por jugador extraídas del acta física.
      */
     public function setFinalScore(Request $request, Game $game)
     {
@@ -366,6 +425,12 @@ public function showLiveGame(Game $game)
         $request->validate([
             'local_team_score' => 'required|integer|min:0',
             'away_team_score' => 'required|integer|min:0',
+            'scoresheet_path' => 'nullable|string|max:500',
+            'player_stats' => 'nullable|array',
+            'player_stats.*.player_id' => 'required|integer|exists:players,id',
+            'player_stats.*.team_side' => 'required|in:local,away',
+            'player_stats.*.points' => 'nullable|integer|min:0',
+            'player_stats.*.fouls' => 'nullable|integer|min:0|max:5',
         ], [
             'local_team_score.required' => 'El marcador del equipo local es obligatorio.',
             'local_team_score.integer' => 'El marcador local debe ser un número entero.',
@@ -381,7 +446,79 @@ public function showLiveGame(Game $game)
                 $game->away_team_score = (int) $request->away_team_score;
                 $game->status = 'finished';
                 $game->timer_status = 'finished';
+
+                if ($request->filled('scoresheet_path')) {
+                    $game->scoresheet_path = $request->scoresheet_path;
+                }
+
                 $game->save();
+
+                // Registrar estadísticas de jugadores si fueron enviadas (desde la lectura de acta)
+                if ($request->has('player_stats') && is_array($request->player_stats)) {
+                    // Limpiar acciones previas de puntos y faltas personales en este partido
+                    $game->actions()->whereIn('action_type', ['point_scored', 'foul_personal'])->delete();
+
+                    foreach ($request->player_stats as $stat) {
+                        $playerId = (int) ($stat['player_id'] ?? 0);
+                        $teamSide = $stat['team_side'] ?? 'local';
+                        $points = (int) ($stat['points'] ?? 0);
+                        $fouls = (int) ($stat['fouls'] ?? 0);
+
+                        if ($playerId <= 0) continue;
+
+                        // Asegurar vinculación en game_player
+                        if (!$game->players()->where('players.id', $playerId)->exists()) {
+                            $game->players()->attach($playerId, [
+                                'team_side' => $teamSide,
+                                'is_starter' => true,
+                                'is_active' => true,
+                            ]);
+                        }
+
+                        // Registrar puntos descompuestos en canastas de 2 y tiros libres de 1
+                        if ($points > 0) {
+                            $twos = intdiv($points, 2);
+                            $ones = $points % 2;
+
+                            for ($i = 0; $i < $twos; $i++) {
+                                GameAction::create([
+                                    'game_id' => $game->id,
+                                    'player_id' => $playerId,
+                                    'team_side' => $teamSide,
+                                    'action_type' => 'point_scored',
+                                    'value' => 2,
+                                    'period' => 1,
+                                    'seconds' => 0,
+                                ]);
+                            }
+
+                            if ($ones > 0) {
+                                GameAction::create([
+                                    'game_id' => $game->id,
+                                    'player_id' => $playerId,
+                                    'team_side' => $teamSide,
+                                    'action_type' => 'point_scored',
+                                    'value' => 1,
+                                    'period' => 1,
+                                    'seconds' => 0,
+                                ]);
+                            }
+                        }
+
+                        // Registrar faltas personales
+                        for ($f = 0; $f < $fouls; $f++) {
+                            GameAction::create([
+                                'game_id' => $game->id,
+                                'player_id' => $playerId,
+                                'team_side' => $teamSide,
+                                'action_type' => 'foul_personal',
+                                'value' => 1,
+                                'period' => 1,
+                                'seconds' => 0,
+                            ]);
+                        }
+                    }
+                }
 
                 // Si pertenece a un torneo, verificar estado de completitud
                 if ($game->tournament) {
@@ -420,6 +557,7 @@ public function showLiveGame(Game $game)
                     'status' => $game->status,
                     'local_team_score' => $game->local_team_score,
                     'away_team_score' => $game->away_team_score,
+                    'scoresheet_path' => $game->scoresheet_path,
                     'result_text' => $resultText,
                 ]
             ]);
@@ -655,7 +793,13 @@ public function showLiveGame(Game $game)
             }
 
             if ($action->action_type === 'point_scored') {
-                $targetStats['points' . $action->value]++;
+                $val = (int) $action->value;
+                if (in_array($val, [1, 2, 3])) {
+                    $targetStats['points' . $val]++;
+                } else {
+                    $targetStats['points2'] += intdiv($val, 2);
+                    $targetStats['points1'] += ($val % 2);
+                }
             } elseif (strpos($action->action_type, 'foul') !== false) {
                 $targetStats['fouls'] += 1;
             }

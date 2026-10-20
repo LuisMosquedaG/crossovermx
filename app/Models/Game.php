@@ -23,6 +23,7 @@ class Game extends Model
         'category_group',
         'round_number',
         'settings',
+        'scoresheet_path',
         'client_id',
     ];
 
