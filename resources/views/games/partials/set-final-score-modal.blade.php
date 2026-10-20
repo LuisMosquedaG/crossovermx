@@ -29,65 +29,6 @@
                     <input type="hidden" id="finalScoreGameId" name="game_id">
                     <input type="hidden" id="scoresheetUploadedPath" name="scoresheet_path">
 
-                    <!-- SECCIÓN: Escanear Hoja de Anotación con IA -->
-                    <div class="relative overflow-hidden rounded-xl border border-indigo-200 bg-gradient-to-r from-indigo-50/80 via-blue-50/50 to-indigo-50/80 p-4 transition-all">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div class="flex items-start gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-200">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h4 class="text-xs font-black uppercase tracking-wider text-indigo-950 flex items-center gap-1.5">
-                                        <span>Lector de Hoja de Anotación</span>
-                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-700">OCR Local / IA</span>
-                                    </h4>
-                                    <p class="text-xs text-indigo-800/80 mt-0.5">
-                                        Sube o toma una foto del acta a pluma: detectará puntos y faltas por jugador automáticamente en menos de 1 segundo.
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="shrink-0">
-                                <button type="button" id="btnTriggerScoresheet" onclick="triggerScoresheetUpload()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow-sm hover:shadow transition">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                                    </svg>
-                                    <span id="btnScoresheetText">Subir o Tomar Foto</span>
-                                </button>
-                                <input type="file" id="scoresheetFileInput" accept="image/*,application/pdf" capture="environment" class="hidden" onchange="handleScoresheetFile(event)">
-                            </div>
-                        </div>
-
-                        <!-- Estado de escaneo en progreso (Spinner) -->
-                        <div id="scoresheetScanningStatus" class="hidden mt-3 p-3.5 bg-white/90 rounded-xl border border-indigo-200 shadow-sm flex items-center justify-center gap-3">
-                            <svg class="animate-spin h-5 w-5 text-indigo-600 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            <span class="text-xs font-semibold text-indigo-900 animate-pulse">
-                                Analizando acta FIBA con OCR Local... leyendo tanteo corrido y faltas...
-                            </span>
-                        </div>
-
-                        <!-- Resumen y Enlace del Acta Cargada -->
-                        <div id="scoresheetSuccessBadge" class="hidden mt-3 p-2.5 bg-emerald-50 rounded-lg border border-emerald-200 flex items-center justify-between text-xs text-emerald-800">
-                            <div class="flex items-center gap-2 truncate">
-                                <span>✅</span>
-                                <span class="font-medium truncate" id="scoresheetStatusText">Acta analizada con éxito.</span>
-                            </div>
-                            <div class="flex items-center gap-2 shrink-0">
-                                <a id="scoresheetFilePreviewLink" href="#" target="_blank" class="text-indigo-600 hover:text-indigo-800 font-bold underline text-[11px]">
-                                    Ver documento ↗
-                                </a>
-                                <button type="button" onclick="triggerScoresheetUpload()" class="text-gray-500 hover:text-gray-700 text-[11px] underline">
-                                    Cambiar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Marcadores Globales de Equipos -->
                     <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
                         <div class="grid grid-cols-7 gap-3 items-center">
@@ -97,7 +38,6 @@
                                     Equipo Local
                                 </label>
                                 <input type="number" name="local_team_score" id="modalLocalScore" min="0" value="0" required
-                                    oninput="calculateMatchOutcome()"
                                     class="block w-full text-center text-3xl font-black text-gray-900 rounded-xl border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 py-3">
                                 <span class="text-[11px] text-gray-500 mt-1 block font-medium">Local</span>
                             </div>
@@ -113,45 +53,52 @@
                                     Equipo Visitante
                                 </label>
                                 <input type="number" name="away_team_score" id="modalAwayScore" min="0" value="0" required
-                                    oninput="calculateMatchOutcome()"
                                     class="block w-full text-center text-3xl font-black text-gray-900 rounded-xl border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 py-3">
                                 <span class="text-[11px] text-gray-500 mt-1 block font-medium">Visitante</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Estado del Resultado (Ganador / Perdedor / Empate) -->
-                    <div id="finalScoreOutcomeCard" class="rounded-xl border p-4 transition-all duration-200">
-                        <div class="flex items-center gap-3">
-                            <div id="finalScoreOutcomeIcon" class="w-10 h-10 rounded-full flex items-center justify-center text-xl shrink-0">
-                                ⚖️
+                    <!-- SECCIÓN: Escanear Hoja de Anotación con OCR / IA -->
+                    <div class="rounded-xl border border-indigo-200 bg-gradient-to-r from-indigo-50/80 via-blue-50/50 to-indigo-50/80 px-4 py-2.5 transition-all">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <div class="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                </div>
+                                <h4 class="text-xs font-black uppercase tracking-wider text-indigo-950 flex items-center gap-1.5 truncate">
+                                    <span>Lector de Hoja de Anotación</span>
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-700 shrink-0">OCR / IA</span>
+                                </h4>
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <div class="text-xs font-bold uppercase tracking-wider text-gray-500 mb-0.5" id="finalScoreOutcomeTitle">
-                                    Resultado del Partido
-                                </div>
-                                <div class="text-sm font-bold text-gray-900 truncate" id="finalScoreOutcomeDesc">
-                                    Empate (0 - 0)
-                                </div>
-                                <div class="text-[11px] text-gray-500 mt-0.5" id="finalScoreOutcomeSub">
-                                    Ambos equipos sumarán los puntos asignados por empate.
-                                </div>
+                            <div class="shrink-0">
+                                <button type="button" id="btnTriggerScoresheet" onclick="triggerScoresheetUpload()" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow-sm hover:shadow transition">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                    </svg>
+                                    <span id="btnScoresheetText">Subir o Tomar Foto</span>
+                                </button>
+                                <input type="file" id="scoresheetFileInput" accept="image/*,application/pdf" capture="environment" class="hidden" onchange="handleScoresheetFile(event)">
                             </div>
+                        </div>
+
+                        <!-- Estado de escaneo en progreso (Spinner) -->
+                        <div id="scoresheetScanningStatus" class="hidden mt-2.5 p-2.5 bg-white/90 rounded-lg border border-indigo-200 shadow-sm flex items-center justify-center gap-2.5">
+                            <svg class="animate-spin h-4 w-4 text-indigo-600 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span class="text-xs font-semibold text-indigo-900 animate-pulse">
+                                Analizando acta FIBA con OCR... leyendo tanteo corrido y faltas...
+                            </span>
                         </div>
                     </div>
 
-                    <!-- SECCIÓN EDITABLE DE JUGADORES DETECTADOS (Human-in-the-loop) -->
+                    <!-- SECCIÓN EDITABLE DE JUGADORES DETECTADOS -->
                     <div id="scoresheetPlayersReviewSection" class="hidden space-y-3">
-                        <div class="flex items-center justify-between border-b border-gray-200 pb-2">
-                            <div>
-                                <h4 class="text-xs font-black uppercase tracking-wider text-gray-900 flex items-center gap-1.5">
-                                    <span>Verificación de Puntos y Faltas por Jugador</span>
-                                    <span class="text-xs font-normal text-gray-500">(Editable)</span>
-                                </h4>
-                                <p class="text-[11px] text-gray-500">Revisa los datos detectados por la IA. Puedes ajustar cualquier número antes de guardar.</p>
-                            </div>
-                        </div>
-
                         <!-- Selector de pestaña de equipo (Local / Visitante) -->
                         <div class="flex rounded-lg bg-gray-100 p-1">
                             <button type="button" id="tabBtnLocal" onclick="switchScoresheetTab('local')" class="flex-1 py-1.5 px-3 rounded-md text-xs font-bold transition shadow-sm bg-white text-gray-900">
@@ -166,9 +113,9 @@
 
                         <!-- Tabla de Jugadores Locales -->
                         <div id="playersTableLocalContainer" class="space-y-2">
-                            <div class="max-h-56 overflow-y-auto rounded-lg border border-gray-200 bg-white">
+                            <div class="rounded-lg border border-gray-200 bg-white overflow-hidden">
                                 <table class="min-w-full divide-y divide-gray-200 text-xs">
-                                    <thead class="bg-gray-50 sticky top-0 z-10 font-bold text-gray-600">
+                                    <thead class="bg-gray-50 font-bold text-gray-600">
                                         <tr>
                                             <th class="py-2 px-3 text-left w-16">Dorsal</th>
                                             <th class="py-2 px-3 text-left">Jugador</th>
@@ -191,9 +138,9 @@
 
                         <!-- Tabla de Jugadores Visitantes -->
                         <div id="playersTableAwayContainer" class="hidden space-y-2">
-                            <div class="max-h-56 overflow-y-auto rounded-lg border border-gray-200 bg-white">
+                            <div class="rounded-lg border border-gray-200 bg-white overflow-hidden">
                                 <table class="min-w-full divide-y divide-gray-200 text-xs">
-                                    <thead class="bg-gray-50 sticky top-0 z-10 font-bold text-gray-600">
+                                    <thead class="bg-gray-50 font-bold text-gray-600">
                                         <tr>
                                             <th class="py-2 px-3 text-left w-16">Dorsal</th>
                                             <th class="py-2 px-3 text-left">Jugador</th>
@@ -213,14 +160,6 @@
                                 </button>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Nota informativa inferior -->
-                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800 flex items-start gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-600 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>Al guardar, el partido cambiará automáticamente a <strong>Finalizado</strong>, registrando estadísticas y actualizando la tabla de posiciones en tiempo real.</span>
                     </div>
 
                     <!-- Botones de Acción -->
@@ -290,7 +229,6 @@
         document.getElementById('scoresheetUploadedPath').value = '';
         document.getElementById('scoresheetFileInput').value = '';
         document.getElementById('scoresheetScanningStatus').classList.add('hidden');
-        document.getElementById('scoresheetSuccessBadge').classList.add('hidden');
         document.getElementById('scoresheetPlayersReviewSection').classList.add('hidden');
         document.getElementById('scoresheetLocalPlayersList').innerHTML = '';
         document.getElementById('scoresheetAwayPlayersList').innerHTML = '';
@@ -362,18 +300,6 @@
 
                 // Guardar ruta del archivo
                 document.getElementById('scoresheetUploadedPath').value = data.scoresheet_path || '';
-                
-                // Mostrar badge de éxito y link de preview
-                const successBadge = document.getElementById('scoresheetSuccessBadge');
-                successBadge.classList.remove('hidden');
-                if (data.scoresheet_url) {
-                    document.getElementById('scoresheetFilePreviewLink').href = data.scoresheet_url;
-                    document.getElementById('scoresheetFilePreviewLink').classList.remove('hidden');
-                } else {
-                    document.getElementById('scoresheetFilePreviewLink').classList.add('hidden');
-                }
-
-                document.getElementById('scoresheetStatusText').innerText = data.confidence_notes || 'Acta analizada con éxito.';
                 document.getElementById('btnScoresheetText').innerText = 'Cambiar Foto';
 
                 // Cargar listas de jugadores
@@ -500,42 +426,7 @@
     }
 
     function calculateMatchOutcome() {
-        const localScore = parseInt(document.getElementById('modalLocalScore').value, 10) || 0;
-        const awayScore = parseInt(document.getElementById('modalAwayScore').value, 10) || 0;
-
-        const card = document.getElementById('finalScoreOutcomeCard');
-        const icon = document.getElementById('finalScoreOutcomeIcon');
-        const title = document.getElementById('finalScoreOutcomeTitle');
-        const desc = document.getElementById('finalScoreOutcomeDesc');
-        const sub = document.getElementById('finalScoreOutcomeSub');
-
-        const diff = Math.abs(localScore - awayScore);
-
-        if (localScore > awayScore) {
-            card.className = 'rounded-xl border border-emerald-200 bg-emerald-50 p-4 transition-all duration-200';
-            icon.className = 'w-10 h-10 rounded-full flex items-center justify-center text-xl shrink-0 bg-emerald-100 text-emerald-700';
-            icon.innerHTML = '🏆';
-            title.innerText = 'Victoria Local';
-            title.className = 'text-xs font-bold uppercase tracking-wider text-emerald-800 mb-0.5';
-            desc.innerHTML = `<span class="text-emerald-900 font-extrabold">${currentFinalScoreLocalName}</span> gana por <span class="text-emerald-700 font-black">+${diff} pts</span>`;
-            sub.innerHTML = `Perdedor: <span class="font-medium text-gray-700">${currentFinalScoreAwayName}</span>`;
-        } else if (awayScore > localScore) {
-            card.className = 'rounded-xl border border-emerald-200 bg-emerald-50 p-4 transition-all duration-200';
-            icon.className = 'w-10 h-10 rounded-full flex items-center justify-center text-xl shrink-0 bg-emerald-100 text-emerald-700';
-            icon.innerHTML = '🏆';
-            title.innerText = 'Victoria Visitante';
-            title.className = 'text-xs font-bold uppercase tracking-wider text-emerald-800 mb-0.5';
-            desc.innerHTML = `<span class="text-emerald-900 font-extrabold">${currentFinalScoreAwayName}</span> gana por <span class="text-emerald-700 font-black">+${diff} pts</span>`;
-            sub.innerHTML = `Perdedor: <span class="font-medium text-gray-700">${currentFinalScoreLocalName}</span>`;
-        } else {
-            card.className = 'rounded-xl border border-amber-200 bg-amber-50 p-4 transition-all duration-200';
-            icon.className = 'w-10 h-10 rounded-full flex items-center justify-center text-xl shrink-0 bg-amber-100 text-amber-700';
-            icon.innerHTML = '⚖️';
-            title.innerText = 'Empate';
-            title.className = 'text-xs font-bold uppercase tracking-wider text-amber-800 mb-0.5';
-            desc.innerHTML = `Empate a <span class="font-black text-amber-900">${localScore}</span> puntos`;
-            sub.innerHTML = `${currentFinalScoreLocalName} y ${currentFinalScoreAwayName} se reparten puntos de empate.`;
-        }
+        // Tarjeta de resultado eliminada según diseño simplificado
     }
 
     async function submitSetFinalScore(event) {
