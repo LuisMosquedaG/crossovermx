@@ -42,10 +42,10 @@
                                 <div>
                                     <h4 class="text-xs font-black uppercase tracking-wider text-indigo-950 flex items-center gap-1.5">
                                         <span>Lector de Hoja de Anotación</span>
-                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-700">IA Gemini</span>
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-700">OCR Local / IA</span>
                                     </h4>
                                     <p class="text-xs text-indigo-800/80 mt-0.5">
-                                        Sube o toma una foto del acta a pluma: detectará puntos y faltas por jugador automáticamente.
+                                        Sube o toma una foto del acta a pluma: detectará puntos y faltas por jugador automáticamente en menos de 1 segundo.
                                     </p>
                                 </div>
                             </div>
@@ -67,7 +67,7 @@
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
                             <span class="text-xs font-semibold text-indigo-900 animate-pulse">
-                                Analizando hoja manuscrita con IA Gemini... leyendo puntos y faltas...
+                                Analizando acta FIBA con OCR Local... leyendo tanteo corrido y faltas...
                             </span>
                         </div>
 

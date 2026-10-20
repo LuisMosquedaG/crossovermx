@@ -155,14 +155,98 @@ DEVUELVE ÚNICAMENTE UN JSON CON ESTA ESTRUCTURA EXACTA:
 }
 PROMPT;
 
-        $provider = env('SCORESHEET_PROVIDER', 'openrouter');
-        $openRouterKey = config('services.openrouter.api_key', env('OPENROUTER_API_KEY'));
+        $provider = env('SCORESHEET_PROVIDER', 'local_ocr');
 
-        if ($provider === 'openrouter' && !empty($openRouterKey)) {
-            return $this->scanWithOpenRouter($base64Data, $mimeType, $prompt, $localPlayers, $awayPlayers);
+        // 1. Intentar primero con el Motor de OCR Local (si está configurado o como predeterminado)
+        if ($provider === 'local_ocr') {
+            try {
+                return $this->scanWithLocalOcr($filePath, $game, $localPlayers, $awayPlayers);
+            } catch (\Throwable $e) {
+                Log::warning("OCR Local falló ({$e->getMessage()}), recurriendo a respaldo en nube...");
+            }
+        }
+
+        // 2. Si OCR local no está activo o falló, intentar con OpenRouter
+        $openRouterKey = config('services.openrouter.api_key', env('OPENROUTER_API_KEY'));
+        if (($provider === 'openrouter' || $provider === 'local_ocr') && !empty($openRouterKey)) {
+            try {
+                return $this->scanWithOpenRouter($base64Data, $mimeType, $prompt, $localPlayers, $awayPlayers);
+            } catch (\Throwable $e) {
+                Log::warning("OpenRouter falló ({$e->getMessage()}), recurriendo a Gemini...");
+            }
         }
 
         return $this->scanWithGemini($base64Data, $mimeType, $prompt, $localPlayers, $awayPlayers);
+    }
+
+    /**
+     * Procesa la hoja utilizando el motor de OCR local y determinístico (Python).
+     */
+    protected function scanWithLocalOcr(string $filePath, Game $game, $localPlayers, $awayPlayers): array
+    {
+        $pythonBin = env('PYTHON_BIN', 'python');
+        $scriptPath = base_path('scripts/ocr/scan_scoresheet.py');
+
+        if (!file_exists($scriptPath)) {
+            throw new \Exception("Script de OCR local no encontrado en: {$scriptPath}");
+        }
+
+        $localRosterData = $localPlayers->map(fn($p) => [
+            'id' => $p->id,
+            'name' => $p->name,
+            'number' => $p->number,
+        ])->values()->toArray();
+
+        $awayRosterData = $awayPlayers->map(fn($p) => [
+            'id' => $p->id,
+            'name' => $p->name,
+            'number' => $p->number,
+        ])->values()->toArray();
+
+        $tempLocalRoster = tempnam(sys_get_temp_dir(), 'roster_loc_');
+        $tempAwayRoster = tempnam(sys_get_temp_dir(), 'roster_away_');
+
+        file_put_contents($tempLocalRoster, json_encode($localRosterData, JSON_UNESCAPED_UNICODE));
+        file_put_contents($tempAwayRoster, json_encode($awayRosterData, JSON_UNESCAPED_UNICODE));
+
+        $localName = escapeshellarg($game->localTeam?->name ?? 'Equipo Local');
+        $awayName = escapeshellarg($game->awayTeam?->name ?? 'Equipo Visitante');
+        $escapedImagePath = escapeshellarg($filePath);
+        $escapedLocalRoster = escapeshellarg($tempLocalRoster);
+        $escapedAwayRoster = escapeshellarg($tempAwayRoster);
+        $escapedScript = escapeshellarg($scriptPath);
+
+        $cmd = "{$pythonBin} {$escapedScript} --image {$escapedImagePath} --local-roster {$escapedLocalRoster} --away-roster {$escapedAwayRoster} --local-name {$localName} --away-name {$awayName} 2>&1";
+
+        Log::info("Ejecutando OCR Local: {$cmd}");
+        $output = shell_exec($cmd);
+
+        @unlink($tempLocalRoster);
+        @unlink($tempAwayRoster);
+
+        if (!$output) {
+            throw new \Exception("El motor de OCR local no generó ninguna salida.");
+        }
+
+        $output = trim($output);
+        if (!mb_check_encoding($output, 'UTF-8')) {
+            $output = mb_convert_encoding($output, 'UTF-8', 'ISO-8859-1, WINDOWS-1252, CP850');
+        }
+
+        // Buscar bloque JSON en la salida
+        if (preg_match('/\{[\s\S]*\}/', $output, $matches)) {
+            $parsed = json_decode($matches[0], true);
+        } else {
+            $parsed = json_decode($output, true);
+        }
+
+        if (!is_array($parsed) || empty($parsed['success'])) {
+            $jsonErr = json_last_error_msg();
+            $errDetail = is_array($parsed) && isset($parsed['error']) ? $parsed['error'] : "({$jsonErr}) " . substr($output, 0, 500);
+            throw new \Exception("Fallo en OCR Local: {$errDetail}");
+        }
+
+        return $this->mergeWithFullRoster($parsed, $localPlayers, $awayPlayers);
     }
 
     /**
