@@ -53,10 +53,12 @@ class ClientController extends Controller
             'phone' => 'nullable|string|max:50',
             'contact_name' => 'nullable|string|max:255',
             'prefix' => 'required|string|max:20|unique:clients,prefix', // Prefix único
-            'logo' => 'nullable|image|max:2048'
+            'logo' => 'nullable|image|max:2048',
+            'storage_limit_mb' => 'nullable|integer|min:50|max:1048576',
         ]);
 
-        $data = $request->only(['name', 'email', 'phone', 'contact_name', 'prefix']);
+        $data = $request->only(['name', 'email', 'phone', 'contact_name', 'prefix', 'storage_limit_mb']);
+        $data['storage_limit_mb'] = (int) ($request->input('storage_limit_mb') ?: 1024);
 
         // 2. INICIO DE TRANSACCIÓN: Todo o nada
         DB::transaction(function () use ($request, $data) {
@@ -111,10 +113,14 @@ class ClientController extends Controller
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:50',
             'contact_name' => 'nullable|string|max:255',
-            'logo' => 'nullable|image|max:2048'
+            'logo' => 'nullable|image|max:2048',
+            'storage_limit_mb' => 'nullable|integer|min:50|max:1048576',
         ]);
 
-        $data = $request->only(['name', 'email', 'phone', 'contact_name', 'prefix']);
+        $data = $request->only(['name', 'email', 'phone', 'contact_name', 'prefix', 'storage_limit_mb']);
+        if ($request->has('storage_limit_mb')) {
+            $data['storage_limit_mb'] = (int) ($request->input('storage_limit_mb') ?: 1024);
+        }
 
         if ($request->hasFile('logo')) {
             if ($client->logo_path && Storage::disk('public')->exists($client->logo_path)) {
@@ -131,7 +137,7 @@ class ClientController extends Controller
 
     public function destroy(Client $client)
     {
-        $client->delete();
-        return redirect()->route('clients.index')->with('message', 'Cliente eliminado exitosamente.');
+        $client->purgeAllData();
+        return redirect()->route('clients.index')->with('message', 'Cliente y toda su información fueron eliminados exitosamente.');
     }
 }

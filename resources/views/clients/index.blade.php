@@ -36,13 +36,14 @@
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Logo</th>
                                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Prefijo</th>
                                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Organización</th>
                                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Contacto</th>
                                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
-                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Espacio</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
@@ -67,25 +68,6 @@
                                         @endphp
 
                                         <tr>
-                                            <td class="px-6 py-4 whitespace-nowrap flex justify-center items-center">
-                                                @if($client->logo_path)
-                                                    <img src="{{ asset('storage/' . $client->logo_path) }}" alt="{{ $client->name }}" class="h-10 w-10 rounded-full object-cover ring-2 ring-gray-100">
-                                                @else
-                                                    <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-bold">
-                                                        {{ substr($client->name, 0, 1) }}
-                                                    </div>
-                                                @endif
-                                            </td>
-                                            
-                                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
-                                                {{ $client->prefix ?? '-' }}
-                                            </td>
-                                            
-                                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-gray-900">{{ $client->name }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{{ $client->contact_name ?? '-' }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{{ $client->email ?? '-' }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{{ $client->phone ?? '-' }}</td>
-                                            
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                                                 <div class="flex items-center justify-center space-x-3">
                                                     
@@ -114,10 +96,10 @@
                                                         </svg>
                                                     </button>
 
-                                                    <!-- BOTÓN ELIMINAR (Mantenido igual) -->
-                                                    <form action="{{ route('clients.destroy', $client) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este cliente?');" class="inline">
+                                                    <!-- BOTÓN ELIMINAR -->
+                                                    <form action="{{ route('clients.destroy', $client) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este cliente? Se eliminará de forma permanente toda su información, torneos, equipos, jugadores, canchas, usuarios y archivos asociados.');" class="inline">
                                                         @csrf @method('DELETE')
-                                                        <button type="submit" class="text-red-600 hover:text-red-900" title="Eliminar">
+                                                        <button type="submit" class="text-red-600 hover:text-red-900" title="Eliminar cliente y toda su información">
                                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                                             </svg>
@@ -125,10 +107,35 @@
                                                     </form>
                                                 </div>
                                             </td>
+
+                                            <td class="px-6 py-4 whitespace-nowrap flex justify-center items-center">
+                                                @if($client->logo_path)
+                                                    <img src="{{ asset('storage/' . $client->logo_path) }}" alt="{{ $client->name }}" class="h-10 w-10 rounded-full object-cover ring-2 ring-gray-100">
+                                                @else
+                                                    <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-bold">
+                                                        {{ substr($client->name, 0, 1) }}
+                                                    </div>
+                                                @endif
+                                            </td>
+                                            
+                                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                                                {{ $client->prefix ?? '-' }}
+                                            </td>
+                                            
+                                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-gray-900">{{ $client->name }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{{ $client->contact_name ?? '-' }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{{ $client->email ?? '-' }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{{ $client->phone ?? '-' }}</td>
+                                            
+                                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-semibold">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-orange-700 border border-orange-200">
+                                                    {{ $client->formatted_storage_limit }}
+                                                </span>
+                                            </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="7" class="px-6 py-4 text-center text-gray-500">No hay clientes registrados.</td>
+                                            <td colspan="8" class="px-6 py-4 text-center text-gray-500">No hay clientes registrados.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -187,6 +194,34 @@
                                     <div class="mb-4">
                                         <x-input-label for="modal_email" :value="__('Correo Electrónico')" />
                                         <x-text-input id="modal_email" class="block mt-1 w-full" type="email" name="email" />
+                                    </div>
+
+                                    <!-- LÍMITE DE ESPACIO DE ALMACENAMIENTO -->
+                                    <div class="mb-4">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <x-input-label for="modal_storage_limit_mb" :value="__('Límite de Almacenamiento')" />
+                                            <span id="storage_limit_display" class="text-xs font-semibold text-orange-700 bg-orange-50 px-2 py-0.5 rounded border border-orange-200">1 GB (1024 MB)</span>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mb-2">Espacio asignado para imágenes y documentos de este cliente:</p>
+
+                                        <!-- Botones de selección rápida -->
+                                        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-2">
+                                            <button type="button" onclick="setStorageLimit(512)" class="storage-preset-btn px-2 py-1.5 text-xs font-medium rounded border border-gray-300 hover:border-orange-500 hover:bg-orange-50 text-gray-700 transition" data-mb="512">500 MB</button>
+                                            <button type="button" onclick="setStorageLimit(1024)" class="storage-preset-btn px-2 py-1.5 text-xs font-bold rounded border border-orange-500 bg-orange-50 text-orange-700 transition" data-mb="1024">1 GB</button>
+                                            <button type="button" onclick="setStorageLimit(2048)" class="storage-preset-btn px-2 py-1.5 text-xs font-medium rounded border border-gray-300 hover:border-orange-500 hover:bg-orange-50 text-gray-700 transition" data-mb="2048">2 GB</button>
+                                            <button type="button" onclick="setStorageLimit(3072)" class="storage-preset-btn px-2 py-1.5 text-xs font-medium rounded border border-gray-300 hover:border-orange-500 hover:bg-orange-50 text-gray-700 transition" data-mb="3072">3 GB</button>
+                                            <button type="button" onclick="setStorageLimit(5120)" class="storage-preset-btn px-2 py-1.5 text-xs font-medium rounded border border-gray-300 hover:border-orange-500 hover:bg-orange-50 text-gray-700 transition" data-mb="5120">5 GB</button>
+                                            <button type="button" onclick="setStorageLimit(10240)" class="storage-preset-btn px-2 py-1.5 text-xs font-medium rounded border border-gray-300 hover:border-orange-500 hover:bg-orange-50 text-gray-700 transition" data-mb="10240">10 GB</button>
+                                        </div>
+
+                                        <!-- Campo numérico en MB -->
+                                        <div class="relative mt-1">
+                                            <x-text-input id="modal_storage_limit_mb" class="block w-full pr-14" type="number" name="storage_limit_mb" min="50" step="50" value="1024" required oninput="syncStorageLimitDisplay(this.value)" />
+                                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-xs text-gray-500 font-semibold">
+                                                MB
+                                            </div>
+                                        </div>
+                                        <p class="text-[11px] text-gray-500 mt-1">Este valor definirá el límite y el porcentaje que verá el cliente en su barra de almacenamiento de perfil.</p>
                                     </div>
 
                                     <div class="mb-4">
@@ -290,11 +325,48 @@
     </div>
 
     <script>
+        function formatMbToHuman(mb) {
+            const num = parseInt(mb, 10);
+            if (isNaN(num) || num <= 0) return '0 MB';
+            if (num >= 1024) {
+                const gb = (num / 1024);
+                const formattedGb = (gb % 1 === 0) ? gb : gb.toFixed(1);
+                return `${formattedGb} GB (${num} MB)`;
+            }
+            return `${num} MB`;
+        }
+
+        function setStorageLimit(mb) {
+            const input = document.getElementById('modal_storage_limit_mb');
+            if (input) {
+                input.value = mb;
+                syncStorageLimitDisplay(mb);
+            }
+        }
+
+        function syncStorageLimitDisplay(mb) {
+            const num = parseInt(mb, 10) || 0;
+            const display = document.getElementById('storage_limit_display');
+            if (display) {
+                display.innerText = formatMbToHuman(num);
+            }
+
+            document.querySelectorAll('.storage-preset-btn').forEach(btn => {
+                const btnMb = parseInt(btn.getAttribute('data-mb'), 10);
+                if (btnMb === num) {
+                    btn.className = 'storage-preset-btn px-2 py-1.5 text-xs font-bold rounded border border-orange-500 bg-orange-50 text-orange-700 shadow-sm transition';
+                } else {
+                    btn.className = 'storage-preset-btn px-2 py-1.5 text-xs font-medium rounded border border-gray-300 text-gray-700 hover:border-orange-400 hover:bg-orange-50 transition';
+                }
+            });
+        }
+
         function openCreateModal() {
             resetForm();
             document.getElementById('modalTitle').innerText = 'Crear Nuevo Cliente';
             document.getElementById('form_method').value = 'POST';
             document.getElementById('clientForm').action = '{{ route("clients.store") }}';
+            setStorageLimit(1024);
 
             const saveButton = document.getElementById('saveButton');
             saveButton.className = 'inline-flex items-center px-4 py-2 bg-orange-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-orange-700 focus:bg-orange-700 active:bg-orange-800 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition ease-in-out duration-150 w-full sm:ml-3 sm:w-auto';
@@ -309,7 +381,7 @@
             document.getElementById('clientForm').action = '{{ route("clients.update", ":id") }}'.replace(':id', client.id);
 
             const saveButton = document.getElementById('saveButton');
-            saveButton.className = 'inline-flex items-center px-4 py-2 bg-blue-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150 w-full sm:ml-3 sm:w-auto';
+            saveButton.className = 'inline-flex items-center px-4 py-2 bg-orange-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-orange-700 focus:bg-orange-700 active:bg-orange-800 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition ease-in-out duration-150 w-full sm:ml-3 sm:w-auto';
 
             // Rellenar datos
             document.getElementById('modal_name').value = client.name;
@@ -317,6 +389,7 @@
             document.getElementById('modal_contact').value = client.contact_name || '';
             document.getElementById('modal_phone').value = client.phone || '';
             document.getElementById('modal_email').value = client.email || '';
+            setStorageLimit(client.storage_limit_mb || 1024);
 
             document.getElementById('clientModal').classList.remove('hidden');
         }
@@ -327,6 +400,7 @@
 
         function resetForm() {
             document.getElementById('clientForm').reset();
+            setStorageLimit(1024);
         }
 
         async function submitForm(event) {

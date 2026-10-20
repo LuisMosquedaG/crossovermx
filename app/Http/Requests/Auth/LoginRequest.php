@@ -49,6 +49,16 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        // Si el usuario pertenece a una organización que fue eliminada o no existe
+        $user = Auth::user();
+        if ($user && $user->client_id && !$user->client) {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'La organización asociada a esta cuenta ha sido eliminada o no se encuentra activa.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 
