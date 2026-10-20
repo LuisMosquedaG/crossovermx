@@ -11,16 +11,28 @@ import sys
 import os
 import json
 import argparse
-import numpy as np
 
 # Asegurar importación de módulos locales
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
 
-from perspective_aligner import align_scoresheet, extract_tables
-from foul_detector import detect_team_fouls
-from running_score_reader import read_running_score
+try:
+    import numpy as np
+    import cv2
+    from perspective_aligner import align_scoresheet, extract_tables
+    from foul_detector import detect_team_fouls
+    from running_score_reader import read_running_score
+except Exception as e:
+    err_msg = str(e)
+    hint = "pip install -r scripts/ocr/requirements.txt (o pip3 install opencv-python-headless numpy pypdfium2)"
+    if "cv2" in err_msg or "libGL" in err_msg:
+        hint = "Ejecuta en el VPS: pip3 install opencv-python-headless numpy pypdfium2 (o apt-get install -y libgl1 libglib2.0-0 si usas opencv normal)"
+    print(json.dumps({
+        "success": False,
+        "error": f"Error de dependencias en el servidor Python: {err_msg}. Solución recomendada: {hint}"
+    }, ensure_ascii=True))
+    sys.exit(1)
 
 def parse_roster_arg(roster_arg):
     """Parsea el roster desde un string JSON o una ruta a archivo JSON."""

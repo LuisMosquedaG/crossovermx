@@ -339,7 +339,16 @@
                 body: formData
             });
 
-            const data = await response.json();
+            let data = null;
+            const responseText = await response.text();
+            try {
+                data = JSON.parse(responseText);
+            } catch (jsonErr) {
+                console.error('Respuesta no JSON del servidor:', responseText);
+                const cleanText = responseText.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim();
+                alert(`Error en el servidor (${response.status}): ${cleanText.substring(0, 250) || 'El servidor devolvió una respuesta no válida.'}`);
+                return;
+            }
 
             if (response.ok && data.success) {
                 // Actualizar marcadores sugeridos
@@ -385,8 +394,8 @@
                 alert(data.message || 'Error al procesar la hoja de anotación.');
             }
         } catch (error) {
-            console.error('Error al procesar hoja con Gemini:', error);
-            alert('Error de conexión o procesamiento al analizar la hoja.');
+            console.error('Error al procesar hoja:', error);
+            alert(error.message || 'Error de conexión al analizar la hoja.');
         } finally {
             scanningStatus.classList.add('hidden');
             submitBtn.disabled = false;

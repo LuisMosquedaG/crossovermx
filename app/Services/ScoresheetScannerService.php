@@ -156,13 +156,28 @@ DEVUELVE ÚNICAMENTE UN JSON CON ESTA ESTRUCTURA EXACTA:
 PROMPT;
 
         $provider = env('SCORESHEET_PROVIDER', 'local_ocr');
+        $fallbackToCloud = filter_var(env('SCORESHEET_FALLBACK_TO_AI', false), FILTER_VALIDATE_BOOLEAN);
 
         // 1. Intentar primero con el Motor de OCR Local (si está configurado o como predeterminado)
         if ($provider === 'local_ocr') {
             try {
                 return $this->scanWithLocalOcr($filePath, $game, $localPlayers, $awayPlayers);
             } catch (\Throwable $e) {
-                Log::warning("OCR Local falló ({$e->getMessage()}), recurriendo a respaldo en nube...");
+                Log::warning("OCR Local falló: {$e->getMessage()}");
+
+                // Si no se activó explícitamente el fallback o no hay API keys configuradas,
+                // relanzamos el error de inmediato para un diagnóstico rápido y claro
+                if (!$fallbackToCloud) {
+                    throw new \Exception($e->getMessage());
+                }
+
+                $openRouterKey = config('services.openrouter.api_key', env('OPENROUTER_API_KEY'));
+                $geminiKey = config('services.gemini.api_key', env('GEMINI_API_KEY'));
+                if (empty($openRouterKey) && empty($geminiKey)) {
+                    throw new \Exception($e->getMessage());
+                }
+
+                Log::info("Recurriendo a respaldo en nube...");
             }
         }
 
@@ -180,11 +195,52 @@ PROMPT;
     }
 
     /**
+     * Detecta el binario de Python adecuado para el entorno actual (Windows o Linux/VPS).
+     */
+    protected function getPythonBinary(): string
+    {
+        $configured = env('PYTHON_BIN');
+        if (!empty($configured)) {
+            return $configured;
+        }
+
+        // Si existe un entorno virtual local en el proyecto, priorizarlo
+        $venvCandidates = [
+            base_path('venv/bin/python3'),
+            base_path('venv/bin/python'),
+            base_path('.venv/bin/python3'),
+            base_path('.venv/bin/python'),
+            base_path('venv/Scripts/python.exe'),
+            base_path('.venv/Scripts/python.exe'),
+        ];
+        foreach ($venvCandidates as $venvPath) {
+            if (file_exists($venvPath) && is_executable($venvPath)) {
+                return $venvPath;
+            }
+        }
+
+        if (PHP_OS_FAMILY === 'Windows') {
+            return 'python';
+        }
+
+        // En Linux / VPS probar ejecutables comunes en PATH
+        $candidates = ['python3', 'python', '/usr/bin/python3', '/usr/local/bin/python3', '/usr/bin/python'];
+        foreach ($candidates as $bin) {
+            $path = @shell_exec("command -v {$bin} 2>/dev/null");
+            if (!empty($path) && trim($path) !== '') {
+                return trim($path);
+            }
+        }
+
+        return 'python3';
+    }
+
+    /**
      * Procesa la hoja utilizando el motor de OCR local y determinístico (Python).
      */
     protected function scanWithLocalOcr(string $filePath, Game $game, $localPlayers, $awayPlayers): array
     {
-        $pythonBin = env('PYTHON_BIN', 'python');
+        $pythonBin = $this->getPythonBinary();
         $scriptPath = base_path('scripts/ocr/scan_scoresheet.py');
 
         if (!file_exists($scriptPath)) {
@@ -215,8 +271,9 @@ PROMPT;
         $escapedLocalRoster = escapeshellarg($tempLocalRoster);
         $escapedAwayRoster = escapeshellarg($tempAwayRoster);
         $escapedScript = escapeshellarg($scriptPath);
+        $escapedPythonBin = escapeshellcmd($pythonBin);
 
-        $cmd = "{$pythonBin} {$escapedScript} --image {$escapedImagePath} --local-roster {$escapedLocalRoster} --away-roster {$escapedAwayRoster} --local-name {$localName} --away-name {$awayName} 2>&1";
+        $cmd = "{$escapedPythonBin} {$escapedScript} --image {$escapedImagePath} --local-roster {$escapedLocalRoster} --away-roster {$escapedAwayRoster} --local-name {$localName} --away-name {$awayName} 2>&1";
 
         Log::info("Ejecutando OCR Local: {$cmd}");
         $output = shell_exec($cmd);
@@ -225,7 +282,7 @@ PROMPT;
         @unlink($tempAwayRoster);
 
         if (!$output) {
-            throw new \Exception("El motor de OCR local no generó ninguna salida.");
+            throw new \Exception("El motor de OCR local no generó ninguna salida al ejecutar '{$escapedPythonBin}'. Verifica que Python esté instalado y sea accesible.");
         }
 
         $output = trim($output);
@@ -243,7 +300,7 @@ PROMPT;
         if (!is_array($parsed) || empty($parsed['success'])) {
             $jsonErr = json_last_error_msg();
             $errDetail = is_array($parsed) && isset($parsed['error']) ? $parsed['error'] : "({$jsonErr}) " . substr($output, 0, 500);
-            throw new \Exception("Fallo en OCR Local: {$errDetail}");
+            throw new \Exception("{$errDetail}");
         }
 
         return $this->mergeWithFullRoster($parsed, $localPlayers, $awayPlayers);
