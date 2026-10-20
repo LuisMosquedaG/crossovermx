@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Player;
 use App\Models\Team;
+use App\Services\TenantStorageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -20,9 +21,6 @@ class PlayerController extends Controller
         }
 
         if ($search) {
-            // --- CAMBIO IMPORTANTE ---
-            // ELIMINAMOS la búsqueda por 'rfc' y 'curp' usando LIKE
-            // porque los datos están encriptados en la BD.
             // Mantenemos búsqueda por nombre, número, equipo, etc.
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -121,13 +119,15 @@ class PlayerController extends Controller
             if ($team) {
                 $data['client_id'] = $team->client_id;
             } else {
-                // Devolvemos error JSON en lugar de redirección HTML
                 return response()->json(['message' => 'El equipo seleccionado no es válido.'], 422);
             }
 
-            // 3. Imagen
+            $clientId = $data['client_id'] ?? (auth()->check() ? auth()->user()->client_id : null);
+
+            // 3. Imagen aislada por cliente
             if ($request->hasFile('image')) {
-                $imagePath = $request->file('image')->store('players', 'public');
+                $targetPath = TenantStorageService::path('players', $clientId);
+                $imagePath = $request->file('image')->store($targetPath, 'public');
                 $data['image_path'] = $imagePath;
             }
 
@@ -142,7 +142,6 @@ class PlayerController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            // AQUÍ CAPTURAMOS EL ERROR REAL Y LO DEVOLVEMOS AL FRONTEND
             return response()->json([
                 'message' => 'Error del servidor: ' . $e->getMessage()
             ], 500);
@@ -151,11 +150,10 @@ class PlayerController extends Controller
 
     public function update(Request $request, Player $player)
     {
-        // 1. Validación (Mantén tu validación existente)
         $request->validate([
             'name' => 'required|string|max:255',
             'number' => [
-                'required',
+                'required', 
                 'string',
                 'max:3',
                 'regex:/^[0-9]{1,3}$/',
@@ -221,33 +219,34 @@ class PlayerController extends Controller
         $data = $request->all();
         
         // Lógica de equipo/cliente
+        $clientId = $player->client_id;
         $team = Team::find($request->team_id);
         if ($team) {
             $data['client_id'] = $team->client_id;
+            $clientId = $team->client_id;
         }
+        $clientId = $clientId ?? (auth()->check() ? auth()->user()->client_id : null);
 
-        // Imagen
+        // Imagen aislada por cliente
         if ($request->hasFile('image')) {
-            if ($player->image_path) {
+            if ($player->image_path && Storage::disk('public')->exists($player->image_path)) {
                 Storage::disk('public')->delete($player->image_path);
             }
-            $imagePath = $request->file('image')->store('players', 'public');
+            $targetPath = TenantStorageService::path('players', $clientId);
+            $imagePath = $request->file('image')->store($targetPath, 'public');
             $data['image_path'] = $imagePath;
         }
 
         // Actualizar
         $player->update($data);
 
-        // --- CAMBIO CLAVE: RESPUESTA CONDICIONAL ---
         if ($request->wantsJson()) {
-            // Si la petición es AJAX (nuestro modal), devolvemos JSON
             return response()->json([
                 'success' => true, 
                 'message' => 'Jugador actualizado exitosamente.'
             ]);
         }
 
-        // Si la petición es normal (página de jugadores), redirigimos
         return redirect()->route('players.index')->with('message', 'Jugador actualizado exitosamente.');
     }
 

@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Court;
+use App\Services\TenantStorageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class CourtController extends Controller
 {
- public function index(Request $request)
+    public function index(Request $request)
     {
         // Obtenemos el término de búsqueda, si existe
         $search = $request->input('search');
@@ -16,7 +17,7 @@ class CourtController extends Controller
         // Iniciamos la consulta
         $query = Court::query();
 
-                // --- NUEVO: FILTRO POR CLIENTE ---
+        // --- NUEVO: FILTRO POR CLIENTE ---
         // Solo mostrar canchas del cliente del usuario logueado
         if (auth()->check() && auth()->user()->client_id) {
             $query->where('client_id', auth()->user()->client_id);
@@ -37,6 +38,7 @@ class CourtController extends Controller
 
         return view('courts.index', compact('courts', 'search'));
     }
+
     /**
      * Store a newly created resource in storage.
      */
@@ -52,15 +54,16 @@ class CourtController extends Controller
 
         $data = $request->all();
 
-                // --- NUEVO: ASIGNAR CLIENTE DEL USUARIO LOGUEADO ---
+        // --- ASIGNAR CLIENTE DEL USUARIO LOGUEADO ---
         if (auth()->check() && auth()->user()->client_id) {
             $data['client_id'] = auth()->user()->client_id;
         }
-        // --------------------------------------------------
 
-        // Manejo de la subida de la imagen
+        // Manejo de la subida de la imagen aislada por cliente
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('courts', 'public');
+            $clientId = $data['client_id'] ?? (auth()->check() ? auth()->user()->client_id : null);
+            $targetPath = TenantStorageService::path('courts', $clientId);
+            $imagePath = $request->file('image')->store($targetPath, 'public');
             $data['image_path'] = $imagePath;
         }
 
@@ -90,19 +93,19 @@ class CourtController extends Controller
 
         $data = $request->all();
 
-                // --- NUEVO: ASIGNAR CLIENTE AL ACTUALIZAR (Por seguridad) ---
+        // --- ASIGNAR CLIENTE AL ACTUALIZAR (Por seguridad) ---
         if (auth()->check() && auth()->user()->client_id) {
             $data['client_id'] = auth()->user()->client_id;
         }
-        // ----------------------------------------------------------
 
         // Manejo de la subida de la imagen al editar
         if ($request->hasFile('image')) {
-            // Opcional: Eliminar la imagen anterior si existe
-            // if ($court->image_path) {
-            //     Storage::disk('public')->delete($court->image_path);
-            // }
-            $imagePath = $request->file('image')->store('courts', 'public');
+            if ($court->image_path && Storage::disk('public')->exists($court->image_path)) {
+                Storage::disk('public')->delete($court->image_path);
+            }
+            $clientId = $data['client_id'] ?? $court->client_id ?? (auth()->check() ? auth()->user()->client_id : null);
+            $targetPath = TenantStorageService::path('courts', $clientId);
+            $imagePath = $request->file('image')->store($targetPath, 'public');
             $data['image_path'] = $imagePath;
         }
 
@@ -129,25 +132,20 @@ class CourtController extends Controller
 
     public function updateSchedules(Request $request, Court $court)
     {
-        // --- CORRECCIÓN: Si viene un string vacío "", lo convertimos a array vacío [] ---
-        // Esto evita el error de validación de Laravel cuando borras los datos
+        // Si viene un string vacío "", lo convertimos a array vacío []
         if ($request->has('schedules') && $request->input('schedules') === "") {
             $request->merge(['schedules' => []]);
         }
 
         $request->validate([
-            // Usamos 'sometimes' para que pase si la llave no existe o es null
             'schedules' => 'sometimes|array', 
             'schedules.*.day' => 'required|integer|min:0|max:6',
             'schedules.*.start_time' => 'required|date_format:H:i',
             'schedules.*.end_time' => 'required|date_format:H:i|after:schedules.*.start_time',
         ]);
 
-        // Eliminamos los horarios anteriores de esta cancha
-        // (Si schedules está vacío, esto simplemente limpia todo)
         $court->schedules()->delete();
 
-        // Creamos los nuevos horarios solo si el array no está vacío
         if (!empty($request->schedules)) {
             foreach ($request->schedules as $schedule) {
                 $court->schedules()->create([
@@ -162,11 +160,10 @@ class CourtController extends Controller
     }
 
     /**
-    * Obtiene los horarios de una cancha en formato JSON.
-    */
+     * Obtiene los horarios de una cancha en formato JSON.
+     */
     public function getSchedules(Court $court)
     {
-        // Devolvemos la colección de horarios
         return response()->json($court->schedules);
     }
 }

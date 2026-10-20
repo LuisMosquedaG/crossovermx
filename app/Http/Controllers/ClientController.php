@@ -3,24 +3,26 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
-use App\Models\User;       // <--- AGREGAR ESTO
-use App\Models\Role;        // <--- AGREGAR ESTO
+use App\Models\User;
+use App\Models\Role;
+use App\Services\TenantStorageService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB; // <--- AGREGAR ESTO
-use Illuminate\Support\Facades\Hash; // <--- AGREGAR ESTO
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class ClientController extends Controller
 {
-public function __construct()
-{
-    $this->middleware(function ($request, $next) {
-        // Si NO está logueado O NO tiene el rol "Master Admin"
-        if (!auth()->check() || !auth()->user()->hasRole('Master Admin')) {
-            abort(403, 'No tienes permiso para acceder al Panel de Control.');
-        }
-        return $next($request);
-    });
-}
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            // Si NO está logueado O NO tiene el rol "Master Admin"
+            if (!auth()->check() || !auth()->user()->hasRole('Master Admin')) {
+                abort(403, 'No tienes permiso para acceder al Panel de Control.');
+            }
+            return $next($request);
+        });
+    }
 
     public function index(Request $request)
     {
@@ -56,19 +58,20 @@ public function __construct()
 
         $data = $request->only(['name', 'email', 'phone', 'contact_name', 'prefix']);
 
-        // Manejo de imagen
-        if ($request->hasFile('logo')) {
-            $data['logo_path'] = $request->file('logo')->store('clients_logos', 'public');
-        }
-
         // 2. INICIO DE TRANSACCIÓN: Todo o nada
-        DB::transaction(function () use ($data) {
+        DB::transaction(function () use ($request, $data) {
             
-            // Crear el Cliente
+            // Crear el Cliente (inicializa carpetas automáticamente mediante booted)
             $client = Client::create($data);
 
+            // Manejo de imagen de logo dentro de su propia carpeta
+            if ($request->hasFile('logo')) {
+                $targetPath = TenantStorageService::path('logos', $client->id);
+                $logoPath = $request->file('logo')->store($targetPath, 'public');
+                $client->update(['logo_path' => $logoPath]);
+            }
+
             // 3. Buscar IDs de los roles
-            // Asegúrate de que estos roles existan en tu BD
             $roleSuperAdmin = Role::where('name', 'Super Admin')->first();
             $roleAdmin = Role::where('name', 'Admin')->first();
 
@@ -111,10 +114,14 @@ public function __construct()
             'logo' => 'nullable|image|max:2048'
         ]);
 
-         $data = $request->only(['name', 'email', 'phone', 'contact_name', 'prefix']);
+        $data = $request->only(['name', 'email', 'phone', 'contact_name', 'prefix']);
 
         if ($request->hasFile('logo')) {
-            $data['logo_path'] = $request->file('logo')->store('clients_logos', 'public');
+            if ($client->logo_path && Storage::disk('public')->exists($client->logo_path)) {
+                Storage::disk('public')->delete($client->logo_path);
+            }
+            $targetPath = TenantStorageService::path('logos', $client->id);
+            $data['logo_path'] = $request->file('logo')->store($targetPath, 'public');
         }
 
         $client->update($data);

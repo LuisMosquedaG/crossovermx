@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Services\LiveGameService;
 use App\Services\ScoresheetScannerService;
+use App\Services\TenantStorageService;
 
 class GameController extends Controller
 {
@@ -381,8 +382,10 @@ public function showLiveGame(Game $game)
         try {
             $file = $request->file('scoresheet');
 
-            // Guardar archivo en disco público (storage/app/public/scoresheets)
-            $storedPath = $file->store('scoresheets', 'public');
+            // Guardar archivo en disco público aislado por cliente
+            $clientId = $game->tournament?->client_id ?? $game->client_id ?? (auth()->check() ? auth()->user()->client_id : null);
+            $targetPath = TenantStorageService::path('scoresheets', $clientId);
+            $storedPath = $file->store($targetPath, 'public');
 
             // Procesar con Gemini Vision
             $scanResult = $scannerService->scan($file, $game);

@@ -14,6 +14,7 @@ use App\Strategies\Tournament\TournamentGenerationStrategyInterface;
 use App\Strategies\Tournament\LeagueStrategy;
 use App\Strategies\Tournament\EliminationStrategy;
 use App\Strategies\Tournament\DoubleEliminationStrategy;
+use App\Services\TenantStorageService;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -179,9 +180,10 @@ public function store(Request $request)
     $data['client_id'] = auth()->user()->client_id;
     // -------------------------------------------
 
-    // 3. Procesar Logo
+    // 3. Procesar Logo aislado por cliente
     if ($request->hasFile('logo')) {
-        $logoPath = $request->file('logo')->store('tournaments', 'public');
+        $targetPath = TenantStorageService::path('tournaments', $data['client_id']);
+        $logoPath = $request->file('logo')->store($targetPath, 'public');
         $data['logo_path'] = $logoPath;
     }
 
@@ -226,12 +228,14 @@ public function store(Request $request)
         // 2. Preparar datos
         $data = $request->all();
 
-        // 3. Procesar Logo
+        // 3. Procesar Logo aislado por cliente
         if ($request->hasFile('logo')) {
             if ($tournament->logo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($tournament->logo_path)) {
                 \Illuminate\Support\Facades\Storage::disk('public')->delete($tournament->logo_path);
             }
-            $logoPath = $request->file('logo')->store('tournaments', 'public');
+            $clientId = $tournament->client_id ?? (auth()->check() ? auth()->user()->client_id : null);
+            $targetPath = TenantStorageService::path('tournaments', $clientId);
+            $logoPath = $request->file('logo')->store($targetPath, 'public');
             $data['logo_path'] = $logoPath;
         }
 

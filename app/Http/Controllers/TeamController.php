@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Team;
 use App\Models\Tournament;
+use App\Services\TenantStorageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -164,17 +165,14 @@ class TeamController extends Controller
 
         $data = $request->all();
 
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('teams', 'public');
-            $data['image_path'] = $imagePath;
-        }
-
-        // --- NUEVO: ASIGNAR CLIENTE Y TORNEO ---
+        // --- ASIGNAR CLIENTE Y TORNEO ---
         $tournamentId = $request->input('tournament_id');
+        $clientId = auth()->check() ? auth()->user()->client_id : null;
         if (!empty($tournamentId)) {
             $tournament = Tournament::find($tournamentId);
             if ($tournament) {
-                $data['client_id'] = $tournament->client_id;
+                $clientId = $tournament->client_id ?? $clientId;
+                $data['client_id'] = $clientId;
                 $data['tournament_id'] = $tournament->id;
             } else {
                 if ($request->ajax() || $request->wantsJson()) {
@@ -183,8 +181,15 @@ class TeamController extends Controller
                 return back()->withErrors(['tournament_id' => 'El torneo seleccionado no es válido.']);
             }
         } else {
-            $data['client_id'] = auth()->user()->client_id;
+            $data['client_id'] = $clientId;
             $data['tournament_id'] = null;
+        }
+
+        // Manejo de imagen del equipo aislada por cliente
+        if ($request->hasFile('image')) {
+            $targetPath = TenantStorageService::path('teams', $clientId);
+            $imagePath = $request->file('image')->store($targetPath, 'public');
+            $data['image_path'] = $imagePath;
         }
         // ------------------------------------------
 
@@ -316,23 +321,28 @@ public function update(Request $request, Team $team)
         $data['suspension_games'] = 0;
     }
 
-    if ($request->hasFile('image')) {
-        if ($team->image_path) {
-            Storage::disk('public')->delete($team->image_path);
-        }
-        $imagePath = $request->file('image')->store('teams', 'public');
-        $data['image_path'] = $imagePath;
-    }
-
     // Actualizar client_id y tournament_id
+    $clientId = $team->client_id ?? (auth()->check() ? auth()->user()->client_id : null);
     if ($request->filled('tournament_id')) {
         $tournament = Tournament::find($request->tournament_id);
         if ($tournament) {
             $data['client_id'] = $tournament->client_id;
+            $clientId = $tournament->client_id ?? $clientId;
         }
     } else {
         $data['tournament_id'] = null;
         $data['client_id'] = auth()->user()->client_id ?? $team->client_id;
+        $clientId = $data['client_id'] ?? $clientId;
+    }
+
+    // Manejo de imagen del equipo aislada por cliente
+    if ($request->hasFile('image')) {
+        if ($team->image_path && Storage::disk('public')->exists($team->image_path)) {
+            Storage::disk('public')->delete($team->image_path);
+        }
+        $targetPath = TenantStorageService::path('teams', $clientId);
+        $imagePath = $request->file('image')->store($targetPath, 'public');
+        $data['image_path'] = $imagePath;
     }
 
     // Actualizar equipo sin duplicar registros de equipos ni jugadores
